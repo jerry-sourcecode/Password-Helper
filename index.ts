@@ -1,6 +1,13 @@
 const showNoteMaxLength = 152;
 const showOtherMaxLength = 60;
 
+enum Page{
+    Main,
+    Change,
+    Show,
+    Recent,
+}
+
 class Password{
     from: string;
     uname: string
@@ -15,10 +22,7 @@ class Password{
     getHtml(): string{
         return `
         <div class="info">
-            <p>来源：${this.format(this.from)}</p>
-            <p>用户名：${this.format(this.uname)}</p>
-            <p>密码：${this.format(this.pwd)}</p>
-            <p>注释：${this.format(this.note, showNoteMaxLength)}</p>
+            ${this.getBaseHtml()}
             <div class="tool">
                 <img class="icon" id="edit" style="margin-right: 8px;" src="./img/edit.png" title="编辑">
                 <img class="icon" id="delete" src="./img/delete.png" title="删除">
@@ -26,34 +30,51 @@ class Password{
         </div>
         `;
     }
-    private format(str: string, max: number = showOtherMaxLength): string{
-        if (str.length == 0){
-            return "暂无";
-        }
-        let left: number = max;
-        for (let i = 0; i < str.length; i++){
-            left -= isFullWidthChar(str[i]) ? 2 : 1;
-            if (left < 0){
-                return str.slice(0, i) + "...";
+    getHtmlRecent(): string{
+        return `
+        <div class="info">
+            ${this.getBaseHtml()}
+            <div class="tool">
+                <img class="icon" id="recover" style="margin-right: 8px;" src="./img/recovery.png" title="恢复">
+                <img class="icon" id="delete" src="./img/delete.png" title="删除">
+            </div>
+        </div>
+        `;
+    }
+    private getBaseHtml(): string{
+        function format(str: string, max: number = showOtherMaxLength): string{
+            if (str.length == 0){
+                return "暂无";
             }
+            let left: number = max;
+            for (let i = 0; i < str.length; i++){
+                left -= isFullWidthChar(str[i]) ? 2 : 1;
+                if (left < 0){
+                    return str.slice(0, i) + "...";
+                }
+            }
+            return str;
         }
-        return str;
+        return `<p>来源：${format(this.from)}</p>
+            <p>用户名：${format(this.uname)}</p>
+            <p>密码：${format(this.pwd)}</p>
+            <p>注释：${format(this.note, showNoteMaxLength)}</p>`
     }
 }
 
 let addBtn = document.querySelector("#addPwd");
 const main = document.querySelector("#mainDiv");
 let pwdList : Array<Password> = [];
+let recentPwd : Array<Password> = [];
 
-function random(a: number, b: number): number{
+// 一些工具函数
+function random(a: number, b: number): number{ // 生成[a, b]之间的随机数
     return Math.floor(Math.random() * (b - a) + a);
 }
-
-function isFullWidthChar(c: string): boolean{
+function isFullWidthChar(c: string): boolean{ // 判断是否是全角字符
     return c.charCodeAt(0) > 255;
 }
-
-function copyToClipboard(str: string): boolean{
+function copyToClipboard(str: string): boolean{ // 复制到剪贴板
     let success = true;
     navigator.clipboard.writeText(str)
     .then(() => {
@@ -64,16 +85,25 @@ function copyToClipboard(str: string): boolean{
     });
     return success;
 }
+function massageBox(title: string, msg: string, choice: Array<{msg: string, callback: () => void}> = [{msg: "确定", callback: () => {return;}}]){
+    // 弹出消息框
+}
 
+// 渲染main界面
 function update(by: Array<Password> = pwdList) : void{
-    let inner : string = ``;
+    let inner : string = `<div class="title">密码列表</div>`;
     for (let i = 0; i < by.length; i++){
         inner += by[i].getHtml();
     }
     if (by.length == 0){
-        inner = `<p>暂无密码</p>`;
+        inner += `<p>暂无密码</p>`;
     }
-    inner += `<div class="action" id="addPwd"><p>添加密码</p></div>`;
+    inner += `
+    <div class="info" id="recent">
+        <p>最近删除</p>
+    </div>
+    <div class="action" id="addPwd"><p>添加密码</p></div>
+    `;
     main!.innerHTML = inner;
     addBtn = document.querySelector("#addPwd");
     addBtn?.addEventListener("click", () => {
@@ -81,26 +111,34 @@ function update(by: Array<Password> = pwdList) : void{
     });
     let editBtns = document.querySelectorAll("#edit");
     for(let i = 0; i < editBtns.length; i++){
-        editBtns[i].addEventListener("click", () => {
+        editBtns[i].addEventListener("click", (e) => {
+            e?.stopPropagation();
             changePwd(by, i);
         });
     }
     let deleteBtns = document.querySelectorAll("#delete");
     for(let i = 0; i < deleteBtns.length; i++){
-        deleteBtns[i].addEventListener("click", () => {
+        deleteBtns[i].addEventListener("click", (e) => {
+            e?.stopPropagation();
             deletePwd(i);
         });
     }
     let infos = document.querySelectorAll(".info");
     for(let i = 0; i < infos.length; i++){
+        if (infos[i].id == "recent"){
+            continue;
+        }
         infos[i].addEventListener("click", () => {
-            showPwd(i);
+            showPwd(pwdList, i);
         });
     }
+    document.querySelector("#recent")?.addEventListener("click", () => {
+        showRecent();
+    });
 }
 
+// 渲染编辑密码界面，并更改密码，isAppend表示是否是添加密码，为true时，取消将会删除该密码，会返回main界面
 function changePwd(by: Array<Password>, index: number, isAppend : boolean = false) : void{
-    // 修改密码
     let inner : string = `
     <div class="form">
     <div class="formItem"><label for="from">来源：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
@@ -159,7 +197,20 @@ function changePwd(by: Array<Password>, index: number, isAppend : boolean = fals
 
 function deletePwd(index: number) : void{
     // 删除密码
+    recentPwd.unshift(new Password(pwdList[index].from, pwdList[index].uname, pwdList[index].pwd, pwdList[index].note));
     pwdList.splice(index, 1);
+    update();
+}
+
+function deleteRecentPwd(index: number) : void{
+    // 删除最近删除的密码
+    recentPwd.splice(index, 1);
+}
+
+function recoverPwd(index: number) : void{
+    // 恢复最近删除的密码
+    pwdList.push(recentPwd[index]);
+    recentPwd.splice(index, 1);
     update();
 }
 
@@ -170,14 +221,14 @@ function addPwd() : void{
     changePwd(pwdList, tgt, true);
 }
 
-function showPwd(index: number) : void{
-    // 显示密码
+// 显示密码， from表示从哪个页面跳转过来的，如果是从最近删除跳转过来的，返回时会返回到最近删除页面，否则返回到主页面，需要填写Page枚举
+function showPwd(by: Array<Password>, index: number, from : Page = Page.Main) : void{
     let inner : string = `
     <div class="form">
-    <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${pwdList[index].from}" readonly /><img class="icon" src="./img/copy.png" id="fromCopy" title="复制"></div>
-    <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${pwdList[index].uname}" readonly /><img class="icon" src="./img/copy.png" id="unameCopy" title="复制"></div>
-    <div class="formItem_Copy"><label for="pwd">密码：</label><input type="text" id="pwd" class="vaild" value="${pwdList[index].pwd}" readonly /><img class="icon" src="./img/copy.png" id="pwdCopy" title="复制"></div>
-    <div class="formItem"><label for="note">备注：</label><br><textarea id="note" readonly>${pwdList[index].note}</textarea></div>
+    <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./img/copy.png" id="fromCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${by[index].uname}" readonly /><img class="icon" src="./img/copy.png" id="unameCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="pwd">密码：</label><input type="text" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./img/copy.png" id="pwdCopy" title="复制"></div>
+    <div class="formItem"><label for="note">备注：</label><br><textarea id="note" readonly>${by[index].note}</textarea></div>
     </div>
     <div class="action" id="back"><p>返回</p></div>
     `
@@ -192,7 +243,7 @@ function showPwd(index: number) : void{
             setTimeout(() => {
                 document.querySelector("#fromCopy")?.setAttribute("src", "./img/copy.png");
                 document.querySelector("#from")?.removeAttribute("copyed");
-            }, 1500);
+            }, 1000);
         }
     });
     document.querySelector("#unameCopy")?.addEventListener("click", () => {
@@ -205,7 +256,7 @@ function showPwd(index: number) : void{
             setTimeout(() => {
                 document.querySelector("#unameCopy")?.setAttribute("src", "./img/copy.png");
                 document.querySelector("#uname")?.removeAttribute("copyed");
-            }, 1500);
+            }, 1000);
         }
     });
     document.querySelector("#pwdCopy")?.addEventListener("click", () => {
@@ -218,12 +269,55 @@ function showPwd(index: number) : void{
             setTimeout(() => {
                 document.querySelector("#pwdCopy")?.setAttribute("src", "./img/copy.png");
                 document.querySelector("#pwd")?.removeAttribute("copyed");
-            }, 1500);
+            }, 1000);
         }
     });
+    document.querySelector("#back")?.addEventListener("click", () => {
+        if (from == Page.Main){
+            update();
+        } else if (from == Page.Recent){
+            showRecent();
+        }
+    });
+}
+
+function showRecent() : void{
+    // 显示最近删除的密码
+    let inner : string = `<div class="title">最近删除</div>`;
+    for (let i = 0; i < recentPwd.length; i++){
+        inner += recentPwd[i].getHtmlRecent();
+    }
+    if (recentPwd.length == 0){
+        inner += `<p>暂无删除密码</p>`;
+    }
+    inner += `
+    <div class="action" id="back"><p>返回</p></div>
+    `;
+    main!.innerHTML = inner;
+    let recoverBtns = document.querySelectorAll("#recover");
+    for(let i = 0; i < recoverBtns.length; i++){
+        recoverBtns[i].addEventListener("click", (e) => {
+            e?.stopPropagation();
+            recoverPwd(i);
+            showRecent();
+        });
+    }
+    let deleteBtns = document.querySelectorAll("#delete");
+    for(let i = 0; i < deleteBtns.length; i++){
+        deleteBtns[i].addEventListener("click", (e) => {
+            e?.stopPropagation();
+            deleteRecentPwd(i);
+            showRecent();
+        });
+    }
+    let infos = document.querySelectorAll(".info");
+    for(let i = 0; i < infos.length; i++){
+        infos[i].addEventListener("click", () => {
+            showPwd(recentPwd, i, Page.Recent);
+        });
+    }
     document.querySelector("#back")?.addEventListener("click", () => {
         update();
     });
 }
-
 update();

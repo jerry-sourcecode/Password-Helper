@@ -50,6 +50,15 @@ div.main{
     margin: 15px;
 }
 
+div.title{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px;
+    font-size: 25px;
+    font-weight: bold;
+}
+
 div.action{
     background-color: #4662d9;
     color: white;
