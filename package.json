@@ -1,0 +1,27 @@
+{
+  "name": "password-helper",
+  "version": "1.0.0",
+  "description": "一个帮助管理密码的应用",
+  "homepage": "https://github.com/jerry-sourcecode/Password-Helper#readme",
+  "bugs": {
+    "url": "https://github.com/jerry-sourcecode/Password-Helper/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jerry-sourcecode/Password-Helper.git"
+  },
+  "license": "ISC",
+  "author": "Jerry Li",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "start": "nodemon --exec electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "electron": "^34.0.1"
+  },
+  "dependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
