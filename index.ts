@@ -53,6 +53,18 @@ function isFullWidthChar(c: string): boolean{
     return c.charCodeAt(0) > 255;
 }
 
+function copyToClipboard(str: string): boolean{
+    let success = true;
+    navigator.clipboard.writeText(str)
+    .then(() => {
+        success = true;
+    }).catch((err) => {
+        console.error("can't copy to clipboard: " + err);
+        success = false;
+    });
+    return success;
+}
+
 function update(by: Array<Password> = pwdList) : void{
     let inner : string = ``;
     for (let i = 0; i < by.length; i++){
@@ -91,9 +103,9 @@ function changePwd(by: Array<Password>, index: number, isAppend : boolean = fals
     // 修改密码
     let inner : string = `
     <div class="form">
-    <div class="formItem"><label for="from">来源：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span></span></div>
-    <div class="formItem"><label for="uname">用户名：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span></span></div>
-    <div class="formItem"><label for="pwd">密码：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span></span></div>
+    <div class="formItem"><label for="from">来源：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
+    <div class="formItem"><label for="uname">用户名：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
+    <div class="formItem"><label for="pwd">密码：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span></div>
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" placeholder="可以在这里输入一些想说的话。">${by[index].note}</textarea></div>
     </div>
     <div class="action" style="background-color: #fc5531" id="random"><p>随机生成一个高强度的密码</p></div>
@@ -162,14 +174,53 @@ function showPwd(index: number) : void{
     // 显示密码
     let inner : string = `
     <div class="form">
-    <div class="formItem"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${pwdList[index].from}" readonly /></div>
-    <div class="formItem"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${pwdList[index].uname}" readonly /></div>
-    <div class="formItem"><label for="pwd">密码：</label><input type="text" id="pwd" class="vaild" value="${pwdList[index].pwd}" readonly /></div>
+    <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${pwdList[index].from}" readonly /><img class="icon" src="./img/copy.png" id="fromCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${pwdList[index].uname}" readonly /><img class="icon" src="./img/copy.png" id="unameCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="pwd">密码：</label><input type="text" id="pwd" class="vaild" value="${pwdList[index].pwd}" readonly /><img class="icon" src="./img/copy.png" id="pwdCopy" title="复制"></div>
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" readonly>${pwdList[index].note}</textarea></div>
     </div>
     <div class="action" id="back"><p>返回</p></div>
     `
     main!.innerHTML = inner;
+    document.querySelector("#fromCopy")?.addEventListener("click", () => {
+        if (document.querySelector("#from")?.getAttribute("copyed") == "true"){
+            return;
+        }
+        if (copyToClipboard(pwdList[index].from)){
+            document.querySelector("#fromCopy")?.setAttribute("src", "./img/copy_done.png");
+            document.querySelector("#from")?.setAttribute("copyed", "true");
+            setTimeout(() => {
+                document.querySelector("#fromCopy")?.setAttribute("src", "./img/copy.png");
+                document.querySelector("#from")?.removeAttribute("copyed");
+            }, 1500);
+        }
+    });
+    document.querySelector("#unameCopy")?.addEventListener("click", () => {
+        if (document.querySelector("#uname")?.getAttribute("copyed") == "true"){
+            return;
+        }
+        if (copyToClipboard(pwdList[index].uname)){
+            document.querySelector("#unameCopy")?.setAttribute("src", "./img/copy_done.png");
+            document.querySelector("#uname")?.setAttribute("copyed", "true");
+            setTimeout(() => {
+                document.querySelector("#unameCopy")?.setAttribute("src", "./img/copy.png");
+                document.querySelector("#uname")?.removeAttribute("copyed");
+            }, 1500);
+        }
+    });
+    document.querySelector("#pwdCopy")?.addEventListener("click", () => {
+        if (document.querySelector("#pwd")?.getAttribute("copyed") == "true"){
+            return;
+        }
+        if (copyToClipboard(pwdList[index].pwd)){
+            document.querySelector("#pwdCopy")?.setAttribute("src", "./img/copy_done.png");
+            document.querySelector("#pwd")?.setAttribute("copyed", "true");
+            setTimeout(() => {
+                document.querySelector("#pwdCopy")?.setAttribute("src", "./img/copy.png");
+                document.querySelector("#pwd")?.removeAttribute("copyed");
+            }, 1500);
+        }
+    });
     document.querySelector("#back")?.addEventListener("click", () => {
         update();
     });
