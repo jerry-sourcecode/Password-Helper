@@ -8,6 +8,11 @@ npm install nodemon
 如果想要启动程序，运行以下命令
 ```bash
 tsc
+electron .
+```
+如果想要持续监视
+```bash
+npm run w
 npm start
 ```
 

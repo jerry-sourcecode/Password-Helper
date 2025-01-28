@@ -9,7 +9,17 @@ function setIpc(win){
         fs.writeFileSync(path.join(projectRoot, filename), data);
     });
     ipcMain.handle("read-file", (event, filename)=>{
-        return fs.readFileSync(path.join(projectRoot, filename), 'utf-8');
+        let k;
+        try{
+            k = new Promise((resolve, resject) => {
+                resolve(fs.readFileSync(path.join(projectRoot, filename), 'utf-8'));
+            }) 
+        } catch(e){
+            k = new Promise((resolve, resject) => {
+                resject(e);
+            }) 
+        }
+        return k;
     });
     ipcMain.handle("msg", async (event, title, type, msg, choice)=>{
         return dialog.showMessageBoxSync(win, {

@@ -15,7 +15,7 @@
   "type": "commonjs",
   "main": "./src/electron/main.js",
   "scripts": {
-    "watch": "tsc --build --watch",
+    "w": "tsc --watch",
     "start": "nodemon --exec electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

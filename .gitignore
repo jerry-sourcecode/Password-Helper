@@ -3,3 +3,6 @@ node_modules/
 
 # rm build
 build/
+
+# rm data
+data

@@ -333,4 +333,19 @@ function showRecent() : void{
         update();
     });
 }
-update();
+
+window.fs.read("./data").then((data) => {
+    let obj = JSON.parse(data);
+    for(let i = 0; i < obj.pwd.length; i++){
+        pwdList.push(new Password(obj.pwd[i].from, obj.pwd[i].uname, obj.pwd[i].pwd, obj.pwd[i].note));
+    }
+    for(let i = 0; i < obj.recent.length; i++){
+        recentPwd.push(new Password(obj.recent[i].from, obj.recent[i].uname, obj.recent[i].pwd, obj.recent[i].note));
+    }
+    update();
+}).catch((err) => {
+    console.log(err);
+    pwdList = [];
+    recentPwd = [];
+    update();
+});
