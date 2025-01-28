@@ -13,8 +13,9 @@
   "license": "ISC",
   "author": "Jerry Li",
   "type": "commonjs",
-  "main": "main.js",
+  "main": "./src/electron/main.js",
   "scripts": {
+    "watch": "tsc --build --watch",
     "start": "nodemon --exec electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

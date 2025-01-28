@@ -1,13 +1,15 @@
-const {app, BrowserWindow, ipcMain, dialog} = require("electron")
+const {app, BrowserWindow, ipcMain, dialog} = require("electron");
 const path = require('path');
-const fs = require('fs')
+const fs = require('fs');
+
+const projectRoot = app.getAppPath();
 
 function setIpc(win){
     ipcMain.on("save-file", (event, filename, data)=>{
-        fs.writeFileSync(filename, data);
+        fs.writeFileSync(path.join(projectRoot, filename), data);
     });
     ipcMain.handle("read-file", (event, filename)=>{
-        return fs.readFileSync(filename, 'utf-8');
+        return fs.readFileSync(path.join(projectRoot, filename), 'utf-8');
     });
     ipcMain.handle("msg", async (event, title, type, msg, choice)=>{
         return dialog.showMessageBoxSync(win, {
@@ -32,7 +34,7 @@ function createWindow(){
 
     setIpc(win);
 
-    win.loadFile("./pages/index.html")
+    win.loadFile("./src/pages/index.html")
 }
 
 app.on("ready", ()=>{

@@ -3,13 +3,14 @@
       "strict": true,
       "noImplicitAny": true,
       "module": "commonjs",
-      "target": "ESNext",
-      "lib": ["DOM", "ESNext"],
+      "target": "ES6",
       "isolatedModules": true,
-      "moduleResolution": "node"
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "outDir": "./src/pages",
   },
   "include": [
-    "pages/**/*",     // 你的所有源代码文件
-    "types/**/*.d.ts"  // 包含 types 目录下的所有 d.ts 文件
+    "./src/pages-ts/**/*.ts",
+    "./src/types/**/*.ts"
   ]
 }
