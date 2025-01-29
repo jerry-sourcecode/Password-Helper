@@ -30,7 +30,6 @@ body{
     background-color: rgb(184, 183, 183); /*浅色模式为white*/
     display: flex;
     justify-content: center;
-    overflow-y: scroll;
     height: 100%;
 }
 
@@ -40,14 +39,20 @@ div.background{
     position: fixed;
     top: 0;
     bottom: 0;
-    z-index: 0;
+    z-index: -1;
 }
 div.main{
     display: flex;
     align-items: center;
     flex-direction: column;
-    z-index: 1;
     margin: 15px;
+    width: 50vw;
+    height: 96vh;
+    overflow: auto;
+}
+
+div.main *{
+    flex-shrink: 0;
 }
 
 div.title{

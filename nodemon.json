@@ -5,5 +5,5 @@
     ],
     "restartable": "r",
     "watch": ["*.*"],
-    "ext": "html,js,css,ts"
+    "ext": "html,js,css"
 }
