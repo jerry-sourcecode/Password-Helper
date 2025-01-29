@@ -12,12 +12,16 @@ class Password{ // 密码类
     from: string; // 来源
     uname: string // 用户名
     pwd: string; // 密码
+    email: string; // 邮箱
+    phone: string; // 电话
     note: string; // 备注
-    constructor(from: string, uname: string, pwd: string, note: string){
+    constructor(from: string, uname: string, pwd: string, note: string, email: string, phone: string){ // 构造函数
         this.from = from;
         this.uname = uname;
         this.pwd = pwd;
         this.note = note;
+        this.email = email;
+        this.phone = phone;
     }
     getHtml(): string{ // 获取密码在main页面的html
         return `
@@ -58,9 +62,11 @@ class Password{ // 密码类
         return `<p>来源：${format(this.from)}</p>
             <p>用户名：${format(this.uname)}</p>
             <p>密码：${format(this.pwd)}</p>
-            <p>注释：${format(this.note, showNoteMaxLength)}</p>`
+            ${this.email == ""?"":`<p>邮箱：${format(this.email)}</p>`}
+            ${this.phone == ""?"":`<p>电话：${format(this.phone)}</p>`}
+            ${this.note == ""?"":`<p>备注：${format(this.note, showNoteMaxLength)}</p>`}`
+        };
     }
-}
 
 let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
 const main = document.querySelector("#mainDiv"); // main界面
@@ -145,9 +151,11 @@ function changePwd(by: Array<Password>, index: number, isAppend : boolean = fals
     let inner : string = `
     <div class="title">编辑密码</div>
     <div class="form">
-    <div class="formItem"><label for="from">来源：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
-    <div class="formItem"><label for="uname">用户名：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
-    <div class="formItem"><label for="pwd">密码：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span></div>
+    <div class="formItem"><label for="from">来源<span style="color:red;">*</span>：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
+    <div class="formItem"><label for="uname">用户名<span style="color:red;">*</span>：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
+    <div class="formItem"><label for="pwd">密码<span style="color:red;">*</span>：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span></div>
+    <div class="formItem"><label for="email">邮箱：</label><input type="text" id="email" value="${by[index].email}"></div>
+    <div class="formItem"><label for="phone">手机号：</label><input type="text" id="phone" value="${by[index].phone}"></div>
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" placeholder="可以在这里输入一些想说的话。">${by[index].note}</textarea></div>
     </div>
     <div class="action" style="background-color: #fc5531" id="random"><p>随机生成一个高强度的密码</p></div>
@@ -183,12 +191,14 @@ function changePwd(by: Array<Password>, index: number, isAppend : boolean = fals
         let name = (document.querySelector("#from") as HTMLInputElement).value;
         let uname = (document.querySelector("#uname") as HTMLInputElement).value;
         let pwd = (document.querySelector("#pwd") as HTMLInputElement).value;
+        let email = (document.querySelector("#email") as HTMLInputElement).value;
+        let phone = (document.querySelector("#phone") as HTMLInputElement).value;
         let note = (document.querySelector("#note") as HTMLTextAreaElement).value;
         if (name == "" || uname == "" || pwd == ""){
             alert("请填写完整信息");
             return;
         }
-        by[index] = new Password(name, uname, pwd, note);
+        by[index] = new Password(name, uname, pwd, note, email, phone);
         saveData()
         update();
     });
@@ -202,7 +212,7 @@ function changePwd(by: Array<Password>, index: number, isAppend : boolean = fals
 
 function deletePwd(index: number) : void{
     // 删除密码
-    recentPwd.unshift(new Password(pwdList[index].from, pwdList[index].uname, pwdList[index].pwd, pwdList[index].note));
+    recentPwd.unshift(new Password(pwdList[index].from, pwdList[index].uname, pwdList[index].pwd, pwdList[index].note, pwdList[index].email, pwdList[index].phone));
     pwdList.splice(index, 1);
     saveData();
     update();
@@ -225,7 +235,7 @@ function recoverPwd(index: number) : void{
 function addPwd() : void{
     // 添加密码
     let tgt : number = pwdList.length;
-    pwdList.push(new Password("", "", "", ""));
+    pwdList.push(new Password("", "", "", "", "", ""));
     changePwd(pwdList, tgt, true);
 }
 
@@ -236,6 +246,8 @@ function showPwd(by: Array<Password>, index: number, from : Page = Page.Main) : 
     <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${by[index].uname}" readonly /><img class="icon" src="./resources/copy.png" id="unameCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="pwd">密码：</label><input type="text" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="email">邮箱：</label><input type="text" id="email" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="emailCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制"></div>
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" readonly>${by[index].note}</textarea></div>
     </div>
     <div class="action" id="back"><p>返回</p></div>
@@ -280,6 +292,32 @@ function showPwd(by: Array<Password>, index: number, from : Page = Page.Main) : 
             }, 1000);
         }
     });
+    document.querySelector("#emailCopy")?.addEventListener("click", () => {
+        if (document.querySelector("#email")?.getAttribute("copyed") == "true"){
+            return;
+        }
+        if (copyToClipboard(pwdList[index].email)){
+            document.querySelector("#emailCopy")?.setAttribute("src", "./resources/copy_done.png");
+            document.querySelector("#email")?.setAttribute("copyed", "true");
+            setTimeout(() => {
+                document.querySelector("#emailCopy")?.setAttribute("src", "./resources/copy.png");
+                document.querySelector("#email")?.removeAttribute("copyed");
+            }, 1000);
+        }
+    })
+    document.querySelector("#phoneCopy")?.addEventListener("click", () => {
+        if (document.querySelector("#phone")?.getAttribute("copyed") == "true"){
+            return;
+        }
+        if (copyToClipboard(pwdList[index].phone)){
+            document.querySelector("#phoneCopy")?.setAttribute("src", "./resources/copy_done.png");
+            document.querySelector("#phone")?.setAttribute("copyed", "true");
+            setTimeout(() => {
+                document.querySelector("#phoneCopy")?.setAttribute("src", "./resources/copy.png");
+                document.querySelector("#phone")?.removeAttribute("copyed");
+            }, 1000);
+        }
+    })
     document.querySelector("#back")?.addEventListener("click", () => {
         if (from == Page.Main){
             update();
@@ -337,10 +375,10 @@ function showRecent() : void{
 window.fs.read("./data").then((data) => {
     let obj = JSON.parse(data);
     for(let i = 0; i < obj.pwd.length; i++){
-        pwdList.push(new Password(obj.pwd[i].from, obj.pwd[i].uname, obj.pwd[i].pwd, obj.pwd[i].note));
+        pwdList.push(new Password(obj.pwd[i].from, obj.pwd[i].uname, obj.pwd[i].pwd, obj.pwd[i].note, obj.pwd[i].email, obj.pwd[i].phone));
     }
     for(let i = 0; i < obj.recent.length; i++){
-        recentPwd.push(new Password(obj.recent[i].from, obj.recent[i].uname, obj.recent[i].pwd, obj.recent[i].note));
+        recentPwd.push(new Password(obj.recent[i].from, obj.recent[i].uname, obj.recent[i].pwd, obj.recent[i].note, obj.recent[i].email, obj.recent[i].phone));
     }
     update();
 }).catch((err) => {

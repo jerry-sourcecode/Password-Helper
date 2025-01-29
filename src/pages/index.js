@@ -9,11 +9,13 @@ var Page;
     Page[Page["Recent"] = 3] = "Recent";
 })(Page || (Page = {}));
 class Password {
-    constructor(from, uname, pwd, note) {
+    constructor(from, uname, pwd, note, email, phone) {
         this.from = from;
         this.uname = uname;
         this.pwd = pwd;
         this.note = note;
+        this.email = email;
+        this.phone = phone;
     }
     getHtml() {
         return `
@@ -54,8 +56,11 @@ class Password {
         return `<p>来源：${format(this.from)}</p>
             <p>用户名：${format(this.uname)}</p>
             <p>密码：${format(this.pwd)}</p>
-            <p>注释：${format(this.note, showNoteMaxLength)}</p>`;
+            ${this.email == "" ? "" : `<p>邮箱：${format(this.email)}</p>`}
+            ${this.phone == "" ? "" : `<p>电话：${format(this.phone)}</p>`}
+            ${this.note == "" ? "" : `<p>备注：${format(this.note, showNoteMaxLength)}</p>`}`;
     }
+    ;
 }
 let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
 const main = document.querySelector("#mainDiv"); // main界面
@@ -140,9 +145,11 @@ function changePwd(by, index, isAppend = false) {
     let inner = `
     <div class="title">编辑密码</div>
     <div class="form">
-    <div class="formItem"><label for="from">来源：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
-    <div class="formItem"><label for="uname">用户名：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
-    <div class="formItem"><label for="pwd">密码：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span></div>
+    <div class="formItem"><label for="from">来源<span style="color:red;">*</span>：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
+    <div class="formItem"><label for="uname">用户名<span style="color:red;">*</span>：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
+    <div class="formItem"><label for="pwd">密码<span style="color:red;">*</span>：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span></div>
+    <div class="formItem"><label for="email">邮箱：</label><input type="text" id="email" value="${by[index].email}"></div>
+    <div class="formItem"><label for="phone">手机号：</label><input type="text" id="phone" value="${by[index].phone}"></div>
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" placeholder="可以在这里输入一些想说的话。">${by[index].note}</textarea></div>
     </div>
     <div class="action" style="background-color: #fc5531" id="random"><p>随机生成一个高强度的密码</p></div>
@@ -179,12 +186,14 @@ function changePwd(by, index, isAppend = false) {
         let name = document.querySelector("#from").value;
         let uname = document.querySelector("#uname").value;
         let pwd = document.querySelector("#pwd").value;
+        let email = document.querySelector("#email").value;
+        let phone = document.querySelector("#phone").value;
         let note = document.querySelector("#note").value;
         if (name == "" || uname == "" || pwd == "") {
             alert("请填写完整信息");
             return;
         }
-        by[index] = new Password(name, uname, pwd, note);
+        by[index] = new Password(name, uname, pwd, note, email, phone);
         saveData();
         update();
     });
@@ -197,7 +206,7 @@ function changePwd(by, index, isAppend = false) {
 }
 function deletePwd(index) {
     // 删除密码
-    recentPwd.unshift(new Password(pwdList[index].from, pwdList[index].uname, pwdList[index].pwd, pwdList[index].note));
+    recentPwd.unshift(new Password(pwdList[index].from, pwdList[index].uname, pwdList[index].pwd, pwdList[index].note, pwdList[index].email, pwdList[index].phone));
     pwdList.splice(index, 1);
     saveData();
     update();
@@ -217,17 +226,19 @@ function recoverPwd(index) {
 function addPwd() {
     // 添加密码
     let tgt = pwdList.length;
-    pwdList.push(new Password("", "", "", ""));
+    pwdList.push(new Password("", "", "", "", "", ""));
     changePwd(pwdList, tgt, true);
 }
 // 显示密码， from表示从哪个页面跳转过来的，如果是从最近删除跳转过来的，返回时会返回到最近删除页面，否则返回到主页面，需要填写Page枚举
 function showPwd(by, index, from = Page.Main) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f;
     let inner = `
     <div class="form">
     <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${by[index].uname}" readonly /><img class="icon" src="./resources/copy.png" id="unameCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="pwd">密码：</label><input type="text" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="email">邮箱：</label><input type="text" id="email" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="emailCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制"></div>
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" readonly>${by[index].note}</textarea></div>
     </div>
     <div class="action" id="back"><p>返回</p></div>
@@ -278,7 +289,37 @@ function showPwd(by, index, from = Page.Main) {
             }, 1000);
         }
     });
-    (_d = document.querySelector("#back")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
+    (_d = document.querySelector("#emailCopy")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
+        var _a, _b, _c;
+        if (((_a = document.querySelector("#email")) === null || _a === void 0 ? void 0 : _a.getAttribute("copyed")) == "true") {
+            return;
+        }
+        if (copyToClipboard(pwdList[index].email)) {
+            (_b = document.querySelector("#emailCopy")) === null || _b === void 0 ? void 0 : _b.setAttribute("src", "./resources/copy_done.png");
+            (_c = document.querySelector("#email")) === null || _c === void 0 ? void 0 : _c.setAttribute("copyed", "true");
+            setTimeout(() => {
+                var _a, _b;
+                (_a = document.querySelector("#emailCopy")) === null || _a === void 0 ? void 0 : _a.setAttribute("src", "./resources/copy.png");
+                (_b = document.querySelector("#email")) === null || _b === void 0 ? void 0 : _b.removeAttribute("copyed");
+            }, 1000);
+        }
+    });
+    (_e = document.querySelector("#phoneCopy")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
+        var _a, _b, _c;
+        if (((_a = document.querySelector("#phone")) === null || _a === void 0 ? void 0 : _a.getAttribute("copyed")) == "true") {
+            return;
+        }
+        if (copyToClipboard(pwdList[index].phone)) {
+            (_b = document.querySelector("#phoneCopy")) === null || _b === void 0 ? void 0 : _b.setAttribute("src", "./resources/copy_done.png");
+            (_c = document.querySelector("#phone")) === null || _c === void 0 ? void 0 : _c.setAttribute("copyed", "true");
+            setTimeout(() => {
+                var _a, _b;
+                (_a = document.querySelector("#phoneCopy")) === null || _a === void 0 ? void 0 : _a.setAttribute("src", "./resources/copy.png");
+                (_b = document.querySelector("#phone")) === null || _b === void 0 ? void 0 : _b.removeAttribute("copyed");
+            }, 1000);
+        }
+    });
+    (_f = document.querySelector("#back")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
         if (from == Page.Main) {
             update();
         }
@@ -335,10 +376,10 @@ function showRecent() {
 window.fs.read("./data").then((data) => {
     let obj = JSON.parse(data);
     for (let i = 0; i < obj.pwd.length; i++) {
-        pwdList.push(new Password(obj.pwd[i].from, obj.pwd[i].uname, obj.pwd[i].pwd, obj.pwd[i].note));
+        pwdList.push(new Password(obj.pwd[i].from, obj.pwd[i].uname, obj.pwd[i].pwd, obj.pwd[i].note, obj.pwd[i].email, obj.pwd[i].phone));
     }
     for (let i = 0; i < obj.recent.length; i++) {
-        recentPwd.push(new Password(obj.recent[i].from, obj.recent[i].uname, obj.recent[i].pwd, obj.recent[i].note));
+        recentPwd.push(new Password(obj.recent[i].from, obj.recent[i].uname, obj.recent[i].pwd, obj.recent[i].note, obj.recent[i].email, obj.recent[i].phone));
     }
     update();
 }).catch((err) => {

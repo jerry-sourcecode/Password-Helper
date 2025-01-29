@@ -93,20 +93,14 @@ div.action:active{
 }
 
 input.invaild + span.check::after {
-    position: absolute;
     content: "✖";
     color: red;
     padding-left: 5px;
 }
 input.vaild + span.check::after {
-    position: absolute;
     content: "✓";
     color: green;
     padding-left: 5px;
-}
-input.vaild + span.copy::after {
-    position: absolute;
-    content: "复制";
 }
 
 div.form{
