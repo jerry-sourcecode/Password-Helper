@@ -1,4 +1,5 @@
 const {app, BrowserWindow, ipcMain, dialog} = require("electron");
+const enc = require('crypto-js');
 const path = require('path');
 const fs = require('fs');
 
@@ -21,7 +22,7 @@ function setIpc(win){
         }
         return k;
     });
-    ipcMain.handle("msg", async (event, title, type, msg, choice)=>{
+    ipcMain.handle("msg", (event, title, type, msg, choice)=>{
         return dialog.showMessageBoxSync(win, {
             type: type,
             title: title,
@@ -29,6 +30,19 @@ function setIpc(win){
             buttons: choice,
             cancelId: -1
         });
+    });
+    ipcMain.handle("AES-enc", (event, data, key)=>{
+        return enc.AES.encrypt(data, key).toString();
+    });
+    ipcMain.handle("AES-dec", (event, data, key)=>{
+        return enc.AES.decrypt(data, key).toString(enc.enc.Utf8);
+    });
+    ipcMain.handle("PBKDF2", (event, data, salt)=>{
+        return enc.PBKDF2(data, salt, {
+            keySize: 256 / 32,
+            iterations: 10,
+            hasher: enc.algo.SHA256
+        }).toString(enc.enc.Hex);
     });
 }
 

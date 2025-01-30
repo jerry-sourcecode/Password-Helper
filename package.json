@@ -23,6 +23,7 @@
     "electron": "^34.0.1"
   },
   "dependencies": {
+    "crypto-js": "^4.2.0",
     "nodemon": "^3.1.9"
   }
 }

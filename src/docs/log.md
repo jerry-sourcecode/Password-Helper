@@ -45,3 +45,15 @@ warning: (title: string, msg: string, choice?: string[]) => Promise<number>;
     - `choice`：每一项是一个字符串，表示一个按钮上面的文字。
 - 返回值：表示用户按下按钮在`choice`中对应的索引，取消则返回-1。
 - 作用：显示一个阻塞程序的模态对话框，其中，`info`函数会显示一个消息样态的对话框，而`warning`会显示一个警告样态的对话框。
+## cryp
+```ts
+encrypt: (data: string, pwd: string) => Promise<string>;
+decrypt: (data: string, pwd: string) => Promise<string>;
+pbkdf2: (pwd: string, salt: string) => Promise<string>;
+```
+- 参数：
+    - `data`：需要加密或解密的数据
+    - `pwd`：密码
+    - `salt`：盐
+- 返回值：加密或解密后的数据
+- 作用：加密或解密数据，`pbkdf2`函数用于单向哈希加密。
