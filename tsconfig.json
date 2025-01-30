@@ -11,6 +11,6 @@
   },
   "include": [
     "./src/pages-ts/**/*.ts",
-    "./src/types/**/*.ts"
+    "./src/types/**/*.d.ts"
   ]
 }

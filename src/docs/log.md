@@ -2,8 +2,10 @@
 因为本项目不含node_modules，所以需要手动安装node_modules
 在项目处运行一下命令
 ```bash
-npm install electron --save-dev
-npm install nodemon
+npm i electron --save-dev
+npm i nodemon
+npm i typescript
+npm i crypto.js
 ```
 如果想要启动程序，运行以下命令
 ```bash

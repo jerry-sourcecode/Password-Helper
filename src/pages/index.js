@@ -66,6 +66,7 @@ let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
 const main = document.querySelector("#mainDiv"); // main界面
 let pwdList = []; // 密码列表
 let recentPwd = []; // 最近删除的密码列表
+let mainPwd = ""; // 主密码
 // 一些工具函数
 function random(a, b) {
     return Math.floor(Math.random() * (b - a) + a);
@@ -93,8 +94,10 @@ function saveData() {
 }
 // 渲染main界面
 function update(by = pwdList) {
-    var _a;
-    let inner = `<div class="title">密码列表</div>`;
+    var _a, _b;
+    let inner = `<div class="title">密码列表</div>
+    <div style="position: absolute; top: 15px; right: 45px;" id="setting"><img src="../pages/resources/setting.png" title="设置" class="icon" style="width: 25px;height: 25px;"></div>
+    `;
     for (let i = 0; i < by.length; i++) {
         inner += by[i].getHtml();
     }
@@ -108,6 +111,9 @@ function update(by = pwdList) {
     <div class="action" id="addPwd"><p>添加密码</p></div>
     `;
     main.innerHTML = inner;
+    (_a = document.querySelector("#setting")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+        setting();
+    });
     addBtn = document.querySelector("#addPwd");
     addBtn === null || addBtn === void 0 ? void 0 : addBtn.addEventListener("click", () => {
         addPwd();
@@ -135,7 +141,7 @@ function update(by = pwdList) {
             showPwd(pwdList, i);
         });
     }
-    (_a = document.querySelector("#recent")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+    (_b = document.querySelector("#recent")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
         showRecent();
     });
 }
@@ -370,6 +376,25 @@ function showRecent() {
         });
     }
     (_a = document.querySelector("#back")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+        update();
+    });
+}
+function setting() {
+    var _a, _b;
+    // 显示设置页面
+    main.innerHTML = `
+    <div class="title">设置</div>
+    <div class="form">
+    <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
+    </div>
+    <div class="action" id="save"><p>保存</p></div>
+    <div class="action" id="cancel"><p>取消</p></div>
+    `;
+    (_a = document.querySelector("#save")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+        mainPwd = document.querySelector("#mainPwd").value;
+        update();
+    });
+    (_b = document.querySelector("#cancel")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
         update();
     });
 }

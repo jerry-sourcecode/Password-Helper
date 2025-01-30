@@ -49,6 +49,7 @@ div.main{
     width: 50vw;
     height: 96vh;
     overflow: auto;
+    position: relative;
 }
 
 div.main *{
