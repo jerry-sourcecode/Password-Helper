@@ -5,7 +5,7 @@
 npm i electron --save-dev
 npm i nodemon
 npm i typescript
-npm i crypto.js
+npm i crypto-js
 ```
 如果想要启动程序，运行以下命令
 ```bash

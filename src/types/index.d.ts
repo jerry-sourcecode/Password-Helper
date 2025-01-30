@@ -12,9 +12,9 @@ interface msg {
 }
 
 interface cryp {
-    encrypt: (data: string, pwd: string) => string;
-    decrypt: (data: string, pwd: string) => string;
-    pbkdf2: (pwd: string, salt: string) => string;
+    encrypt: (data: string, pwd: string) => Promise<string>;
+    decrypt: (data: string, pwd: string) => Promise<string>;
+    pbkdf2: (pwd: string, salt: string) => Promise<string>;
 }
 
 declare global {
