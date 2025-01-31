@@ -1,5 +1,4 @@
 const {app, BrowserWindow, ipcMain, dialog} = require("electron");
-const enc = require('crypto-js');
 const path = require('path');
 const fs = require('fs');
 
@@ -40,7 +39,7 @@ function createWindow(){
         autoHideMenuBar: true,
         webPreferences: {
             preload: path.join(__dirname, './preload.js'),
-            nodeIntegration: true
+            sandbox: false,
         }
     })
 
