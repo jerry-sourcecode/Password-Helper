@@ -76,54 +76,39 @@ class Password{ // 密码类
             ${this.note == ""?"":`<p>备注：${format(this.note, showNoteMaxLength)}</p>`}`
     };
 }
-function encrypt(data: Password, key: string): Promise<Password>{ // 加密
+function encrypt(data: Password, key: string): Password{ // 加密
     let enc: Password = new Password(data);
     let index : number = 0;
     function getKey(): string{
         let dkey: string = key + key; // 重复主密码
         let res: string = dkey.slice(index, index + key.length); // 取出主密码
         index++;
+        if (index >= key.length) index = 0;
         return res;
     }
-    let promiseList : Array<Promise<void>> = [];
     for (let v of Object.keys(data) as (keyof Password)[]){
         if (typeof data[v] === "string"){
-            let k = window.cryp.encrypt(data[v], getKey())
-            .then((res) => {
-                (enc as any)[v] = res;
-            })
-            .catch((err) => {
-                console.error("encrypt error: " + err);
-            })
-            promiseList.push(k);
+            (enc as any)[v] = window.cryp.encrypt(data[v], getKey())
         }
     }
-    return Promise.all(promiseList).then(() => enc);
+    return enc;
 }
-function decrypt(data:Password, key: string): Promise<Password>{ // 解密
+function decrypt(data:Password, key: string): Password{ // 解密
     let dec = new Password(data); // 复制当前对象的基本数据
-
     let index : number = 0;
     function getKey(): string{
         let dkey: string = key + key; // 重复主密码
         let res: string = dkey.slice(index, index + key.length); // 取出主密码
         index++;
+        if (index >= key.length) index = 0;
         return res;
     }
-    
-    let promiseList : Array<Promise<void>> = [];
     for (let v of Object.keys(data) as (keyof Password)[]){
         if (typeof data[v] == "string"){
-            promiseList.push(window.cryp.decrypt(data[v], getKey())
-            .then((res) => {
-                (dec as any)[v] = res;
-            })
-            .catch((err) => {
-                console.error("decrypt error: " + err);
-            }));
+            (dec as any)[v] = window.cryp.decrypt(data[v], getKey());
         }
     }
-    return Promise.all(promiseList).then(() => dec);
+    return dec;
 }
     
 
@@ -162,38 +147,28 @@ function copyToClipboard(str: string): boolean{ // 复制到剪贴板
 }
 function saveData(): void{ // 保存数据
     let salt: string = randstr(16);
-    window.cryp.pbkdf2(mainPwd, salt)
-    .then(async (enc) => {
-        let pwdListUpdated = [...pwdList];
-        let recentPwdUpdated = [...recentPwd];
+    let enc = window.cryp.pbkdf2(mainPwd, salt)
+    let pwdListUpdated = [...pwdList];
+    let recentPwdUpdated = [...recentPwd];
 
-        // 使用 for 循环配合 async/await 保证顺序
-        for (let index = 0; index < pwdList.length; index++) {
-            pwdListUpdated[index] = await encrypt(pwdList[index], enc);
-        }
-        for (let index = 0; index < recentPwd.length; index++) {
-            recentPwdUpdated[index] = await encrypt(recentPwd[index], enc);
-        }
+    for (let index = 0; index < pwdList.length; index++) {
+        pwdListUpdated[index] = encrypt(pwdList[index], enc);
+    }
+    for (let index = 0; index < recentPwd.length; index++) {
+        recentPwdUpdated[index] = encrypt(recentPwd[index], enc);
+    }
 
-        window.cryp.pbkdf2(enc, salt)
-        .then((denc) => {
-            // 数据保存
-            let data = JSON.stringify({
-                pwd: pwdListUpdated,
-                recent: recentPwdUpdated,
-                mainPwd: denc,
-                salt: salt,
-                memory: isremember? mainPwd : null,
-            });
-            window.fs.save("./data", data);
-        })
-        .catch((err) => {
-            console.error("encrypt error: " + err);
-        });
-    })
-    .catch((err) => {
-        console.error("save data error: " + err);
-    })
+    // 数据保存
+    let data = JSON.stringify({
+        version: "1.0",
+        pwd: pwdListUpdated,
+        recent: recentPwdUpdated,
+        mainPwd: window.cryp.pbkdf2(enc, salt),
+        salt: salt,
+        memory: isremember? mainPwd : null,
+        isPwdNull: mainPwd === "",
+    });
+    window.fs.save("./data", data);
 }
 
 // 渲染main界面
@@ -476,7 +451,7 @@ function setting() : void {
     <div class="title">设置</div>
     <div class="form">
     <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
-    <div><label for="rememberPwd">记住密钥：</label><input type="checkbox" id="rememberPwd" ${isremember ? "checked" : ""}/></div>
+    <div><input type="checkbox" id="rememberPwd" ${isremember ? "checked" : ""} style="margin-right: 10px;"/><label for="rememberPwd">记住密钥</label></div>
     </div>
     <div class="action" id="save"><p>保存</p></div>
     <div class="action" id="cancel"><p>取消</p></div>
@@ -494,43 +469,51 @@ function setting() : void {
 
 window.fs.read("./data").then((data) => {
     let obj = JSON.parse(data);
+    const salt = obj.salt;
 
-    if (obj.memory !== null && obj.memory !== undefined){
-        let m = obj.memory;
-        isremember = true;
+    if (obj.isPwdNull){
+        enc(window.cryp.pbkdf2("", salt));
     } else {
-        isremember = false;
-        main!.innerHTML = `
-        <div class="title">请输入访问密钥</div>
-        <div class="form">
-        <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild"/></div>
-        <div><label for="rememberPwd">记住密钥：</label><input type="checkbox" id="rememberPwd"}/></div>
-        </div>
-        <div class="action" id="Yes"><p>确定</p></div>
-        `;
+        if (obj.memory !== null && obj.memory !== undefined){
+            let m = obj.memory;
+            let dpwd = window.cryp.pbkdf2(m, salt);
+            if (window.cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
+                isremember = true;
+                mainPwd = m;
+                enc(dpwd);
+            } else {
+                isremember = false;
+            }
+        }
+        if (!isremember) {
+            main!.innerHTML = `
+            <div class="title">请输入访问密钥</div>
+            <div class="form">
+            <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild"/></div>
+            <div><input type="checkbox" id="rememberPwd"} style="margin-right: 10px;"/><label for="rememberPwd">记住密钥</label></div>
+            </div>
+            <div class="action" id="Yes"><p>确定</p></div>
+            `;
+            document.querySelector("#Yes")?.addEventListener("click", () => {
+                let m = (document.querySelector("#mainPwd") as HTMLInputElement).value;
+                let dpwd = window.cryp.pbkdf2(m, salt);
+                if (window.cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
+                    isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
+                    mainPwd = m;
+                    enc(dpwd);
+                };
+            });
+        }
     }
 
-    function enc(){
-        let promiseList: Array<Promise<void>> = [];
+    function enc(key: string) : void{
         obj.pwd.forEach((element: any) => {
-            promiseList.push((decrypt(new Password(element.from, element.uname, element.pwd, element.note, element.email, element.phone), mainPwd)
-            .then((pwd) => {
-                pwdList.push(pwd);
-            })
-            .catch((err) => {
-                console.log(err);
-            })));
+            pwdList.push(decrypt(new Password(element.from, element.uname, element.pwd, element.note, element.email, element.phone), key));
         });
         obj.recent.forEach((element: any) => {
-            promiseList.push((decrypt(new Password(element.from, element.uname, element.pwd, element.note, element.email, element.phone), mainPwd)
-            .then((pwd) => {
-                recentPwd.push(pwd);
-            })
-            .catch((err) => {
-                console.log(err);
-            })));
+            recentPwd.push(decrypt(new Password(element.from, element.uname, element.pwd, element.note, element.email, element.phone), key));
         });
-        Promise.all(promiseList).then(() => {update();});
+        update();
     }
 }).catch((err) => {
     console.log(err);

@@ -31,19 +31,6 @@ function setIpc(win){
             cancelId: -1
         });
     });
-    ipcMain.handle("AES-enc", (event, data, key)=>{
-        return enc.AES.encrypt(data, key).toString();
-    });
-    ipcMain.handle("AES-dec", (event, data, key)=>{
-        return enc.AES.decrypt(data, key).toString(enc.enc.Utf8);
-    });
-    ipcMain.handle("PBKDF2", (event, data, salt)=>{
-        return enc.PBKDF2(data, salt, {
-            keySize: 256 / 32,
-            iterations: 10,
-            hasher: enc.algo.SHA256
-        }).toString(enc.enc.Hex);
-    });
 }
 
 function createWindow(){
@@ -52,7 +39,8 @@ function createWindow(){
         height: 600,
         autoHideMenuBar: true,
         webPreferences: {
-            preload: path.join(__dirname, './preload.js')
+            preload: path.join(__dirname, './preload.js'),
+            nodeIntegration: true
         }
     })
 

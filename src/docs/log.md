@@ -47,9 +47,9 @@ warning: (title: string, msg: string, choice?: string[]) => Promise<number>;
 - 作用：显示一个阻塞程序的模态对话框，其中，`info`函数会显示一个消息样态的对话框，而`warning`会显示一个警告样态的对话框。
 ## cryp
 ```ts
-encrypt: (data: string, pwd: string) => Promise<string>;
-decrypt: (data: string, pwd: string) => Promise<string>;
-pbkdf2: (pwd: string, salt: string) => Promise<string>;
+encrypt: (data: string, pwd: string) => string;
+decrypt: (data: string, pwd: string) => string;
+pbkdf2: (pwd: string, salt: string) => string;
 ```
 - 参数：
     - `data`：需要加密或解密的数据
