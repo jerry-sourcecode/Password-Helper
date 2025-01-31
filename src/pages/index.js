@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 const showNoteMaxLength = 152; // 在main页面显示备注的最大长度
 const showOtherMaxLength = 60; // 在main页面显示来源、用户名、密码的最大长度
 var Page;
@@ -9,13 +18,23 @@ var Page;
     Page[Page["Recent"] = 3] = "Recent";
 })(Page || (Page = {}));
 class Password {
-    constructor(from, uname, pwd, note, email, phone) {
-        this.from = from;
-        this.uname = uname;
-        this.pwd = pwd;
-        this.note = note;
-        this.email = email;
-        this.phone = phone;
+    constructor(fromOrdata = "", uname = "", pwd = "", note = "", email = "", phone = "") {
+        if (typeof fromOrdata === "string") {
+            this.from = fromOrdata;
+            this.uname = uname;
+            this.pwd = pwd;
+            this.note = note;
+            this.email = email;
+            this.phone = phone;
+        }
+        else {
+            this.from = fromOrdata.from;
+            this.uname = fromOrdata.uname;
+            this.pwd = fromOrdata.pwd;
+            this.note = fromOrdata.note;
+            this.email = fromOrdata.email;
+            this.phone = fromOrdata.phone;
+        }
     }
     getHtml() {
         return `
@@ -62,14 +81,70 @@ class Password {
     }
     ;
 }
+function encrypt(data, key) {
+    let enc = new Password(data);
+    let index = 0;
+    function getKey() {
+        let dkey = key + key; // 重复主密码
+        let res = dkey.slice(index, index + key.length); // 取出主密码
+        index++;
+        return res;
+    }
+    let promiseList = [];
+    for (let v of Object.keys(data)) {
+        if (typeof data[v] === "string") {
+            let k = window.cryp.encrypt(data[v], getKey())
+                .then((res) => {
+                enc[v] = res;
+            })
+                .catch((err) => {
+                console.error("encrypt error: " + err);
+            });
+            promiseList.push(k);
+        }
+    }
+    return Promise.all(promiseList).then(() => enc);
+}
+function decrypt(data, key) {
+    let dec = new Password(data); // 复制当前对象的基本数据
+    let index = 0;
+    function getKey() {
+        let dkey = key + key; // 重复主密码
+        let res = dkey.slice(index, index + key.length); // 取出主密码
+        index++;
+        return res;
+    }
+    let promiseList = [];
+    for (let v of Object.keys(data)) {
+        if (typeof data[v] == "string") {
+            promiseList.push(window.cryp.decrypt(data[v], getKey())
+                .then((res) => {
+                dec[v] = res;
+            })
+                .catch((err) => {
+                console.error("decrypt error: " + err);
+            }));
+        }
+    }
+    return Promise.all(promiseList).then(() => dec);
+}
 let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
 const main = document.querySelector("#mainDiv"); // main界面
 let pwdList = []; // 密码列表
 let recentPwd = []; // 最近删除的密码列表
 let mainPwd = ""; // 主密码
+let isremember = false; // 是否记住密码
 // 一些工具函数
 function random(a, b) {
     return Math.floor(Math.random() * (b - a) + a);
+}
+function randstr(length) {
+    let res = "";
+    let chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?";
+    for (let i = 0; i < length; i++) {
+        res += chars[random(0, chars.length)];
+    }
+    return res;
 }
 function isFullWidthChar(c) {
     return c.charCodeAt(0) > 255;
@@ -86,11 +161,37 @@ function copyToClipboard(str) {
     return success;
 }
 function saveData() {
-    let data = JSON.stringify({
-        pwd: pwdList,
-        recent: recentPwd,
+    let salt = randstr(16);
+    window.cryp.pbkdf2(mainPwd, salt)
+        .then((enc) => __awaiter(this, void 0, void 0, function* () {
+        let pwdListUpdated = [...pwdList];
+        let recentPwdUpdated = [...recentPwd];
+        // 使用 for 循环配合 async/await 保证顺序
+        for (let index = 0; index < pwdList.length; index++) {
+            pwdListUpdated[index] = yield encrypt(pwdList[index], enc);
+        }
+        for (let index = 0; index < recentPwd.length; index++) {
+            recentPwdUpdated[index] = yield encrypt(recentPwd[index], enc);
+        }
+        window.cryp.pbkdf2(enc, salt)
+            .then((denc) => {
+            // 数据保存
+            let data = JSON.stringify({
+                pwd: pwdListUpdated,
+                recent: recentPwdUpdated,
+                mainPwd: denc,
+                salt: salt,
+                memory: isremember ? mainPwd : null,
+            });
+            window.fs.save("./data", data);
+        })
+            .catch((err) => {
+            console.error("encrypt error: " + err);
+        });
+    }))
+        .catch((err) => {
+        console.error("save data error: " + err);
     });
-    window.fs.save("./data", data);
 }
 // 渲染main界面
 function update(by = pwdList) {
@@ -180,12 +281,7 @@ function changePwd(by, index, isAppend = false) {
     const rd = document.querySelector("#random");
     rd === null || rd === void 0 ? void 0 : rd.addEventListener("click", () => {
         const pwd = document.querySelector("#pwd");
-        let str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+";
-        let res = "";
-        for (let i = 0; i < random(10, 16); i++) {
-            res += str[random(0, str.length - 1)];
-        }
-        pwd.value = res;
+        pwd.value = randstr(16);
         pwd.dispatchEvent(new Event("input"));
     });
     (_a = document.querySelector("#submit")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
@@ -386,12 +482,15 @@ function setting() {
     <div class="title">设置</div>
     <div class="form">
     <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
+    <div><label for="rememberPwd">记住密钥：</label><input type="checkbox" id="rememberPwd" ${isremember ? "checked" : ""}/></div>
     </div>
     <div class="action" id="save"><p>保存</p></div>
     <div class="action" id="cancel"><p>取消</p></div>
     `;
     (_a = document.querySelector("#save")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
         mainPwd = document.querySelector("#mainPwd").value;
+        isremember = document.querySelector("#rememberPwd").checked;
+        saveData();
         update();
     });
     (_b = document.querySelector("#cancel")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
@@ -400,13 +499,43 @@ function setting() {
 }
 window.fs.read("./data").then((data) => {
     let obj = JSON.parse(data);
-    for (let i = 0; i < obj.pwd.length; i++) {
-        pwdList.push(new Password(obj.pwd[i].from, obj.pwd[i].uname, obj.pwd[i].pwd, obj.pwd[i].note, obj.pwd[i].email, obj.pwd[i].phone));
+    if (obj.memory !== null && obj.memory !== undefined) {
+        let m = obj.memory;
+        isremember = true;
     }
-    for (let i = 0; i < obj.recent.length; i++) {
-        recentPwd.push(new Password(obj.recent[i].from, obj.recent[i].uname, obj.recent[i].pwd, obj.recent[i].note, obj.recent[i].email, obj.recent[i].phone));
+    else {
+        isremember = false;
+        main.innerHTML = `
+        <div class="title">请输入访问密钥</div>
+        <div class="form">
+        <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild"/></div>
+        <div><label for="rememberPwd">记住密钥：</label><input type="checkbox" id="rememberPwd"}/></div>
+        </div>
+        <div class="action" id="Yes"><p>确定</p></div>
+        `;
     }
-    update();
+    function enc() {
+        let promiseList = [];
+        obj.pwd.forEach((element) => {
+            promiseList.push((decrypt(new Password(element.from, element.uname, element.pwd, element.note, element.email, element.phone), mainPwd)
+                .then((pwd) => {
+                pwdList.push(pwd);
+            })
+                .catch((err) => {
+                console.log(err);
+            })));
+        });
+        obj.recent.forEach((element) => {
+            promiseList.push((decrypt(new Password(element.from, element.uname, element.pwd, element.note, element.email, element.phone), mainPwd)
+                .then((pwd) => {
+                recentPwd.push(pwd);
+            })
+                .catch((err) => {
+                console.log(err);
+            })));
+        });
+        Promise.all(promiseList).then(() => { update(); });
+    }
 }).catch((err) => {
     console.log(err);
     pwdList = [];

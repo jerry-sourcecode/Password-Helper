@@ -15,13 +15,22 @@ class Password{ // 密码类
     email: string; // 邮箱
     phone: string; // 电话
     note: string; // 备注
-    constructor(from: string, uname: string, pwd: string, note: string, email: string, phone: string){ // 构造函数
-        this.from = from;
-        this.uname = uname;
-        this.pwd = pwd;
-        this.note = note;
-        this.email = email;
-        this.phone = phone;
+    constructor(fromOrdata: string | Password = "", uname: string = "", pwd: string = "", note: string = "", email: string = "", phone: string = ""){ // 构造函数
+        if (typeof fromOrdata === "string") {
+            this.from = fromOrdata;
+            this.uname = uname;
+            this.pwd = pwd;
+            this.note = note;
+            this.email = email;
+            this.phone = phone;
+        } else {
+            this.from = fromOrdata.from;
+            this.uname = fromOrdata.uname;
+            this.pwd = fromOrdata.pwd;
+            this.note = fromOrdata.note;
+            this.email = fromOrdata.email;
+            this.phone = fromOrdata.phone;
+        }
     }
     getHtml(): string{ // 获取密码在main页面的html
         return `
@@ -65,18 +74,77 @@ class Password{ // 密码类
             ${this.email == ""?"":`<p>邮箱：${format(this.email)}</p>`}
             ${this.phone == ""?"":`<p>电话：${format(this.phone)}</p>`}
             ${this.note == ""?"":`<p>备注：${format(this.note, showNoteMaxLength)}</p>`}`
-        };
+    };
+}
+function encrypt(data: Password, key: string): Promise<Password>{ // 加密
+    let enc: Password = new Password(data);
+    let index : number = 0;
+    function getKey(): string{
+        let dkey: string = key + key; // 重复主密码
+        let res: string = dkey.slice(index, index + key.length); // 取出主密码
+        index++;
+        return res;
     }
+    let promiseList : Array<Promise<void>> = [];
+    for (let v of Object.keys(data) as (keyof Password)[]){
+        if (typeof data[v] === "string"){
+            let k = window.cryp.encrypt(data[v], getKey())
+            .then((res) => {
+                (enc as any)[v] = res;
+            })
+            .catch((err) => {
+                console.error("encrypt error: " + err);
+            })
+            promiseList.push(k);
+        }
+    }
+    return Promise.all(promiseList).then(() => enc);
+}
+function decrypt(data:Password, key: string): Promise<Password>{ // 解密
+    let dec = new Password(data); // 复制当前对象的基本数据
+
+    let index : number = 0;
+    function getKey(): string{
+        let dkey: string = key + key; // 重复主密码
+        let res: string = dkey.slice(index, index + key.length); // 取出主密码
+        index++;
+        return res;
+    }
+    
+    let promiseList : Array<Promise<void>> = [];
+    for (let v of Object.keys(data) as (keyof Password)[]){
+        if (typeof data[v] == "string"){
+            promiseList.push(window.cryp.decrypt(data[v], getKey())
+            .then((res) => {
+                (dec as any)[v] = res;
+            })
+            .catch((err) => {
+                console.error("decrypt error: " + err);
+            }));
+        }
+    }
+    return Promise.all(promiseList).then(() => dec);
+}
+    
 
 let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
 const main = document.querySelector("#mainDiv"); // main界面
 let pwdList : Array<Password> = []; // 密码列表
 let recentPwd : Array<Password> = []; // 最近删除的密码列表
 let mainPwd : string = ""; // 主密码
+let isremember : boolean = false; // 是否记住密码
 
 // 一些工具函数
 function random(a: number, b: number): number{ // 生成[a, b]之间的随机数
     return Math.floor(Math.random() * (b - a) + a);
+}
+function randstr(length: number): string{ // 生成随机字符串
+    let res: string = "";
+    let chars: string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?";
+    for (let i = 0; i < length; i++){
+        res += chars[random(0, chars.length)];
+    }
+    return res;
 }
 function isFullWidthChar(c: string): boolean{ // 判断是否是全角字符
     return c.charCodeAt(0) > 255;
@@ -93,12 +161,41 @@ function copyToClipboard(str: string): boolean{ // 复制到剪贴板
     return success;
 }
 function saveData(): void{ // 保存数据
-    let data: string = JSON.stringify({
-        pwd: pwdList,
-        recent: recentPwd,
-    });
-    window.fs.save("./data", data);
+    let salt: string = randstr(16);
+    window.cryp.pbkdf2(mainPwd, salt)
+    .then(async (enc) => {
+        let pwdListUpdated = [...pwdList];
+        let recentPwdUpdated = [...recentPwd];
+
+        // 使用 for 循环配合 async/await 保证顺序
+        for (let index = 0; index < pwdList.length; index++) {
+            pwdListUpdated[index] = await encrypt(pwdList[index], enc);
+        }
+        for (let index = 0; index < recentPwd.length; index++) {
+            recentPwdUpdated[index] = await encrypt(recentPwd[index], enc);
+        }
+
+        window.cryp.pbkdf2(enc, salt)
+        .then((denc) => {
+            // 数据保存
+            let data = JSON.stringify({
+                pwd: pwdListUpdated,
+                recent: recentPwdUpdated,
+                mainPwd: denc,
+                salt: salt,
+                memory: isremember? mainPwd : null,
+            });
+            window.fs.save("./data", data);
+        })
+        .catch((err) => {
+            console.error("encrypt error: " + err);
+        });
+    })
+    .catch((err) => {
+        console.error("save data error: " + err);
+    })
 }
+
 // 渲染main界面
 function update(by: Array<Password> = pwdList) : void{
     let inner : string = `<div class="title">密码列表</div>
@@ -185,12 +282,7 @@ function changePwd(by: Array<Password>, index: number, isAppend : boolean = fals
     const rd = document.querySelector("#random");
     rd?.addEventListener("click", () => {
         const pwd = document.querySelector("#pwd") as HTMLInputElement;
-        let str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+";
-        let res = "";
-        for (let i = 0; i < random(10, 16); i++){
-            res += str[random(0, str.length - 1)];
-        }
-        pwd.value = res;
+        pwd.value = randstr(16);
         pwd.dispatchEvent(new Event("input"));
     });
     document.querySelector("#submit")?.addEventListener("click", () => {
@@ -384,12 +476,15 @@ function setting() : void {
     <div class="title">设置</div>
     <div class="form">
     <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
+    <div><label for="rememberPwd">记住密钥：</label><input type="checkbox" id="rememberPwd" ${isremember ? "checked" : ""}/></div>
     </div>
     <div class="action" id="save"><p>保存</p></div>
     <div class="action" id="cancel"><p>取消</p></div>
     `;
     document.querySelector("#save")?.addEventListener("click", () => {
         mainPwd = (document.querySelector("#mainPwd") as HTMLInputElement).value;
+        isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
+        saveData();
         update();
     })
     document.querySelector("#cancel")?.addEventListener("click", () => {
@@ -399,13 +494,44 @@ function setting() : void {
 
 window.fs.read("./data").then((data) => {
     let obj = JSON.parse(data);
-    for(let i = 0; i < obj.pwd.length; i++){
-        pwdList.push(new Password(obj.pwd[i].from, obj.pwd[i].uname, obj.pwd[i].pwd, obj.pwd[i].note, obj.pwd[i].email, obj.pwd[i].phone));
+
+    if (obj.memory !== null && obj.memory !== undefined){
+        let m = obj.memory;
+        isremember = true;
+    } else {
+        isremember = false;
+        main!.innerHTML = `
+        <div class="title">请输入访问密钥</div>
+        <div class="form">
+        <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild"/></div>
+        <div><label for="rememberPwd">记住密钥：</label><input type="checkbox" id="rememberPwd"}/></div>
+        </div>
+        <div class="action" id="Yes"><p>确定</p></div>
+        `;
     }
-    for(let i = 0; i < obj.recent.length; i++){
-        recentPwd.push(new Password(obj.recent[i].from, obj.recent[i].uname, obj.recent[i].pwd, obj.recent[i].note, obj.recent[i].email, obj.recent[i].phone));
+
+    function enc(){
+        let promiseList: Array<Promise<void>> = [];
+        obj.pwd.forEach((element: any) => {
+            promiseList.push((decrypt(new Password(element.from, element.uname, element.pwd, element.note, element.email, element.phone), mainPwd)
+            .then((pwd) => {
+                pwdList.push(pwd);
+            })
+            .catch((err) => {
+                console.log(err);
+            })));
+        });
+        obj.recent.forEach((element: any) => {
+            promiseList.push((decrypt(new Password(element.from, element.uname, element.pwd, element.note, element.email, element.phone), mainPwd)
+            .then((pwd) => {
+                recentPwd.push(pwd);
+            })
+            .catch((err) => {
+                console.log(err);
+            })));
+        });
+        Promise.all(promiseList).then(() => {update();});
     }
-    update();
 }).catch((err) => {
     console.log(err);
     pwdList = [];
