@@ -8,6 +8,11 @@ enum Page{ // 页面枚举
     Recent, // 最近删除页面
 }
 
+enum Type{ // 类型枚举
+    Folder, // 文件夹
+    Password, // 密码
+}
+
 class Password{ // 密码类
     from: string; // 来源
     uname: string // 用户名
@@ -15,7 +20,10 @@ class Password{ // 密码类
     email: string; // 邮箱
     phone: string; // 电话
     note: string; // 备注
-    constructor(fromOrdata: string | Password = "", uname: string = "", pwd: string = "", note: string = "", email: string = "", phone: string = ""){ // 构造函数
+    dir: Folder; // 文件夹
+    type: Type = Type.Password; // 类型
+    constructor(fromOrdata: string | Password = "", uname: string = "", pwd: string = "", note: string = "", email: string = "", phone: string = "", dir: Folder = new Folder("")){ // 构造函数
+        this.type = Type.Password;
         if (typeof fromOrdata === "string") {
             this.from = fromOrdata;
             this.uname = uname;
@@ -23,6 +31,7 @@ class Password{ // 密码类
             this.note = note;
             this.email = email;
             this.phone = phone;
+            this.dir = new Folder(dir.name, dir.parent);
         } else {
             this.from = fromOrdata.from;
             this.uname = fromOrdata.uname;
@@ -30,26 +39,27 @@ class Password{ // 密码类
             this.note = fromOrdata.note;
             this.email = fromOrdata.email;
             this.phone = fromOrdata.phone;
+            this.dir = new Folder(fromOrdata.dir.name, fromOrdata.dir.parent);
         }
     }
-    getHtml(): string{ // 获取密码在main页面的html
+    getHtml(id: number): string{ // 获取密码在main页面的html
         return `
-        <div class="info">
+        <div class="info" id="pwd${id}" draggable="true">
             ${this.getBaseHtml()}
             <div class="tool">
-                <img class="icon" id="edit" style="margin-right: 8px;" src="./resources/edit.png" title="编辑">
-                <img class="icon" id="delete" src="./resources/delete.png" title="删除">
+                <img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="编辑">
+                <img class="icon" id="pwd${id}-delete" src="./resources/delete.png" title="删除">
             </div>
         </div>
         `;
     }
-    getHtmlRecent(): string{ // 获取密码在recent页面的html
+    getHtmlRecent(id: number): string{ // 获取密码在recent页面的html
         return `
-        <div class="info">
+        <div class="info" id="recent${id}" draggable="true">
             ${this.getBaseHtml()}
             <div class="tool">
-                <img class="icon" id="recover" style="margin-right: 8px;" src="./resources/recovery.png" title="恢复">
-                <img class="icon" id="delete" src="./resources/delete.png" title="删除">
+                <img class="icon" id="recent${id}-recover" style="margin-right: 8px;" src="./resources/recovery.png" title="恢复">
+                <img class="icon" id="recent${id}-delete" src="./resources/delete.png" title="删除">
             </div>
         </div>
         `;
@@ -76,8 +86,68 @@ class Password{ // 密码类
             ${this.note == ""?"":`<p>备注：${format(this.note, showNoteMaxLength)}</p>`}`
     };
 }
-function encrypt(data: Password, key: string): Password{ // 加密
-    let enc: Password = new Password(data);
+
+class Folder {
+    name: string;
+    parent: string;
+    type: Type = Type.Folder;
+    /*
+    name: 文件夹名称
+    parent: 文件夹路径
+    parent的格式如下：
+    ":/a/"表示在主文件夹下的a文件夹内
+    ":/"表示在主文件夹下
+    */
+    constructor(nameOrClass: string | Folder, parent: string = ":/"){
+        this.type = Type.Folder;
+        if (typeof nameOrClass === "string"){
+            this.name = nameOrClass;
+            this.parent = parent;
+        } else {
+            this.name = nameOrClass.name;
+            this.parent = nameOrClass.parent;
+        }
+    }
+    stringify(): string{
+        return this.parent + this.name;
+    }
+    isMain(): boolean{
+        return this.stringify() == ":/";
+    }
+    static root(): Folder{
+        return new Folder("", ":/");
+    }
+    isSame(folder: Folder): boolean{
+        return this.stringify() == folder.stringify();
+    }
+    getHtml(id: number): string{ // 获取密码在main页面的html
+        return `
+        <div class="info" id="folder${id}" draggable="true">
+            <p>${this.name}</p>
+            <div class="tool">
+                <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="重命名">
+                <img class="icon" id="folder${id}-delete" src="./resources/delete.png" title="删除">
+            </div>
+        </div>
+        `;
+    }
+    getHtmlRecent(id: number): string{ // 获取密码在recent页面的html
+        return `
+        <div class="info" id="recent${id}" draggable="true">
+            <p>${this.name}</p>
+            <div class="tool">
+                <img class="icon" id="recent${id}-recover" style="margin-right: 8px;" src="./resources/recovery.png" title="恢复">
+                <img class="icon" id="recent${id}-delete" src="./resources/delete.png" title="删除">
+            </div>
+        </div>
+        `;
+    }
+}
+
+function encrypt(data: Password | Folder, key: string): Password | Folder{ // 加密
+    let enc: Password | Folder;
+    if (data instanceof Password) enc = new Password(data);
+    else enc = new Folder(data);
     let index : number = 0;
     function getKey(): string{
         let dkey: string = key + key; // 重复主密码
@@ -86,15 +156,17 @@ function encrypt(data: Password, key: string): Password{ // 加密
         if (index >= key.length) index = 0;
         return res;
     }
-    for (let v of Object.keys(data) as (keyof Password)[]){
+    for (let v of Object.keys(data) as (keyof (Password | Folder))[]){
         if (typeof data[v] === "string"){
             (enc as any)[v] = window.cryp.encrypt(data[v], getKey())
         }
     }
     return enc;
 }
-function decrypt(data:Password, key: string): Password{ // 解密
-    let dec = new Password(data); // 复制当前对象的基本数据
+function decrypt(data:Password | Folder, key: string): Password | Folder{ // 解密
+    let dec: Password | Folder;
+    if (data instanceof Password) dec = new Password(data);
+    else dec = new Folder(data);
     let index : number = 0;
     function getKey(): string{
         let dkey: string = key + key; // 重复主密码
@@ -103,7 +175,7 @@ function decrypt(data:Password, key: string): Password{ // 解密
         if (index >= key.length) index = 0;
         return res;
     }
-    for (let v of Object.keys(data) as (keyof Password)[]){
+    for (let v of Object.keys(data) as (keyof (Password | Folder))[]){
         if (typeof data[v] == "string"){
             (dec as any)[v] = window.cryp.decrypt(data[v], getKey());
         }
@@ -115,7 +187,8 @@ function decrypt(data:Password, key: string): Password{ // 解密
 let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
 const main = document.querySelector("#mainDiv"); // main界面
 let pwdList : Array<Password> = []; // 密码列表
-let recentPwd : Array<Password> = []; // 最近删除的密码列表
+let recentItem : Array<Password | Folder> = []; // 最近删除的密码列表
+let folderList : Array<Folder> = []; // 文件夹列表
 let mainPwd : string = ""; // 主密码
 let isremember : boolean = false; // 是否记住密码
 
@@ -148,21 +221,26 @@ function copyToClipboard(str: string): boolean{ // 复制到剪贴板
 function saveData(): void{ // 保存数据
     let salt: string = randstr(16);
     let enc = window.cryp.pbkdf2(mainPwd, salt)
-    let pwdListUpdated = [...pwdList];
-    let recentPwdUpdated = [...recentPwd];
+    let pwdListUpdated : Array<Password> = []
+    let folderListUpdated : Array<Folder> = [];
+    let recentItemUpdated : Array<Password | Folder> = [];
 
     for (let index = 0; index < pwdList.length; index++) {
-        pwdListUpdated[index] = encrypt(pwdList[index], enc);
+        pwdListUpdated.push(encrypt(pwdList[index], enc) as Password);
     }
-    for (let index = 0; index < recentPwd.length; index++) {
-        recentPwdUpdated[index] = encrypt(recentPwd[index], enc);
+    for (let index = 0; index < folderList.length; index++) {
+        folderListUpdated.push(encrypt(folderList[index], enc) as Folder);
+    }
+    for (let index = 0; index < recentItem.length; index++) {
+        recentItemUpdated.push(encrypt(recentItem[index], enc));
     }
 
     // 数据保存
     let data = JSON.stringify({
         version: "1.0",
         pwd: pwdListUpdated,
-        recent: recentPwdUpdated,
+        folder: folderListUpdated,
+        recent: recentItemUpdated,
         mainPwd: window.cryp.pbkdf2(enc, salt),
         salt: salt,
         memory: isremember? mainPwd : null,
@@ -172,14 +250,24 @@ function saveData(): void{ // 保存数据
 }
 
 // 渲染main界面
-function update(by: Array<Password> = pwdList) : void{
+function update(by: Array<Password> = pwdList, by_dirList: Array<Folder> = folderList, dir: Folder = Folder.root()) : void{
     let inner : string = `<div class="title">密码列表</div>
-    <div style="position: absolute; top: 15px; right: 45px;" id="setting"><img src="../pages/resources/setting.png" title="设置" class="icon" style="width: 25px;height: 25px;"></div>
+    <div style="position: absolute; top: 15px; right: 45px;" id="MainToolBar">
+        <img src="../pages/resources/setting.png" title="设置" class="icon" style="width: 25px;height: 25px;" id="setting">
+        <img src="../pages/resources/newFolder.png" title="新建文件夹" class="icon" style="width: 25px;height: 25px;" id="newFolder">
+    </div>
     `;
-    for (let i = 0; i < by.length; i++){
-        inner += by[i].getHtml();
+
+    let has : boolean = false;
+    for (let i = 0; i < folderList.length; i++){
+        if (folderList[i].parent == dir.parent) inner += folderList[i].getHtml(i);
+        has = true;
     }
-    if (by.length == 0){
+    for (let i = 0; i < by.length; i++){
+        if (by[i].dir.isSame(dir)) inner += by[i].getHtml(i);
+        has = true;
+    }
+    if (!has){
         inner += `<p>暂无密码</p>`;
     }
     inner += `
@@ -192,30 +280,81 @@ function update(by: Array<Password> = pwdList) : void{
     document.querySelector("#setting")?.addEventListener("click", () => {
         setting();
     })
+    document.querySelector("#newFolder")?.addEventListener("click", () => {
+        let k : Set<number> = new Set()
+        for (let i = 0; i < folderList.length; i++){
+            if (folderList[i].parent == dir.parent){
+                if(folderList[i].name == "新建文件夹") k.add(0);
+                if (folderList[i].name.length >= 5 && folderList[i].name.slice(0, 5) == "新建文件夹"){
+                    let can: boolean = true;
+                    for(let j = 5; j < folderList[i].name.length; j++){
+                        if (isNaN(Number(folderList[i].name[j]))){
+                            can = false;
+                            break;
+                        }
+                    }
+                    if (can){
+                        k.add(Number(folderList[i].name.slice(5)));
+                    }
+                }
+            }
+        }
+        let lowerBound = 0;
+        while(true){
+            if (!k.has(lowerBound)){
+                break;
+            }
+            lowerBound++;
+        }
+        folderList.push(new Folder(`新建文件夹${lowerBound == 0 ? "" : lowerBound}`, ":/"));
+        update();
+    });
     addBtn = document.querySelector("#addPwd");
     addBtn?.addEventListener("click", () => {
         addPwd();
     });
-    let editBtns = document.querySelectorAll("#edit");
-    for(let i = 0; i < editBtns.length; i++){
-        editBtns[i].addEventListener("click", (e) => {
+    for(let i = 0; i < pwdList.length; i++){
+        const editBtn = document.querySelector(`#pwd${i}-edit`);
+        editBtn!.addEventListener("click", (e) => {
             e?.stopPropagation();
             changePwd(by, i);
         });
     }
-    let deleteBtns = document.querySelectorAll("#delete");
-    for(let i = 0; i < deleteBtns.length; i++){
-        deleteBtns[i].addEventListener("click", (e) => {
+    for(let i = 0; i < pwdList.length; i++){
+        const deleteBtn = document.querySelector(`#pwd${i}-delete`);
+        deleteBtn!.addEventListener("click", (e) => {
             e?.stopPropagation();
             deletePwd(i);
         });
     }
-    let infos = document.querySelectorAll(".info");
-    for(let i = 0; i < infos.length; i++){
-        if (infos[i].id == "recent"){
-            continue;
-        }
-        infos[i].addEventListener("click", () => {
+    for(let i = 0; i < folderList.length; i++){
+        const feditBtn = document.querySelector(`#folder${i}-edit`);
+        feditBtn!.addEventListener("click", (e) => {
+            e?.stopPropagation();
+            const div = document.querySelector(`#folder${i}`);
+            div!.innerHTML = `<input type="text" value="${folderList[i].name}" id="folder${i}-input">`;
+            const input = document.querySelector(`#folder${i}-input`) as HTMLInputElement;
+            input.focus();
+            input.select();
+            input!.addEventListener("blur", () => {
+                folderList[i].name = input!.value;
+                div!.outerHTML = folderList[i].getHtml(i);
+                update();
+            });
+        });
+    }
+    for(let i = 0; i < folderList.length; i++){
+        const fdeleteBtn = document.querySelector(`#folder${i}-delete`);
+        fdeleteBtn!.addEventListener("click", (e) => {
+            e?.stopPropagation();
+            recentItem.push(folderList[i]);
+            folderList.splice(i, 1);
+            update();
+        });
+    }
+    for(let i = 0; i < pwdList.length; i++){
+        const info = document.querySelector(`#pwd${i}`);
+        info!.addEventListener("click", () => {
             showPwd(pwdList, i);
         });
     }
@@ -271,7 +410,7 @@ function changePwd(by: Array<Password>, index: number, isAppend : boolean = fals
             alert("请填写完整信息");
             return;
         }
-        by[index] = new Password(name, uname, pwd, note, email, phone);
+        by[index] = new Password(name, uname, pwd, note, email, phone, new Folder(""));
         saveData()
         update();
     });
@@ -285,22 +424,23 @@ function changePwd(by: Array<Password>, index: number, isAppend : boolean = fals
 
 function deletePwd(index: number) : void{
     // 删除密码
-    recentPwd.unshift(new Password(pwdList[index].from, pwdList[index].uname, pwdList[index].pwd, pwdList[index].note, pwdList[index].email, pwdList[index].phone));
+    recentItem.unshift(new Password(pwdList[index]));
     pwdList.splice(index, 1);
     saveData();
     update();
 }
 
-function deleteRecentPwd(index: number) : void{
+function deleterecentItem(index: number) : void{
     // 删除最近删除的密码
-    recentPwd.splice(index, 1);
+    recentItem.splice(index, 1);
     saveData();
 }
 
 function recoverPwd(index: number) : void{
     // 恢复最近删除的密码
-    pwdList.push(recentPwd[index]);
-    recentPwd.splice(index, 1);
+    if (recentItem[index] instanceof Password) pwdList.push(recentItem[index]);
+    else folderList.push(recentItem[index]);
+    recentItem.splice(index, 1);
     saveData();
     update();
 }
@@ -308,7 +448,7 @@ function recoverPwd(index: number) : void{
 function addPwd() : void{
     // 添加密码
     let tgt : number = pwdList.length;
-    pwdList.push(new Password("", "", "", "", "", ""));
+    pwdList.push(new Password("", "", "", "", "", "", new Folder("")));
     changePwd(pwdList, tgt, true);
 }
 
@@ -403,41 +543,42 @@ function showPwd(by: Array<Password>, index: number, from : Page = Page.Main) : 
 function showRecent() : void{
     // 显示最近删除的密码
     let inner : string = `<div class="title">最近删除</div>`;
-    for (let i = 0; i < recentPwd.length; i++){
-        inner += recentPwd[i].getHtmlRecent();
+    for (let i = 0; i < recentItem.length; i++){
+        inner += recentItem[i].getHtmlRecent(i);
     }
-    if (recentPwd.length == 0){
+    if (recentItem.length == 0){
         inner += `<p>暂无删除密码</p>`;
     }
     inner += `
     <div class="action" id="back"><p>返回</p></div>
     `;
     main!.innerHTML = inner;
-    let recoverBtns = document.querySelectorAll("#recover");
-    for(let i = 0; i < recoverBtns.length; i++){
-        recoverBtns[i].addEventListener("click", (e) => {
+    for(let i = 0; i < recentItem.length; i++){
+        const recoverBtn = document.querySelector(`#recent${i}-recover`);
+        recoverBtn!.addEventListener("click", (e) => {
             e?.stopPropagation();
             recoverPwd(i);
             showRecent();
         });
     }
-    let deleteBtns = document.querySelectorAll("#delete");
-    for(let i = 0; i < deleteBtns.length; i++){
-        deleteBtns[i].addEventListener("click", (e) => {
+
+    for(let i = 0; i < recentItem.length; i++){
+        const deleteBtn = document.querySelector(`#recent${i}-delete`);
+        deleteBtn!.addEventListener("click", (e) => {
             e?.stopPropagation();
             let result = window.msg.warning("警告", "此操作不可撤销，你确定要永久删除吗？", ["确定", "取消"]);
             result.then((res) => {
                 if (res == 0){
-                    deleteRecentPwd(i);
+                    deleterecentItem(i);
                     showRecent();
                 }
             })
         });
     }
-    let infos = document.querySelectorAll(".info");
-    for(let i = 0; i < infos.length; i++){
-        infos[i].addEventListener("click", () => {
-            showPwd(recentPwd, i, Page.Recent);
+    for(let i = 0; i < recentItem.length; i++){
+        const info = document.querySelector(`#recent${i}`);
+        info!.addEventListener("click", () => {
+            if (recentItem[i] instanceof Password) showPwd(<Array<Password>>recentItem, i, Page.Recent);
         });
     }
     document.querySelector("#back")?.addEventListener("click", () => {
@@ -508,16 +649,20 @@ window.fs.read("./data").then((data) => {
 
     function enc(key: string) : void{
         obj.pwd.forEach((element: any) => {
-            pwdList.push(decrypt(new Password(element.from, element.uname, element.pwd, element.note, element.email, element.phone), key));
+            pwdList.push(<Password>decrypt(new Password(element), key));
         });
+        obj.folder.forEach((element: any) => {
+            folderList.push(<Folder>decrypt(new Folder(element), key));
+        })
         obj.recent.forEach((element: any) => {
-            recentPwd.push(decrypt(new Password(element.from, element.uname, element.pwd, element.note, element.email, element.phone), key));
+            if (element.type == Type.Password) recentItem.push(decrypt(new Password(element), key));
+            else recentItem.push(decrypt(new Folder(element), key));
         });
         update();
     }
 }).catch((err) => {
     console.log(err);
     pwdList = [];
-    recentPwd = [];
+    recentItem = [];
     update();
 });
