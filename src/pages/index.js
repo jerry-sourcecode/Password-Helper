@@ -1,20 +1,14 @@
 "use strict";
 const showNoteMaxLength = 152; // 在main页面显示备注的最大长度
 const showOtherMaxLength = 60; // 在main页面显示来源、用户名、密码的最大长度
-var Page;
-(function (Page) {
-    Page[Page["Main"] = 0] = "Main";
-    Page[Page["Change"] = 1] = "Change";
-    Page[Page["Show"] = 2] = "Show";
-    Page[Page["Recent"] = 3] = "Recent";
-})(Page || (Page = {}));
+const showPathMaxLength = 65; // 在main页面显示路径的最大长度
 var Type;
 (function (Type) {
     Type[Type["Folder"] = 0] = "Folder";
     Type[Type["Password"] = 1] = "Password";
 })(Type || (Type = {}));
 class Password {
-    constructor(fromOrdata = "", uname = "", pwd = "", note = "", email = "", phone = "", dir = new Folder("")) {
+    constructor(fromOrdata = "", uname = "", pwd = "", note = "", email = "", phone = "", dir = Folder.root()) {
         this.type = Type.Password; // 类型
         this.type = Type.Password;
         if (typeof fromOrdata === "string") {
@@ -58,28 +52,43 @@ class Password {
         </div>
         `;
     }
-    getBaseHtml() {
-        function format(str, max = showOtherMaxLength) {
-            if (str.length == 0) {
-                return "暂无";
+    static format(str, max = showOtherMaxLength, OmitWhere = "back") {
+        if (str.length == 0) {
+            return "暂无";
+        }
+        let left = max;
+        if (OmitWhere == "front") {
+            for (let i = str.length - 1; i >= 0; i--) {
+                left -= isFullWidthChar(str[i]) ? 2 : 1;
+                if (left < 0) {
+                    return "..." + str.slice(i + 1);
+                }
             }
-            let left = max;
+        }
+        else {
             for (let i = 0; i < str.length; i++) {
                 left -= isFullWidthChar(str[i]) ? 2 : 1;
                 if (left < 0) {
                     return str.slice(0, i) + "...";
                 }
             }
-            return str;
         }
-        return `<p>来源：${format(this.from)}</p>
-            <p>用户名：${format(this.uname)}</p>
-            <p>密码：${format(this.pwd)}</p>
-            ${this.email == "" ? "" : `<p>邮箱：${format(this.email)}</p>`}
-            ${this.phone == "" ? "" : `<p>电话：${format(this.phone)}</p>`}
-            ${this.note == "" ? "" : `<p>备注：${format(this.note, showNoteMaxLength)}</p>`}`;
+        return str;
+    }
+    getBaseHtml() {
+        return `<p>来源：${Password.format(this.from)}</p>
+            <p>用户名：${Password.format(this.uname)}</p>
+            <p>密码：${Password.format(this.pwd)}</p>
+            ${this.email == "" ? "" : `<p>邮箱：${Password.format(this.email)}</p>`}
+            ${this.phone == "" ? "" : `<p>电话：${Password.format(this.phone)}</p>`}
+            ${this.note == "" ? "" : `<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}`;
     }
     ;
+    isin(folder) {
+        // 检查当前密码是否在folder或folder的子孙目录的目录下
+        const f = folder.stringify();
+        return f == this.dir.stringify().slice(0, f.length);
+    }
 }
 class Folder {
     /*
@@ -87,9 +96,11 @@ class Folder {
     parent: 文件夹路径
     parent的格式如下：
     ":/a/"表示在主文件夹下的a文件夹内
-    ":/"表示在主文件夹下
+    ""表示在主文件夹下
+
+    特别的，主文件夹的name为":"，parent为""，在回收站中的文件name为"~"，parent为""
     */
-    constructor(nameOrClass, parent = ":/") {
+    constructor(nameOrClass, parent = ":") {
         this.type = Type.Folder;
         this.type = Type.Folder;
         if (typeof nameOrClass === "string") {
@@ -102,16 +113,36 @@ class Folder {
         }
     }
     stringify() {
-        return this.parent + this.name;
+        return this.parent + this.name + "/";
     }
-    isMain() {
-        return this.stringify() == ":/";
+    isRoot() {
+        return Folder.root().isSame(this);
     }
     static root() {
-        return new Folder("", ":/");
+        return new Folder(":", "");
+    }
+    static bin() {
+        return new Folder("~", "");
+    }
+    static fromString(str) {
+        if (str[str.length - 1] != "/")
+            str += "/";
+        const arr = str.split("/");
+        let k = arr.slice(0, arr.length - 2).join("/");
+        return new Folder(arr[arr.length - 2], k == "" ? "" : k + "/");
     }
     isSame(folder) {
         return this.stringify() == folder.stringify();
+    }
+    setParent(parent) {
+        this.parent = parent.stringify();
+    }
+    // 判断item是否包含在当前文件夹中
+    isInclude(item) {
+        if (item instanceof Folder)
+            return item.parent == this.stringify();
+        else
+            return item.dir.isSame(this);
     }
     getHtml(id) {
         return `
@@ -134,6 +165,10 @@ class Folder {
             </div>
         </div>
         `;
+    }
+    isin(folder) {
+        const f = folder.stringify();
+        return f == this.parent.slice(0, f.length);
     }
 }
 function encrypt(data, key) {
@@ -187,6 +222,8 @@ let recentItem = []; // 最近删除的密码列表
 let folderList = []; // 文件夹列表
 let mainPwd = ""; // 主密码
 let isremember = false; // 是否记住密码
+let folderIsEditing = false; // 是否正在编辑文件夹
+let currentFolder = Folder.root();
 // 一些工具函数
 function random(a, b) {
     return Math.floor(Math.random() * (b - a) + a);
@@ -212,6 +249,12 @@ function copyToClipboard(str) {
         success = false;
     });
     return success;
+}
+function getScroll() {
+    return {
+        top: main.scrollTop || main.scrollTop,
+        left: main.scrollLeft || main.scrollLeft
+    };
 }
 function saveData() {
     let salt = randstr(16);
@@ -241,10 +284,30 @@ function saveData() {
     });
     window.fs.save("./data", data);
 }
+function mkdir(dir) {
+    let parent = Folder.fromString(dir.parent);
+    if (folderList.findIndex(v => v.isSame(dir)) != -1 || dir.isSame(Folder.root())) {
+        return; // 文件夹已存在
+    }
+    if (folderList.findIndex(v => v.isSame(parent)) == -1) {
+        mkdir(parent);
+    }
+    folderList.push(dir);
+    saveData();
+}
 // 渲染main界面
-function update(by = pwdList, by_dirList = folderList, dir = Folder.root()) {
+function update(dir) {
     var _a, _b, _c;
+    let topScroll;
+    if (dir.isSame(currentFolder)) {
+        topScroll = getScroll();
+    }
+    else {
+        topScroll = { top: 0, left: 0 };
+    }
+    currentFolder = dir;
     let inner = `<div class="title">密码列表</div>
+    ${dir.isSame(Folder.root()) ? "" : `<div class="subtitle">当前位置：${Password.format(dir.stringify(), showPathMaxLength, "front")}</div>`}
     <div style="position: absolute; top: 15px; right: 45px;" id="MainToolBar">
         <img src="../pages/resources/setting.png" title="设置" class="icon" style="width: 25px;height: 25px;" id="setting">
         <img src="../pages/resources/newFolder.png" title="新建文件夹" class="icon" style="width: 25px;height: 25px;" id="newFolder">
@@ -252,14 +315,16 @@ function update(by = pwdList, by_dirList = folderList, dir = Folder.root()) {
     `;
     let has = false;
     for (let i = 0; i < folderList.length; i++) {
-        if (folderList[i].parent == dir.parent)
+        if (dir.isInclude(folderList[i])) {
             inner += folderList[i].getHtml(i);
-        has = true;
+            has = true;
+        }
     }
-    for (let i = 0; i < by.length; i++) {
-        if (by[i].dir.isSame(dir))
-            inner += by[i].getHtml(i);
-        has = true;
+    for (let i = 0; i < pwdList.length; i++) {
+        if (dir.isInclude(pwdList[i])) {
+            inner += pwdList[i].getHtml(i);
+            has = true;
+        }
     }
     if (!has) {
         inner += `<p>暂无密码</p>`;
@@ -277,7 +342,7 @@ function update(by = pwdList, by_dirList = folderList, dir = Folder.root()) {
     (_b = document.querySelector("#newFolder")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
         let k = new Set();
         for (let i = 0; i < folderList.length; i++) {
-            if (folderList[i].parent == dir.parent) {
+            if (dir.isInclude(folderList[i])) {
                 if (folderList[i].name == "新建文件夹")
                     k.add(0);
                 if (folderList[i].name.length >= 5 && folderList[i].name.slice(0, 5) == "新建文件夹") {
@@ -301,64 +366,163 @@ function update(by = pwdList, by_dirList = folderList, dir = Folder.root()) {
             }
             lowerBound++;
         }
-        folderList.push(new Folder(`新建文件夹${lowerBound == 0 ? "" : lowerBound}`, ":/"));
-        update();
+        mkdir(new Folder(`新建文件夹${lowerBound == 0 ? "" : lowerBound}`, dir.stringify()));
+        update(dir);
     });
     addBtn = document.querySelector("#addPwd");
     addBtn === null || addBtn === void 0 ? void 0 : addBtn.addEventListener("click", () => {
-        addPwd();
+        addPwd(dir);
     });
     for (let i = 0; i < pwdList.length; i++) {
+        if (!dir.isInclude(pwdList[i]))
+            continue;
         const editBtn = document.querySelector(`#pwd${i}-edit`);
         editBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
-            changePwd(by, i);
+            changePwd(pwdList, i, dir);
         });
     }
     for (let i = 0; i < pwdList.length; i++) {
+        if (!dir.isInclude(pwdList[i]))
+            continue;
         const deleteBtn = document.querySelector(`#pwd${i}-delete`);
         deleteBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
-            deletePwd(i);
+            deleteItem(Type.Password, i, dir);
         });
     }
     for (let i = 0; i < folderList.length; i++) {
+        if (!dir.isInclude(folderList[i]))
+            continue;
         const feditBtn = document.querySelector(`#folder${i}-edit`);
         feditBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
             const div = document.querySelector(`#folder${i}`);
             div.innerHTML = `<input type="text" value="${folderList[i].name}" id="folder${i}-input">`;
             const input = document.querySelector(`#folder${i}-input`);
+            folderIsEditing = true;
             input.focus();
             input.select();
+            input.addEventListener("keydown", (e) => {
+                if (e.key == "Enter" && !e.isComposing) {
+                    input.blur();
+                }
+            });
             input.addEventListener("blur", () => {
-                folderList[i].name = input.value;
-                div.outerHTML = folderList[i].getHtml(i);
-                update();
+                let newFolder = new Folder(folderList[i]);
+                newFolder.name = input.value;
+                folderIsEditing = false;
+                if (folderList.findIndex(v => (v.isSame(newFolder))) != -1 && !newFolder.isSame(folderList[i])) {
+                    window.msg.warning("警告", "文件夹名已存在");
+                    saveData();
+                    update(dir);
+                    return;
+                }
+                for (let j = 0; j < pwdList.length; j++) {
+                    if (folderList[i].isInclude(pwdList[j])) {
+                        pwdList[j].dir = newFolder;
+                    }
+                }
+                for (let j = 0; j < folderList.length; j++) {
+                    if (folderList[i].isInclude(folderList[j])) {
+                        folderList[j].setParent(newFolder);
+                    }
+                }
+                folderList[i] = new Folder(newFolder);
+                saveData();
+                update(dir);
             });
         });
     }
     for (let i = 0; i < folderList.length; i++) {
+        if (!dir.isInclude(folderList[i]))
+            continue;
         const fdeleteBtn = document.querySelector(`#folder${i}-delete`);
         fdeleteBtn.addEventListener("click", (e) => {
+            if (folderIsEditing)
+                return;
             e === null || e === void 0 ? void 0 : e.stopPropagation();
-            recentItem.push(folderList[i]);
-            folderList.splice(i, 1);
-            update();
+            deleteItem(Type.Folder, i, dir);
+            update(dir);
         });
     }
     for (let i = 0; i < pwdList.length; i++) {
+        if (!dir.isInclude(pwdList[i]))
+            continue;
         const info = document.querySelector(`#pwd${i}`);
         info.addEventListener("click", () => {
-            showPwd(pwdList, i);
+            if (folderIsEditing)
+                return;
+            showPwd(pwdList, i, dir);
+        });
+    }
+    for (let i = 0; i < folderList.length; i++) {
+        if (!dir.isInclude(folderList[i]))
+            continue;
+        const folder = document.querySelector(`#folder${i}`);
+        folder.addEventListener("click", () => {
+            if (folderIsEditing)
+                return;
+            update(folderList[i]);
         });
     }
     (_c = document.querySelector("#recent")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
+        if (folderIsEditing)
+            return;
         showRecent();
     });
+    for (let i = 0; i < pwdList.length; i++) {
+        if (!dir.isInclude(pwdList[i]))
+            continue;
+        const pwd = document.querySelector(`#pwd${i}`);
+        pwd.addEventListener("dragstart", (e) => {
+            var _a;
+            if (folderIsEditing)
+                return;
+            (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData("text/plain", "p" + i.toString());
+        });
+    }
+    ;
+    for (let i = 0; i < folderList.length; i++) {
+        if (!dir.isInclude(folderList[i]))
+            continue;
+        const folder = document.querySelector(`#folder${i}`);
+        folder.addEventListener("dragstart", (e) => {
+            var _a;
+            if (folderIsEditing)
+                return;
+            (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData("text/plain", "f" + i.toString());
+        });
+    }
+    for (let i = 0; i < folderList.length; i++) {
+        if (!dir.isInclude(folderList[i]))
+            continue;
+        const folder = document.querySelector(`#folder${i}`);
+        folder.addEventListener("dragover", (e) => {
+            if (folderIsEditing)
+                return;
+            e.preventDefault();
+        });
+        folder.addEventListener("drop", (e) => {
+            var _a;
+            if (folderIsEditing)
+                return;
+            e.preventDefault();
+            const index = (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData("text/plain");
+            if (index[0] == "p") {
+                pwdList[parseInt(index.substring(1))].dir = folderList[i];
+            }
+            else if (index[0] == "f") {
+                folderList[parseInt(index.substring(1))].setParent(folderList[i]);
+            }
+            saveData();
+            update(dir);
+        });
+    }
+    main === null || main === void 0 ? void 0 : main.scrollTo(topScroll);
 }
 // 渲染编辑密码界面，并更改密码，isAppend表示是否是添加密码，为true时，取消将会删除该密码，会返回main界面
-function changePwd(by, index, isAppend = false) {
+function changePwd(by, index, dir, isAppend = false) {
     var _a, _b;
     let inner = `
     <div class="title">编辑密码</div>
@@ -406,23 +570,44 @@ function changePwd(by, index, isAppend = false) {
             alert("请填写完整信息");
             return;
         }
-        by[index] = new Password(name, uname, pwd, note, email, phone, new Folder(""));
+        const dir = by[index].dir;
+        by[index] = new Password(name, uname, pwd, note, email, phone, dir);
         saveData();
-        update();
+        update(dir);
     });
     (_b = document.querySelector("#cancel")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
         if (isAppend) {
             by.splice(index, 1);
         }
-        update();
+        update(dir);
     });
 }
-function deletePwd(index) {
-    // 删除密码
-    recentItem.unshift(new Password(pwdList[index]));
-    pwdList.splice(index, 1);
-    saveData();
-    update();
+// 删除密码，type为类型，index为索引，dir_from为来源文件夹，dir_rm为删除到的文件夹，默认为回收站，在外部的调用中，save不应被填写
+function deleteItem(type, index, dir_from, save = true) {
+    if (type == Type.Password) {
+        pwdList[index].dir = Folder.fromString(Folder.bin().stringify() + pwdList[index].dir.stringify().slice(2));
+        recentItem.unshift(new Password(pwdList[index]));
+        pwdList.splice(index, 1);
+    }
+    else {
+        pwdList.forEach((item, i) => {
+            if (folderList[index].isInclude(item)) {
+                deleteItem(Type.Password, i, dir_from, false);
+            }
+        });
+        folderList.forEach((item, i) => {
+            if (folderList[index].isInclude(item)) {
+                deleteItem(Type.Folder, i, dir_from, false);
+            }
+        });
+        folderList[index] = Folder.fromString(Folder.bin().stringify() + folderList[index].stringify().slice(2));
+        recentItem.unshift(new Folder(folderList[index]));
+        folderList.splice(index, 1);
+    }
+    if (save) {
+        saveData();
+        update(dir_from);
+    }
 }
 function deleterecentItem(index) {
     // 删除最近删除的密码
@@ -431,22 +616,34 @@ function deleterecentItem(index) {
 }
 function recoverPwd(index) {
     // 恢复最近删除的密码
-    if (recentItem[index] instanceof Password)
+    if (recentItem[index] instanceof Password) {
+        recentItem[index].dir = Folder.fromString(Folder.root().stringify() + recentItem[index].dir.stringify().slice(2));
+        mkdir(recentItem[index].dir);
         pwdList.push(recentItem[index]);
-    else
-        folderList.push(recentItem[index]);
+    }
+    else {
+        recentItem[index] = Folder.fromString(Folder.root().stringify() + recentItem[index].stringify().slice(2));
+        mkdir(Folder.fromString(recentItem[index].parent));
+        let has = false;
+        folderList.forEach((item) => {
+            if (item.isSame(recentItem[index])) {
+                has = true;
+            }
+        });
+        if (!has)
+            mkdir(recentItem[index]);
+    }
     recentItem.splice(index, 1);
     saveData();
-    update();
 }
-function addPwd() {
+function addPwd(dir) {
     // 添加密码
     let tgt = pwdList.length;
-    pwdList.push(new Password("", "", "", "", "", "", new Folder("")));
-    changePwd(pwdList, tgt, true);
+    pwdList.push(new Password("", "", "", "", "", "", dir));
+    changePwd(pwdList, tgt, dir, true);
 }
 // 显示密码， from表示从哪个页面跳转过来的，如果是从最近删除跳转过来的，返回时会返回到最近删除页面，否则返回到主页面，需要填写Page枚举
-function showPwd(by, index, from = Page.Main) {
+function showPwd(by, index, from) {
     var _a, _b, _c, _d, _e, _f;
     let inner = `
     <div class="form">
@@ -536,16 +733,24 @@ function showPwd(by, index, from = Page.Main) {
         }
     });
     (_f = document.querySelector("#back")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
-        if (from == Page.Main) {
-            update();
-        }
-        else if (from == Page.Recent) {
+        if (from == Folder.bin()) {
             showRecent();
+        }
+        else {
+            update(from);
         }
     });
 }
 function showRecent() {
     var _a;
+    let pos;
+    if (currentFolder.isSame(Folder.bin())) {
+        pos = getScroll();
+    }
+    else {
+        pos = { top: 0, left: 0 };
+    }
+    currentFolder = Folder.bin();
     // 显示最近删除的密码
     let inner = `<div class="title">最近删除</div>`;
     for (let i = 0; i < recentItem.length; i++) {
@@ -583,12 +788,13 @@ function showRecent() {
         const info = document.querySelector(`#recent${i}`);
         info.addEventListener("click", () => {
             if (recentItem[i] instanceof Password)
-                showPwd(recentItem, i, Page.Recent);
+                showPwd(recentItem, i, Folder.bin());
         });
     }
     (_a = document.querySelector("#back")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
-        update();
+        update(Folder.root());
     });
+    main === null || main === void 0 ? void 0 : main.scrollTo(pos);
 }
 function setting() {
     var _a, _b;
@@ -606,10 +812,10 @@ function setting() {
         mainPwd = document.querySelector("#mainPwd").value;
         isremember = document.querySelector("#rememberPwd").checked;
         saveData();
-        update();
+        update(Folder.root());
     });
     (_b = document.querySelector("#cancel")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
-        update();
+        update(Folder.root());
     });
 }
 window.fs.read("./data").then((data) => {
@@ -666,11 +872,11 @@ window.fs.read("./data").then((data) => {
             else
                 recentItem.push(decrypt(new Folder(element), key));
         });
-        update();
+        update(Folder.root());
     }
 }).catch((err) => {
     console.log(err);
     pwdList = [];
     recentItem = [];
-    update();
+    update(Folder.root());
 });
