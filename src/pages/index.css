@@ -144,7 +144,7 @@ div.info *{
     overflow-wrap: anywhere;
     font-size: 16px;
 }
-div.info:active:not(:has(img.icon:active)){
+div.info:active:not(:has(img.icon:active,div.checkbox:active)){
     box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.3);
 }
 div.info:active img.icon:active{
@@ -159,7 +159,7 @@ div.tool{
     flex-direction: row-reverse;
     justify-content: flex-start;
     align-items: center;
-    width: 43vw;
+    width: 39vw;
 }
 img.icon{
     width: 20px;
@@ -167,4 +167,21 @@ img.icon{
     margin: 4px;
     user-select: none;
     cursor: pointer;
+}
+div.checkbox{
+    border-right: 3px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3vw;
+    height: 100%;
+}
+div.checkbox:active{
+    box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.3);
+}
+div.content{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 39vw;
 }

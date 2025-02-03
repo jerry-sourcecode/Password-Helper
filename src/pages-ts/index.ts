@@ -36,16 +36,22 @@ class Password{ // 密码类
             this.dir = new Folder(fromOrdata.dir.name, fromOrdata.dir.parent);
         }
     }
-    getHtml(id: number): string{ // 获取密码在main页面的html
-        return `
-        <div class="info" id="pwd${id}" draggable="true">
+    getHtml(id: number, checkable: boolean = false): string{
+		let tool = `<div class="tool">
+			<img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="编辑">
+			<img class="icon" id="pwd${id}-delete" src="./resources/delete.png" title="删除">
+		</div>`
+		if (checkable) return `<div class="info" style="flex-direction: row;" id="pwd${id}" draggable="true">
+			<div class="checkbox"><input type="checkbox" id="pwd${id}-checkbox"></div>
+			<div class="content">
+				${this.getBaseHtml()}
+				${tool}
+			</div>
+        </div>`;
+		else return `<div class="info" id="pwd${id}" draggable="true">
             ${this.getBaseHtml()}
-            <div class="tool">
-                <img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="编辑">
-                <img class="icon" id="pwd${id}-delete" src="./resources/delete.png" title="删除">
-            </div>
-        </div>
-        `;
+            ${tool}
+        </div>`;
     }
     getHtmlRecent(id: number): string{ // 获取密码在recent页面的html
         return `
@@ -118,11 +124,33 @@ class Folder {
             this.parent = nameOrClass.parent;
         }
     }
-    stringify(): string{
-        return this.parent + this.name + "/";
+	getHtml(id: number, checkable: boolean = false): string{
+		let tool = `<div class="tool">
+			<img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="重命名">
+			<img class="icon" id="folder${id}-delete" src="./resources/delete.png" title="删除">
+		</div>`
+		if (checkable) return `<div class="info" style="flex-direction: row;" id="folder${id}" draggable="true">
+			<div class="checkbox"><input type="checkbox" id="folder${id}-checkbox"></div>
+			<div class="content">
+				<p>${this.name}</p>
+				${tool}
+			</div>
+        </div>`;
+		else return `<div class="info" id="folder${id}" draggable="true">
+            <p>${this.name}</p>
+            ${tool}
+        </div>`;
     }
-    isRoot(): boolean{
-        return Folder.root().isSame(this);
+    getHtmlRecent(id: number): string{ // 获取密码在recent页面的html
+        return `
+        <div class="info" id="recent${id}" draggable="true">
+            <p>${this.name}</p>
+            <div class="tool">
+                <img class="icon" id="recent${id}-recover" style="margin-right: 8px;" src="./resources/recovery.png" title="恢复">
+                <img class="icon" id="recent${id}-delete" src="./resources/delete.png" title="删除">
+            </div>
+        </div>
+        `;
     }
     static root(): Folder{
         return new Folder(":", "");
@@ -136,39 +164,24 @@ class Folder {
         let k = arr.slice(0, arr.length - 2).join("/");
         return new Folder(arr[arr.length - 2], k == "" ? "" : k + "/");
     }
+	stringify(): string{
+        return this.parent + this.name + "/";
+    }
     isSame(folder: Folder): boolean{
         return this.stringify() == folder.stringify();
     }
     setParent(parent: Folder){
         this.parent = parent.stringify();
     }
+	getParent(): Folder{
+        return Folder.fromString(this.parent);
+	}
     // 判断item是否包含在当前文件夹中
     isInclude(item : Folder | Password): boolean{
         if (item instanceof Folder) return item.parent == this.stringify();
         else return item.dir.isSame(this);
     }
-    getHtml(id: number): string{ // 获取密码在main页面的html
-        return `
-        <div class="info" id="folder${id}" draggable="true">
-            <p>${this.name}</p>
-            <div class="tool">
-                <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="重命名">
-                <img class="icon" id="folder${id}-delete" src="./resources/delete.png" title="删除">
-            </div>
-        </div>
-        `;
-    }
-    getHtmlRecent(id: number): string{ // 获取密码在recent页面的html
-        return `
-        <div class="info" id="recent${id}" draggable="true">
-            <p>${this.name}</p>
-            <div class="tool">
-                <img class="icon" id="recent${id}-recover" style="margin-right: 8px;" src="./resources/recovery.png" title="恢复">
-                <img class="icon" id="recent${id}-delete" src="./resources/delete.png" title="删除">
-            </div>
-        </div>
-        `;
-    }
+    // 判断文件夹是否在当前文件夹或后代文件夹下
     isin(folder: Folder): boolean{
         const f = folder.stringify()
         return f == this.parent.slice(0, f.length);
@@ -314,6 +327,7 @@ function update(dir: Folder) : void{
     <div style="position: absolute; top: 15px; right: 45px;" id="MainToolBar">
         <img src="../pages/resources/setting.png" title="设置" class="icon" style="width: 25px;height: 25px;" id="setting">
         <img src="../pages/resources/newFolder.png" title="新建文件夹" class="icon" style="width: 25px;height: 25px;" id="newFolder">
+    	${dir.isSame(Folder.root())?"":`<img src="../pages/resources/up.png" title="上移到${dir.parent}" class="icon" style="width: 23px;height: 23px;" id="up">`}
     </div>
     `;
 
@@ -342,7 +356,10 @@ function update(dir: Folder) : void{
     main!.innerHTML = inner;
     document.querySelector("#setting")?.addEventListener("click", () => {
         setting();
-    })
+    });
+	document.querySelector("#up")?.addEventListener("click", () => {
+	    update(dir.getParent());
+	});
     document.querySelector("#newFolder")?.addEventListener("click", () => {
         let k : Set<number> = new Set()
         for (let i = 0; i < folderList.length; i++){
