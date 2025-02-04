@@ -31,13 +31,13 @@ class Password {
         }
     }
     getHtml(id, checkable = false) {
-        let tool = `<div class="tool">
+        let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
 			<img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="编辑">
 			<img class="icon" id="pwd${id}-delete" src="./resources/delete.png" title="删除">
 		</div>`;
         if (checkable)
             return `<div class="info" style="flex-direction: row;" id="pwd${id}" draggable="true">
-			<div class="checkbox"><input type="checkbox" id="pwd${id}-checkbox"></div>
+			<div class="checkbox" id="pwd${id}-checkboxDiv"><input type="checkbox" id="pwd${id}-checkbox"></div>
 			<div class="content">
 				${this.getBaseHtml()}
 				${tool}
@@ -49,16 +49,24 @@ class Password {
             ${tool}
         </div>`;
     }
-    getHtmlRecent(id) {
-        return `
-        <div class="info" id="recent${id}" draggable="true">
-            ${this.getBaseHtml()}
-            <div class="tool">
+    getHtmlRecent(id, checkable = false) {
+        let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
                 <img class="icon" id="recent${id}-recover" style="margin-right: 8px;" src="./resources/recovery.png" title="恢复">
                 <img class="icon" id="recent${id}-delete" src="./resources/delete.png" title="删除">
-            </div>
-        </div>
-        `;
+            </div>`;
+        if (checkable)
+            return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
+            <div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
+			<div class="content">
+				${this.getBaseHtml()}
+				${tool}
+			</div>
+        </div>`;
+        else
+            return `<div class="info" id="recent${id}" draggable="true">
+            ${this.getBaseHtml()}
+            ${tool}
+        </div>`;
     }
     static format(str, max = showOtherMaxLength, OmitWhere = "back") {
         if (str.length == 0) {
@@ -121,13 +129,13 @@ class Folder {
         }
     }
     getHtml(id, checkable = false) {
-        let tool = `<div class="tool">
+        let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
 			<img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="重命名">
 			<img class="icon" id="folder${id}-delete" src="./resources/delete.png" title="删除">
 		</div>`;
         if (checkable)
             return `<div class="info" style="flex-direction: row;" id="folder${id}" draggable="true">
-			<div class="checkbox"><input type="checkbox" id="folder${id}-checkbox"></div>
+			<div class="checkbox" id="folder${id}-checkboxDiv"><input type="checkbox" id="folder${id}-checkbox"></div>
 			<div class="content">
 				<p>${this.name}</p>
 				${tool}
@@ -139,14 +147,23 @@ class Folder {
             ${tool}
         </div>`;
     }
-    getHtmlRecent(id) {
+    getHtmlRecent(id, checkable = false) {
+        let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
+                <img class="icon" id="recent${id}-recover" style="margin-right: 8px;" src="./resources/recovery.png" title="恢复">
+                <img class="icon" id="recent${id}-delete" src="./resources/delete.png" title="删除">
+            </div>`;
+        if (checkable)
+            return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
+			<div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
+			<div class="content">
+				<p>${this.name}</p>
+				${tool}
+			</div>
+        </div>`;
         return `
         <div class="info" id="recent${id}" draggable="true">
             <p>${this.name}</p>
-            <div class="tool">
-                <img class="icon" id="recent${id}-recover" style="margin-right: 8px;" src="./resources/recovery.png" title="恢复">
-                <img class="icon" id="recent${id}-delete" src="./resources/delete.png" title="删除">
-            </div>
+            ${tool}
         </div>
         `;
     }
@@ -313,7 +330,7 @@ function mkdir(dir) {
     saveData();
 }
 // 渲染main界面
-function update(dir) {
+function update(dir, checkable = false) {
     var _a, _b, _c, _d;
     let topScroll;
     if (dir.isSame(currentFolder)) {
@@ -334,13 +351,13 @@ function update(dir) {
     let has = false;
     for (let i = 0; i < folderList.length; i++) {
         if (dir.isInclude(folderList[i])) {
-            inner += folderList[i].getHtml(i);
+            inner += folderList[i].getHtml(i, checkable);
             has = true;
         }
     }
     for (let i = 0; i < pwdList.length; i++) {
         if (dir.isInclude(pwdList[i])) {
-            inner += pwdList[i].getHtml(i);
+            inner += pwdList[i].getHtml(i, checkable);
             has = true;
         }
     }
@@ -402,15 +419,35 @@ function update(dir) {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
             changePwd(pwdList, i, dir);
         });
-    }
-    for (let i = 0; i < pwdList.length; i++) {
-        if (!dir.isInclude(pwdList[i]))
-            continue;
         const deleteBtn = document.querySelector(`#pwd${i}-delete`);
         deleteBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
             deleteItem(Type.Password, i, dir);
         });
+        const info = document.querySelector(`#pwd${i}`);
+        info.addEventListener("click", () => {
+            if (folderIsEditing)
+                return;
+            showPwd(pwdList, i, dir);
+        });
+        const pwd = document.querySelector(`#pwd${i}`);
+        pwd.addEventListener("dragstart", (e) => {
+            var _a;
+            if (folderIsEditing)
+                return;
+            (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData("text/plain", "p" + i.toString());
+        });
+        if (checkable) {
+            const check = document.querySelector(`#pwd${i}-checkboxDiv`);
+            const checkBox = document.querySelector(`#pwd${i}-checkbox`);
+            check.addEventListener("click", (e) => {
+                e.stopPropagation();
+                checkBox.checked = !checkBox.checked;
+            });
+            checkBox.addEventListener("click", (e) => {
+                e.stopPropagation();
+            });
+        }
     }
     for (let i = 0; i < folderList.length; i++) {
         if (!dir.isInclude(folderList[i]))
@@ -454,10 +491,6 @@ function update(dir) {
                 update(dir);
             });
         });
-    }
-    for (let i = 0; i < folderList.length; i++) {
-        if (!dir.isInclude(folderList[i]))
-            continue;
         const fdeleteBtn = document.querySelector(`#folder${i}-delete`);
         fdeleteBtn.addEventListener("click", (e) => {
             if (folderIsEditing)
@@ -466,59 +499,18 @@ function update(dir) {
             deleteItem(Type.Folder, i, dir);
             update(dir);
         });
-    }
-    for (let i = 0; i < pwdList.length; i++) {
-        if (!dir.isInclude(pwdList[i]))
-            continue;
-        const info = document.querySelector(`#pwd${i}`);
-        info.addEventListener("click", () => {
-            if (folderIsEditing)
-                return;
-            showPwd(pwdList, i, dir);
-        });
-    }
-    for (let i = 0; i < folderList.length; i++) {
-        if (!dir.isInclude(folderList[i]))
-            continue;
         const folder = document.querySelector(`#folder${i}`);
         folder.addEventListener("click", () => {
             if (folderIsEditing)
                 return;
             update(folderList[i]);
         });
-    }
-    (_d = document.querySelector("#recent")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
-        if (folderIsEditing)
-            return;
-        showRecent();
-    });
-    for (let i = 0; i < pwdList.length; i++) {
-        if (!dir.isInclude(pwdList[i]))
-            continue;
-        const pwd = document.querySelector(`#pwd${i}`);
-        pwd.addEventListener("dragstart", (e) => {
-            var _a;
-            if (folderIsEditing)
-                return;
-            (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData("text/plain", "p" + i.toString());
-        });
-    }
-    ;
-    for (let i = 0; i < folderList.length; i++) {
-        if (!dir.isInclude(folderList[i]))
-            continue;
-        const folder = document.querySelector(`#folder${i}`);
         folder.addEventListener("dragstart", (e) => {
             var _a;
             if (folderIsEditing)
                 return;
             (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData("text/plain", "f" + i.toString());
         });
-    }
-    for (let i = 0; i < folderList.length; i++) {
-        if (!dir.isInclude(folderList[i]))
-            continue;
-        const folder = document.querySelector(`#folder${i}`);
         folder.addEventListener("dragover", (e) => {
             if (folderIsEditing)
                 return;
@@ -539,7 +531,23 @@ function update(dir) {
             saveData();
             update(dir);
         });
+        if (checkable) {
+            const check = document.querySelector(`#folder${i}-checkboxDiv`);
+            const checkBox = document.querySelector(`#folder${i}-checkbox`);
+            check.addEventListener("click", (e) => {
+                e.stopPropagation();
+                checkBox.checked = !checkBox.checked;
+            });
+            checkBox.addEventListener("click", (e) => {
+                e.stopPropagation();
+            });
+        }
     }
+    (_d = document.querySelector("#recent")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
+        if (folderIsEditing)
+            return;
+        showRecent();
+    });
     main === null || main === void 0 ? void 0 : main.scrollTo(topScroll);
 }
 // 渲染编辑密码界面，并更改密码，isAppend表示是否是添加密码，为true时，取消将会删除该密码，会返回main界面
@@ -762,7 +770,7 @@ function showPwd(by, index, from) {
         }
     });
 }
-function showRecent() {
+function showRecent(checkable = false) {
     var _a;
     let pos;
     if (currentFolder.isSame(Folder.bin())) {
@@ -775,7 +783,7 @@ function showRecent() {
     // 显示最近删除的密码
     let inner = `<div class="title">最近删除</div>`;
     for (let i = 0; i < recentItem.length; i++) {
-        inner += recentItem[i].getHtmlRecent(i);
+        inner += recentItem[i].getHtmlRecent(i, checkable);
     }
     if (recentItem.length == 0) {
         inner += `<p>暂无删除密码</p>`;
@@ -791,8 +799,6 @@ function showRecent() {
             recoverPwd(i);
             showRecent();
         });
-    }
-    for (let i = 0; i < recentItem.length; i++) {
         const deleteBtn = document.querySelector(`#recent${i}-delete`);
         deleteBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
@@ -804,13 +810,22 @@ function showRecent() {
                 }
             });
         });
-    }
-    for (let i = 0; i < recentItem.length; i++) {
         const info = document.querySelector(`#recent${i}`);
         info.addEventListener("click", () => {
             if (recentItem[i] instanceof Password)
                 showPwd(recentItem, i, Folder.bin());
         });
+        if (checkable) {
+            const check = document.querySelector(`#recent${i}-checkboxDiv`);
+            const checkbox = document.querySelector(`#recent${i}-checkbox`);
+            check.addEventListener("click", (e) => {
+                e.stopPropagation();
+                checkbox.checked = !checkbox.checked;
+            });
+            checkbox.addEventListener("click", (e) => {
+                e.stopPropagation();
+            });
+        }
     }
     (_a = document.querySelector("#back")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
         update(Folder.root());
