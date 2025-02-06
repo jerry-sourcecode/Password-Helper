@@ -17,7 +17,7 @@
   "scripts": {
     "w": "tsc --watch",
     "start": "nodemon --exec electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "electron ."
   },
   "devDependencies": {
     "electron": "^34.0.1"

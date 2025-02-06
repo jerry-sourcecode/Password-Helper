@@ -10,7 +10,7 @@ npm i crypto-js
 如果想要启动程序，运行以下命令
 ```bash
 tsc
-electron .
+npm test
 ```
 如果想要持续监视
 ```bash
@@ -57,3 +57,10 @@ pbkdf2: (pwd: string, salt: string) => string;
     - `salt`：盐
 - 返回值：加密或解密后的数据
 - 作用：加密或解密数据，`pbkdf2`函数用于单向哈希加密。
+
+# 声明
+此程序的依赖如下：
+1. electron
+2. typescript
+3. crypto-js
+4. 图标来自：https://iconfont.cn

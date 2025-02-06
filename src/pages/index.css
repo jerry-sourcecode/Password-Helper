@@ -185,3 +185,12 @@ div.content{
     flex-direction: column;
     width: 39vw;
 }
+div#MainToolBar{
+    position: absolute; top: 15px; right: 45px;
+}
+img.tool{
+    width: 25px;height: 25px;
+    margin: 4px;
+    user-select: none;
+    cursor: pointer;
+}

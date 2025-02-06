@@ -338,10 +338,11 @@ function update(dir: Folder, checkable: boolean = false) : void{
     currentFolder = dir;
     let inner : string = `<div class="title">密码列表</div>
     ${dir.isSame(Folder.root())?"":`<div class="subtitle">当前位置：${Password.format(dir.stringify(), showPathMaxLength, "front")}</div>`}
-    <div style="position: absolute; top: 15px; right: 45px;" id="MainToolBar">
-        <img src="../pages/resources/setting.png" title="设置" class="icon" style="width: 25px;height: 25px;" id="setting">
-        <img src="../pages/resources/newFolder.png" title="新建文件夹" class="icon" style="width: 25px;height: 25px;" id="newFolder">
-    	${dir.isSame(Folder.root())?"":`<img src="../pages/resources/up.png" title="上移到${dir.parent}" class="icon" style="width: 23px;height: 23px;" id="up">`}
+    <div id="MainToolBar">
+        <img src="../pages/resources/setting.png" title="设置" class="tool" id="setting">
+        <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" style="width: 25px;height: 25px;" id="newFolder">
+        <img src="../pages/resources/checkable.png" title="多选" class="tool" style="width: 25px;height: 25px;" id="checkable">
+    	${dir.isSame(Folder.root())?"":`<img src="../pages/resources/up.png" title="上移到${dir.parent}" class="tool" style="width: 23px;height: 23px;" id="up">`}
     </div>
     `;
 
@@ -374,6 +375,9 @@ function update(dir: Folder, checkable: boolean = false) : void{
 	document.querySelector("#up")?.addEventListener("click", () => {
 	    update(dir.getParent());
 	});
+    document.querySelector("#checkable")?.addEventListener("click", () => {
+        update(dir, !checkable);
+    });
     document.querySelector("#newFolder")?.addEventListener("click", () => {
         let k : Set<number> = new Set()
         for (let i = 0; i < folderList.length; i++){
@@ -760,7 +764,10 @@ function showRecent(checkable: boolean = false) : void{
     }
     currentFolder = Folder.bin();
     // 显示最近删除的密码
-    let inner : string = `<div class="title">最近删除</div>`;
+    let inner : string = `<div class="title">最近删除</div>
+    <div id="MainToolBar">
+        <img src="../pages/resources/checkable.png" title="多选" class="tool" style="width: 25px;height: 25px;" id="checkable">
+    </div>`;
     for (let i = 0; i < recentItem.length; i++){
         inner += recentItem[i].getHtmlRecent(i, checkable);
     }
@@ -771,6 +778,9 @@ function showRecent(checkable: boolean = false) : void{
     <div class="action" id="back"><p>返回</p></div>
     `;
     main!.innerHTML = inner;
+    document.querySelector("div#MainToolBar")?.addEventListener("click", () => {
+        showRecent(!checkable);
+    });
     for(let i = 0; i < recentItem.length; i++){
         const recoverBtn = document.querySelector(`#recent${i}-recover`);
         recoverBtn!.addEventListener("click", (e) => {

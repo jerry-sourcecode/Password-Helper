@@ -331,7 +331,7 @@ function mkdir(dir) {
 }
 // 渲染main界面
 function update(dir, checkable = false) {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     let topScroll;
     if (dir.isSame(currentFolder)) {
         topScroll = getScroll();
@@ -342,10 +342,11 @@ function update(dir, checkable = false) {
     currentFolder = dir;
     let inner = `<div class="title">密码列表</div>
     ${dir.isSame(Folder.root()) ? "" : `<div class="subtitle">当前位置：${Password.format(dir.stringify(), showPathMaxLength, "front")}</div>`}
-    <div style="position: absolute; top: 15px; right: 45px;" id="MainToolBar">
-        <img src="../pages/resources/setting.png" title="设置" class="icon" style="width: 25px;height: 25px;" id="setting">
-        <img src="../pages/resources/newFolder.png" title="新建文件夹" class="icon" style="width: 25px;height: 25px;" id="newFolder">
-    	${dir.isSame(Folder.root()) ? "" : `<img src="../pages/resources/up.png" title="上移到${dir.parent}" class="icon" style="width: 23px;height: 23px;" id="up">`}
+    <div id="MainToolBar">
+        <img src="../pages/resources/setting.png" title="设置" class="tool" id="setting">
+        <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" style="width: 25px;height: 25px;" id="newFolder">
+        <img src="../pages/resources/checkable.png" title="多选" class="tool" style="width: 25px;height: 25px;" id="checkable">
+    	${dir.isSame(Folder.root()) ? "" : `<img src="../pages/resources/up.png" title="上移到${dir.parent}" class="tool" style="width: 23px;height: 23px;" id="up">`}
     </div>
     `;
     let has = false;
@@ -377,7 +378,10 @@ function update(dir, checkable = false) {
     (_b = document.querySelector("#up")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
         update(dir.getParent());
     });
-    (_c = document.querySelector("#newFolder")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
+    (_c = document.querySelector("#checkable")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
+        update(dir, !checkable);
+    });
+    (_d = document.querySelector("#newFolder")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
         let k = new Set();
         for (let i = 0; i < folderList.length; i++) {
             if (dir.isInclude(folderList[i])) {
@@ -543,7 +547,7 @@ function update(dir, checkable = false) {
             });
         }
     }
-    (_d = document.querySelector("#recent")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
+    (_e = document.querySelector("#recent")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
         if (folderIsEditing)
             return;
         showRecent();
@@ -771,7 +775,7 @@ function showPwd(by, index, from) {
     });
 }
 function showRecent(checkable = false) {
-    var _a;
+    var _a, _b;
     let pos;
     if (currentFolder.isSame(Folder.bin())) {
         pos = getScroll();
@@ -781,7 +785,10 @@ function showRecent(checkable = false) {
     }
     currentFolder = Folder.bin();
     // 显示最近删除的密码
-    let inner = `<div class="title">最近删除</div>`;
+    let inner = `<div class="title">最近删除</div>
+    <div id="MainToolBar">
+        <img src="../pages/resources/checkable.png" title="多选" class="tool" style="width: 25px;height: 25px;" id="checkable">
+    </div>`;
     for (let i = 0; i < recentItem.length; i++) {
         inner += recentItem[i].getHtmlRecent(i, checkable);
     }
@@ -792,6 +799,9 @@ function showRecent(checkable = false) {
     <div class="action" id="back"><p>返回</p></div>
     `;
     main.innerHTML = inner;
+    (_a = document.querySelector("div#MainToolBar")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+        showRecent(!checkable);
+    });
     for (let i = 0; i < recentItem.length; i++) {
         const recoverBtn = document.querySelector(`#recent${i}-recover`);
         recoverBtn.addEventListener("click", (e) => {
@@ -827,7 +837,7 @@ function showRecent(checkable = false) {
             });
         }
     }
-    (_a = document.querySelector("#back")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+    (_b = document.querySelector("#back")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
         update(Folder.root());
     });
     main === null || main === void 0 ? void 0 : main.scrollTo(pos);
