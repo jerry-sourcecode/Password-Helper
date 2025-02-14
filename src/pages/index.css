@@ -13,7 +13,7 @@ p, span, label{
     cursor: pointer;
 }
 textarea{
-    height: 50vh;
+    height: 45vh;
     width: 33vw;
     font-size: 17px;
     margin-bottom: 5px;
@@ -144,13 +144,13 @@ div.info *{
     overflow-wrap: anywhere;
     font-size: 16px;
 }
-div.info:active:not(:has(img.icon:active,div.checkbox:active)){
+div.info:active:not(:has(.icon:active,div.checkbox:active)){
     box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.3);
 }
 div.info:active img.icon:active{
     box-shadow: none;
 }
-div.info:hover:not(:has(img.icon:hover)){
+div.info:hover:not(:has(.icon:hover)){
     cursor: pointer;
     font-weight: bold;
 }
@@ -161,9 +161,23 @@ div.tool{
     align-items: center;
     width: 39vw;
 }
+p.icon{
+    height: 25px;
+    margin: 4px;
+    user-select: none;
+    cursor: pointer;
+    color: blue;
+    display: inline-block;
+}
+p.icon:hover{
+    font-weight: bold;
+}
+p.icon:not(:hover){
+    font-weight: normal;
+}
 img.icon{
-    width: 20px;
-    height: 20px;
+    width: 25px;
+    height: 25px;
     margin: 4px;
     user-select: none;
     cursor: pointer;
@@ -189,8 +203,19 @@ div#MainToolBar{
     position: absolute; top: 15px; right: 45px;
 }
 img.tool{
-    width: 25px;height: 25px;
+    width: 30px;height: 30px;
     margin: 4px;
     user-select: none;
     cursor: pointer;
+}
+p.tool{
+    height: 30px;
+    margin: 4px;
+    user-select: none;
+    cursor: pointer;
+    color: blue;
+    display: inline-block;
+}
+p.tool:hover{
+    font-weight: bold;
 }

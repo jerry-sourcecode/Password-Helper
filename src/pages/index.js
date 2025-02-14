@@ -51,8 +51,8 @@ class Password {
     }
     getHtmlRecent(id, checkable = false) {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
-                <img class="icon" id="recent${id}-recover" style="margin-right: 8px;" src="./resources/recovery.png" title="恢复">
-                <img class="icon" id="recent${id}-delete" src="./resources/delete.png" title="删除">
+                <p class="icon" id="recent${id}-recover" style="margin-right: 8px;">恢复</p>
+                <p class="icon" id="recent${id}-delete">彻底删除</p>
             </div>`;
         if (checkable)
             return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
@@ -149,8 +149,8 @@ class Folder {
     }
     getHtmlRecent(id, checkable = false) {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
-                <img class="icon" id="recent${id}-recover" style="margin-right: 8px;" src="./resources/recovery.png" title="恢复">
-                <img class="icon" id="recent${id}-delete" src="./resources/delete.png" title="删除">
+                <p class="icon" id="recent${id}-recover" style="margin-right: 8px;">恢复</p>
+                <p class="icon" id="recent${id}-delete">彻底删除</p>
             </div>`;
         if (checkable)
             return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
@@ -203,6 +203,16 @@ class Folder {
     isin(folder) {
         const f = folder.stringify();
         return f == this.parent.slice(0, f.length);
+    }
+    toReadable() {
+        let ans = this.stringify(), lans = "主文件夹 > ";
+        for (let i = 2; i < ans.length; i++) {
+            if (ans[i] == "/")
+                lans += " > ";
+            else
+                lans += ans[i];
+        }
+        return lans;
     }
 }
 function encrypt(data, key) {
@@ -332,6 +342,10 @@ function mkdir(dir) {
 // 渲染main界面
 function update(dir, checkable = false) {
     var _a, _b, _c, _d, _e;
+    if (dir.stringify() == "~/") {
+        showRecent();
+        return;
+    }
     let topScroll;
     if (dir.isSame(currentFolder)) {
         topScroll = getScroll();
@@ -340,13 +354,17 @@ function update(dir, checkable = false) {
         topScroll = { top: 0, left: 0 };
     }
     currentFolder = dir;
+    let faname = Folder.fromString(dir.parent).name;
     let inner = `<div class="title">密码列表</div>
-    ${dir.isSame(Folder.root()) ? "" : `<div class="subtitle">当前位置：${Password.format(dir.stringify(), showPathMaxLength, "front")}</div>`}
+    ${dir.isSame(Folder.root()) ? "" : `<div class="subtitle">当前位置：${Password.format(dir.toReadable(), showPathMaxLength, "front")}</div>`}
     <div id="MainToolBar">
+    ${checkable ?
+        `<p class="tool" id="checkable">取消选择</p>`
+        :
+            `<p class="tool" id="checkable">选择</p>
         <img src="../pages/resources/setting.png" title="设置" class="tool" id="setting">
-        <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" style="width: 25px;height: 25px;" id="newFolder">
-        <img src="../pages/resources/checkable.png" title="多选" class="tool" style="width: 25px;height: 25px;" id="checkable">
-    	${dir.isSame(Folder.root()) ? "" : `<img src="../pages/resources/up.png" title="上移到${dir.parent}" class="tool" style="width: 23px;height: 23px;" id="up">`}
+        <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" id="newFolder">
+    	${dir.isSame(Folder.root()) ? "" : `<img src="../pages/resources/up.png" title="上移到${faname == ":" ? "主文件夹" : faname}" class="tool" id="up">`}`}
     </div>
     `;
     let has = false;
@@ -480,6 +498,14 @@ function update(dir, checkable = false) {
                     update(dir);
                     return;
                 }
+                for (let j = 0; j < newFolder.name.length; j++) {
+                    if (newFolder.name[j] == "/") {
+                        window.msg.warning("警告", "文件夹名不能包含“/”");
+                        saveData();
+                        update(dir);
+                        return;
+                    }
+                }
                 for (let j = 0; j < pwdList.length; j++) {
                     if (folderList[i].isInclude(pwdList[j])) {
                         pwdList[j].dir = newFolder;
@@ -562,12 +588,11 @@ function changePwd(by, index, dir, isAppend = false) {
     <div class="form">
     <div class="formItem"><label for="from">来源<span style="color:red;">*</span>：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
     <div class="formItem"><label for="uname">用户名<span style="color:red;">*</span>：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
-    <div class="formItem"><label for="pwd">密码<span style="color:red;">*</span>：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span></div>
+    <div class="formItem"><label for="pwd">密码<span style="color:red;">*</span>：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span><p class="icon" style="margin-left: 0;" id="randpwd">随机生成一个高强度的密码</p></div>
     <div class="formItem"><label for="email">邮箱：</label><input type="text" id="email" value="${by[index].email}"></div>
     <div class="formItem"><label for="phone">手机号：</label><input type="text" id="phone" value="${by[index].phone}"></div>
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" placeholder="可以在这里输入一些想说的话。">${by[index].note}</textarea></div>
     </div>
-    <div class="action" style="background-color: #fc5531" id="random"><p>随机生成一个高强度的密码</p></div>
     <div class="action" id="submit"><p>提交</p></div>
     <div class="action" id="cancel"><p>取消</p></div>
     `;
@@ -586,7 +611,7 @@ function changePwd(by, index, dir, isAppend = false) {
             }
         });
     }
-    const rd = document.querySelector("#random");
+    const rd = document.querySelector("#randpwd");
     rd === null || rd === void 0 ? void 0 : rd.addEventListener("click", () => {
         const pwd = document.querySelector("#pwd");
         pwd.value = randstr(16);
@@ -787,7 +812,7 @@ function showRecent(checkable = false) {
     // 显示最近删除的密码
     let inner = `<div class="title">最近删除</div>
     <div id="MainToolBar">
-        <img src="../pages/resources/checkable.png" title="多选" class="tool" style="width: 25px;height: 25px;" id="checkable">
+        <img src="../pages/resources/checkable.png" title="多选" class="tool" id="checkable">
     </div>`;
     for (let i = 0; i < recentItem.length; i++) {
         inner += recentItem[i].getHtmlRecent(i, checkable);

@@ -63,4 +63,9 @@ pbkdf2: (pwd: string, salt: string) => string;
 1. electron
 2. typescript
 3. crypto-js
-4. 图标来自：https://iconfont.cn
+4. 所有图标搜集自https://icon.sucai999.com
+- 图标复制来自https://github.com/dariushhpg1/IconaMoon
+- 图标删除来自Google
+- 图标编辑来自https://github.com/artcoholic/akar-icons
+- 图标新增文件夹来自https://github.com/stephenhutchings/typicons.font
+- 其余为原创图标或作者许可证未要求表明来源。
