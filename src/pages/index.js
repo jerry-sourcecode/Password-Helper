@@ -12,9 +12,9 @@ class Password {
         this.type = Type.Password; // 类型
         this.rmDate = null; // 删除日期
         this.type = Type.Password;
-        this.mkDate = new Date();
-        this.rmDate = null;
         if (typeof fromOrdata === "string") {
+            this.moDate = new Date();
+            this.rmDate = null;
             this.from = fromOrdata;
             this.uname = uname;
             this.pwd = pwd;
@@ -31,6 +31,8 @@ class Password {
             this.email = fromOrdata.email;
             this.phone = fromOrdata.phone;
             this.dir = new Folder(fromOrdata.dir.name, fromOrdata.dir.parent);
+            this.rmDate = fromOrdata.rmDate;
+            this.moDate = fromOrdata.moDate;
         }
     }
     getHtml(id, checkable = false) {
@@ -61,13 +63,13 @@ class Password {
             return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
             <div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
 			<div class="content">
-				${this.getBaseHtml()}
+				${this.getBaseHtml(true)}
 				${tool}
 			</div>
         </div>`;
         else
             return `<div class="info" id="recent${id}" draggable="true">
-            ${this.getBaseHtml()}
+            ${this.getBaseHtml(true)}
             ${tool}
         </div>`;
     }
@@ -94,19 +96,23 @@ class Password {
         }
         return str;
     }
-    getBaseHtml() {
+    getBaseHtml(isRecent = false) {
         return `<p>来源：${Password.format(this.from)}</p>
             <p>用户名：${Password.format(this.uname)}</p>
             <p>密码：${Password.format(this.pwd)}</p>
             ${this.email == "" ? "" : `<p>邮箱：${Password.format(this.email)}</p>`}
             ${this.phone == "" ? "" : `<p>电话：${Password.format(this.phone)}</p>`}
-            ${this.note == "" ? "" : `<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}`;
+            ${this.note == "" ? "" : `<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}
+            <p>${isRecent ? "删除时间" : "修改时间"}：${getReadableTime(isRecent ? this.rmDate : this.moDate)}</p>`;
     }
     ;
     isin(folder) {
         // 检查当前密码是否在folder或folder的子孙目录的目录下
         const f = folder.stringify();
         return f == this.dir.stringify().slice(0, f.length);
+    }
+    updateDate() {
+        this.moDate = new Date();
     }
 }
 class Folder {
@@ -122,7 +128,7 @@ class Folder {
     constructor(nameOrClass, parent = ":") {
         this.type = Type.Folder;
         this.type = Type.Folder;
-        this.mkDate = new Date();
+        this.moDate = new Date();
         this.rmDate = null;
         if (typeof nameOrClass === "string") {
             this.name = nameOrClass;
@@ -219,6 +225,9 @@ class Folder {
         }
         return lans;
     }
+    updateDate() {
+        this.moDate = new Date();
+    }
 }
 function encrypt(data, key) {
     let enc;
@@ -304,6 +313,15 @@ function getScroll() {
         top: main.scrollTop || main.scrollTop,
         left: main.scrollLeft || main.scrollLeft
     };
+}
+function getReadableTime(time) {
+    let minite = time.getMinutes(), strminite = minite.toString();
+    if (minite < 10)
+        strminite = "0" + minite;
+    let sec = time.getSeconds(), strsec = sec.toString();
+    if (sec < 10)
+        strsec = "0" + sec;
+    return time.getFullYear() + "." + (time.getMonth() + 1) + "." + time.getDate() + " " + time.getHours() + ":" + strminite + ":" + strsec;
 }
 function saveData() {
     let salt = randstr(16);
@@ -606,9 +624,11 @@ function changePwd(by, index, dir, isAppend = false) {
     <div class="form">
     <div class="formItem"><label for="from">来源<span style="color:red;">*</span>：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
     <div class="formItem"><label for="uname">用户名<span style="color:red;">*</span>：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
-    <div class="formItem"><label for="pwd">密码<span style="color:red;">*</span>：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span><p class="icon" style="margin-left: 0;" id="randpwd">随机生成一个高强度的密码</p></div>
+    <div class="formItem"><label for="pwd">密码<span style="color:red;">*</span>：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span></div>
+    <div class="formItem"><p class="icon" style="margin-left: 0;" id="randpwd">随机生成一个高强度的密码</p></div>
     <div class="formItem"><label for="email">邮箱：</label><input type="text" id="email" value="${by[index].email}"></div>
     <div class="formItem"><label for="phone">手机号：</label><input type="text" id="phone" value="${by[index].phone}"></div>
+    <div class="formItem_Copy"><p>修改时间：${getReadableTime(by[index].moDate)}</p></div>
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" placeholder="可以在这里输入一些想说的话。">${by[index].note}</textarea></div>
     </div>
     <div class="action" id="submit"><p>提交</p></div>
@@ -731,6 +751,8 @@ function showPwd(by, index, from) {
     <div class="formItem_Copy"><label for="pwd">密码：</label><input type="text" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="email">邮箱：</label><input type="text" id="email" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="emailCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制"></div>
+    <div class="formItem_Copy"><p>修改时间：${getReadableTime(by[index].moDate)}</p></div>
+    ${from.isSame(Folder.bin()) ? `<div class="formItem_Copy"><p>删除时间：${getReadableTime(by[index].rmDate)}</p></div>` : ""}
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" readonly>${by[index].note}</textarea></div>
     </div>
     <div class="action" id="back"><p>返回</p></div>

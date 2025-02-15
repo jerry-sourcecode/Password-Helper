@@ -18,13 +18,13 @@ class Password{ // 密码类
     note: string; // 备注
     dir: Folder; // 文件夹
     type: Type = Type.Password; // 类型
-    mkDate: Date; // 创建日期
+    moDate: Date; // 创建日期
     rmDate: Date | null = null; // 删除日期
     constructor(fromOrdata: string | Password = "", uname: string = "", pwd: string = "", note: string = "", email: string = "", phone: string = "", dir: Folder = Folder.root()){ // 构造函数
         this.type = Type.Password;
-        this.mkDate = new Date();
-        this.rmDate = null;
         if (typeof fromOrdata === "string") {
+            this.moDate = new Date();
+            this.rmDate = null;
             this.from = fromOrdata;
             this.uname = uname;
             this.pwd = pwd;
@@ -40,6 +40,8 @@ class Password{ // 密码类
             this.email = fromOrdata.email;
             this.phone = fromOrdata.phone;
             this.dir = new Folder(fromOrdata.dir.name, fromOrdata.dir.parent);
+            this.rmDate = fromOrdata.rmDate;
+            this.moDate = fromOrdata.moDate;
         }
     }
     getHtml(id: number, checkable: boolean = false): string{
@@ -67,12 +69,12 @@ class Password{ // 密码类
         if (checkable) return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
             <div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
 			<div class="content">
-				${this.getBaseHtml()}
+				${this.getBaseHtml(true)}
 				${tool}
 			</div>
         </div>`;
         else return `<div class="info" id="recent${id}" draggable="true">
-            ${this.getBaseHtml()}
+            ${this.getBaseHtml(true)}
             ${tool}
         </div>`;
     }
@@ -98,25 +100,29 @@ class Password{ // 密码类
         }
         return str;
     }
-    private getBaseHtml(): string{ // 获取密码的基本html
+    private getBaseHtml(isRecent: boolean = false): string{ // 获取密码的基本html
         return `<p>来源：${Password.format(this.from)}</p>
             <p>用户名：${Password.format(this.uname)}</p>
             <p>密码：${Password.format(this.pwd)}</p>
             ${this.email == ""?"":`<p>邮箱：${Password.format(this.email)}</p>`}
             ${this.phone == ""?"":`<p>电话：${Password.format(this.phone)}</p>`}
-            ${this.note == ""?"":`<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}`
+            ${this.note == ""?"":`<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}
+            <p>${isRecent?"删除时间":"修改时间"}：${getReadableTime(isRecent?this.rmDate!:this.moDate)}</p>`
     };
     isin(folder: Folder): boolean{
         // 检查当前密码是否在folder或folder的子孙目录的目录下
         const f = folder.stringify()
         return f == this.dir.stringify().slice(0, f.length);
     }
+    updateDate(){
+        this.moDate = new Date();
+    }
 }
 
 class Folder {
     name: string;
     parent: string;
-    mkDate: Date;
+    moDate: Date;
     rmDate: Date | null;
     type: Type = Type.Folder;
     /*
@@ -130,7 +136,7 @@ class Folder {
     */
     constructor(nameOrClass: string | Folder, parent: string = ":"){
         this.type = Type.Folder;
-        this.mkDate = new Date();
+        this.moDate = new Date();
         this.rmDate = null;
         if (typeof nameOrClass === "string"){
             this.name = nameOrClass;
@@ -218,6 +224,9 @@ class Folder {
         }
         return lans;
     }
+    updateDate(){
+        this.moDate = new Date();
+    }
 }
 
 function encrypt(data: Item, key: string): Item{ // 加密
@@ -302,6 +311,14 @@ function getScroll(): {top: number, left: number}{
         left: main!.scrollLeft || main!.scrollLeft
     }
 }
+function getReadableTime(time: Date): string{
+    let minite = time.getMinutes(), strminite: string = minite.toString();
+    if (minite < 10) strminite = "0" + minite;
+    let sec = time.getSeconds(), strsec: string = sec.toString();
+    if (sec < 10) strsec = "0" + sec;
+    return time.getFullYear() + "." + (time.getMonth() + 1) + "." + time.getDate() + " " + time.getHours() + ":" + strminite + ":" + strsec;
+}
+
 function saveData(): void{ // 保存数据
     let salt: string = randstr(16);
     let enc = window.cryp.pbkdf2(mainPwd, salt)
@@ -605,9 +622,11 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
     <div class="form">
     <div class="formItem"><label for="from">来源<span style="color:red;">*</span>：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
     <div class="formItem"><label for="uname">用户名<span style="color:red;">*</span>：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
-    <div class="formItem"><label for="pwd">密码<span style="color:red;">*</span>：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span><p class="icon" style="margin-left: 0;" id="randpwd">随机生成一个高强度的密码</p></div>
+    <div class="formItem"><label for="pwd">密码<span style="color:red;">*</span>：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span></div>
+    <div class="formItem"><p class="icon" style="margin-left: 0;" id="randpwd">随机生成一个高强度的密码</p></div>
     <div class="formItem"><label for="email">邮箱：</label><input type="text" id="email" value="${by[index].email}"></div>
     <div class="formItem"><label for="phone">手机号：</label><input type="text" id="phone" value="${by[index].phone}"></div>
+    <div class="formItem_Copy"><p>修改时间：${getReadableTime(by[index].moDate)}</p></div>
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" placeholder="可以在这里输入一些想说的话。">${by[index].note}</textarea></div>
     </div>
     <div class="action" id="submit"><p>提交</p></div>
@@ -731,6 +750,8 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
     <div class="formItem_Copy"><label for="pwd">密码：</label><input type="text" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="email">邮箱：</label><input type="text" id="email" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="emailCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制"></div>
+    <div class="formItem_Copy"><p>修改时间：${getReadableTime(by[index].moDate)}</p></div>
+    ${from.isSame(Folder.bin())? `<div class="formItem_Copy"><p>删除时间：${getReadableTime(by[index].rmDate!)}</p></div>` : ""}
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" readonly>${by[index].note}</textarea></div>
     </div>
     <div class="action" id="back"><p>返回</p></div>
