@@ -122,18 +122,20 @@ class Folder {
 
     特别的，主文件夹的name为":"，parent为""，在回收站中的文件name为"~"，parent为""
     */
-    constructor(nameOrClass, parent = ":") {
+    constructor(nameOrClass, parent = ":", time = Date.now().toString()) {
         this.type = Type.Folder;
         this.type = Type.Folder;
-        this.moDate = new Date();
-        this.rmDate = null;
         if (typeof nameOrClass === "string") {
             this.name = nameOrClass;
             this.parent = parent;
+            this.moDate = time;
+            this.rmDate = null;
         }
         else {
             this.name = nameOrClass.name;
             this.parent = nameOrClass.parent;
+            this.moDate = nameOrClass.moDate;
+            this.rmDate = nameOrClass.rmDate;
         }
     }
     getHtml(id, checkable = false) {
@@ -146,12 +148,14 @@ class Folder {
 			<div class="checkbox" id="folder${id}-checkboxDiv"><input type="checkbox" id="folder${id}-checkbox"></div>
 			<div class="content">
 				<p>${this.name}</p>
+                <p>修改日期：${getReadableTime(this.moDate)}</p>
 				${tool}
 			</div>
         </div>`;
         else
             return `<div class="info" id="folder${id}" draggable="true">
             <p>${this.name}</p>
+            <p>修改日期：${getReadableTime(this.moDate)}</p>
             ${tool}
         </div>`;
     }
@@ -165,12 +169,14 @@ class Folder {
 			<div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
 			<div class="content">
 				<p>${this.name}</p>
+                <p>删除日期：${getReadableTime(this.rmDate)}</p>
 				${tool}
 			</div>
         </div>`;
         return `
         <div class="info" id="recent${id}" draggable="true">
             <p>${this.name}</p>
+            <p>删除日期：${getReadableTime(this.rmDate)}</p>
             ${tool}
         </div>
         `;
@@ -181,12 +187,12 @@ class Folder {
     static bin() {
         return new Folder("~", "");
     }
-    static fromString(str) {
+    static fromString(str, time = Date.now().toString()) {
         if (str[str.length - 1] != "/")
             str += "/";
         const arr = str.split("/");
         let k = arr.slice(0, arr.length - 2).join("/");
-        return new Folder(arr[arr.length - 2], k == "" ? "" : k + "/");
+        return new Folder(arr[arr.length - 2], k == "" ? "" : k + "/", time);
     }
     stringify() {
         return this.parent + this.name + "/";
@@ -417,27 +423,28 @@ function update(dir, checkable = false) {
     let has = false;
     for (let i = 0; i < folderList.length; i++) {
         if (dir.isInclude(folderList[i])) {
-            nowFolders.push(folderList[i]);
+            nowFolders.push({ item: folderList[i], idx: i });
             has = true;
         }
     }
     for (let i = 0; i < pwdList.length; i++) {
         if (dir.isInclude(pwdList[i])) {
-            nowPwds.push(pwdList[i]);
+            nowPwds.push({ item: pwdList[i], idx: i });
             has = true;
         }
     }
     nowFolders.sort((a, b) => {
-        return a.name.localeCompare(b.name);
+        return a.item.name.localeCompare(b.item.name);
     });
     nowPwds.sort((a, b) => {
-        return a.from.localeCompare(b.from);
+        return a.item.from.localeCompare(b.item
+            .from);
     });
     nowFolders.forEach((value, idx) => {
-        inner += value.getHtml(idx, checkable);
+        inner += value.item.getHtml(idx, checkable);
     });
     nowPwds.forEach((value, idx) => {
-        inner += value.getHtml(idx, checkable);
+        inner += value.item.getHtml(idx, checkable);
     });
     if (!has) {
         inner += `<p>暂无密码</p>`;
@@ -514,7 +521,7 @@ function update(dir, checkable = false) {
             var _a;
             if (folderIsEditing)
                 return;
-            (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData("text/plain", "p" + i.toString());
+            (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData("text/plain", "p" + nowPwds[i].idx.toString());
         });
         if (checkable) {
             const check = document.querySelector(`#pwd${i}-checkboxDiv`);
@@ -716,8 +723,8 @@ function deleteItem(type, index, dir_from, _save = true) {
                 deleteItem(Type.Folder, i, dir_from, false);
             }
         });
-        folderList[index] = Folder.fromString(Folder.bin().stringify() + folderList[index].stringify().slice(2));
-        folderList[index].rmDate = new Date();
+        folderList[index] = Folder.fromString(Folder.bin().stringify() + folderList[index].stringify().slice(2), folderList[index].moDate);
+        folderList[index].rmDate = Date.now().toString();
         recentItem.unshift(new Folder(folderList[index]));
         folderList.splice(index, 1);
     }
@@ -740,7 +747,9 @@ function recoverPwd(index) {
         pwdList.push(recentItem[index]);
     }
     else {
+        let x = recentItem[index].moDate;
         recentItem[index] = Folder.fromString(Folder.root().stringify() + recentItem[index].stringify().slice(2));
+        recentItem[index].moDate = x;
         mkdir(Folder.fromString(recentItem[index].parent));
         let has = false;
         folderList.forEach((item) => {

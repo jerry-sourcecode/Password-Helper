@@ -119,8 +119,8 @@ class Password{ // 密码类
 class Folder {
     name: string;
     parent: string;
-    moDate: Date;
-    rmDate: Date | null;
+    moDate: string;
+    rmDate: string | null;
     type: Type = Type.Folder;
     /*
     name: 文件夹名称
@@ -131,16 +131,18 @@ class Folder {
 
     特别的，主文件夹的name为":"，parent为""，在回收站中的文件name为"~"，parent为""
     */
-    constructor(nameOrClass: string | Folder, parent: string = ":"){
+    constructor(nameOrClass: string | Folder, parent: string = ":", time: string = Date.now().toString()){
         this.type = Type.Folder;
-        this.moDate = new Date();
-        this.rmDate = null;
         if (typeof nameOrClass === "string"){
             this.name = nameOrClass;
             this.parent = parent;
+            this.moDate = time;
+            this.rmDate = null;
         } else {
             this.name = nameOrClass.name;
             this.parent = nameOrClass.parent;
+            this.moDate = nameOrClass.moDate;
+            this.rmDate = nameOrClass.rmDate;
         }
     }
 	getHtml(id: number, checkable: boolean = false): string{
@@ -152,11 +154,13 @@ class Folder {
 			<div class="checkbox" id="folder${id}-checkboxDiv"><input type="checkbox" id="folder${id}-checkbox"></div>
 			<div class="content">
 				<p>${this.name}</p>
+                <p>修改日期：${getReadableTime(this.moDate)}</p>
 				${tool}
 			</div>
         </div>`;
 		else return `<div class="info" id="folder${id}" draggable="true">
             <p>${this.name}</p>
+            <p>修改日期：${getReadableTime(this.moDate)}</p>
             ${tool}
         </div>`;
     }
@@ -169,12 +173,14 @@ class Folder {
 			<div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
 			<div class="content">
 				<p>${this.name}</p>
+                <p>删除日期：${getReadableTime(this.rmDate!)}</p>
 				${tool}
 			</div>
         </div>`;
         return `
         <div class="info" id="recent${id}" draggable="true">
             <p>${this.name}</p>
+            <p>删除日期：${getReadableTime(this.rmDate!)}</p>
             ${tool}
         </div>
         `;
@@ -185,11 +191,11 @@ class Folder {
     static bin(): Folder{
         return new Folder("~", "");
     }
-    static fromString(str: string): Folder{
+    static fromString(str: string, time: string = Date.now().toString()): Folder{
         if (str[str.length - 1] != "/") str += "/";
         const arr = str.split("/");
         let k = arr.slice(0, arr.length - 2).join("/");
-        return new Folder(arr[arr.length - 2], k == "" ? "" : k + "/");
+        return new Folder(arr[arr.length - 2], k == "" ? "" : k + "/", time);
     }
 	stringify(): string{
         return this.parent + this.name + "/";
@@ -408,34 +414,37 @@ function update(dir: Folder, checkable: boolean = false) : void{
     }
     </div>
     `;
-    let nowPwds: Array<Password> = [];
-    let nowFolders: Array<Folder> = [];
+    type pwdMapping = {item: Password, idx: number};
+    type folderMapping = {item: Folder, idx: number};
+    let nowPwds: Array<pwdMapping> = [];
+    let nowFolders: Array<folderMapping> = [];
     let has : boolean = false;
     for (let i = 0; i < folderList.length; i++){
         if (dir.isInclude(folderList[i])) {
-            nowFolders.push(folderList[i]);
+            nowFolders.push({item: folderList[i], idx: i});
             has = true;
         }
     }
     for (let i = 0; i < pwdList.length; i++){
         if (dir.isInclude(pwdList[i])) {
-            nowPwds.push(pwdList[i]);
+            nowPwds.push({item: pwdList[i], idx: i});
             has = true;
         }
     }
 
-    nowFolders.sort((a: Folder, b: Folder) => {
-        return a.name.localeCompare(b.name);
+    nowFolders.sort((a: folderMapping, b: folderMapping) => {
+        return a.item.name.localeCompare(b.item.name);
     });
-    nowPwds.sort((a: Password, b: Password) => {
-        return a.from.localeCompare(b.from);
+    nowPwds.sort((a: pwdMapping, b: pwdMapping) => {
+        return a.item.from.localeCompare(b.item
+            .from);
     });
 
-    nowFolders.forEach((value: Folder, idx: number) => {
-        inner += value.getHtml(idx, checkable);
+    nowFolders.forEach((value: folderMapping, idx: number) => {
+        inner += value.item.getHtml(idx, checkable);
     });
-    nowPwds.forEach((value: Password, idx: number) => {
-        inner += value.getHtml(idx, checkable);
+    nowPwds.forEach((value: pwdMapping, idx: number) => {
+        inner += value.item.getHtml(idx, checkable);
     });
 
     if (!has){
@@ -512,7 +521,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
         const pwd = document.querySelector(`#pwd${i}`);
         pwd!.addEventListener("dragstart", (e) => {
             if (folderIsEditing) return;
-            (e as DragEvent)?.dataTransfer?.setData("text/plain", "p" + i.toString());
+            (e as DragEvent)?.dataTransfer?.setData("text/plain", "p" + nowPwds[i].idx.toString());
         });
 
         if (checkable){
@@ -709,8 +718,8 @@ function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean 
                 deleteItem(Type.Folder, i, dir_from, false);
             }
         })
-        folderList[index] = Folder.fromString(Folder.bin().stringify() + folderList[index].stringify().slice(2));
-        folderList[index].rmDate = new Date();
+        folderList[index] = Folder.fromString(Folder.bin().stringify() + folderList[index].stringify().slice(2), folderList[index].moDate);
+        folderList[index].rmDate = Date.now().toString();
         recentItem.unshift(new Folder(folderList[index]));
         folderList.splice(index, 1);
     }
@@ -735,7 +744,9 @@ function recoverPwd(index: number) : void{
         pwdList.push(recentItem[index]);
     }
     else {
-        recentItem[index] = Folder.fromString(Folder.root().stringify() + recentItem[index].stringify().slice(2));
+        let x: string = recentItem[index].moDate;
+        recentItem[index] = Folder.fromString(Folder.root().stringify() + recentItem[index].stringify().slice(2)); 
+        recentItem[index].moDate = x;
         mkdir(Folder.fromString(recentItem[index].parent));
         let has: boolean = false;
         folderList.forEach((item) => {
