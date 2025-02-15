@@ -384,6 +384,10 @@ function deepCopy<T>(value: T): T {
 }
 
 
+function init(dir: Folder): void{
+    saveData();
+    update(dir);
+}
 // 渲染main界面
 function update(dir: Folder, checkable: boolean = false) : void{
     if (dir.stringify() == "~/"){
@@ -403,8 +407,8 @@ function update(dir: Folder, checkable: boolean = false) : void{
     <div id="MainToolBar">
     ${checkable?
         `<p class="tool" id="checkable">取消选择</p>
-        <p class="tool" id="checkable">全部选择</p>
-        <p class="tool" id="checkable">反向选择</p>
+        <p class="tool" id="check-all">全部选择</p>
+        <p class="tool" id="check-invert">反向选择</p>
         <img src="../pages/resources/delete.png" title="删除" class="tool" id="delete">`
         :
         `<p class="tool" id="checkable">选择</p>
@@ -436,8 +440,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
         return a.item.name.localeCompare(b.item.name);
     });
     nowPwds.sort((a: pwdMapping, b: pwdMapping) => {
-        return a.item.from.localeCompare(b.item
-            .from);
+        return a.item.from.localeCompare(b.item.from);
     });
 
     nowFolders.forEach((value: folderMapping, idx: number) => {
@@ -466,6 +469,35 @@ function update(dir: Folder, checkable: boolean = false) : void{
     document.querySelector("#checkable")?.addEventListener("click", () => {
         update(dir, !checkable);
     });
+    if (checkable){
+        document.querySelector("#check-all")?.addEventListener("click", () => {
+            nowFolders.forEach((value: folderMapping, index: number) => {
+                (document.querySelector(`#folder${index}-checkbox`) as HTMLInputElement)!.checked = true;
+            })
+            nowPwds.forEach((value: pwdMapping, index: number) => {
+                (document.querySelector(`#pwd${index}-checkbox`) as HTMLInputElement)!.checked = true;
+            })
+        });
+        document.querySelector("#check-invert")?.addEventListener("click", () => {
+            nowFolders.forEach((value: folderMapping, index: number) => {
+                (document.querySelector(`#folder${index}-checkbox`) as HTMLInputElement)!.checked = !(document.querySelector(`#folder${index}-checkbox`) as HTMLInputElement)!.checked;
+            })
+            nowPwds.forEach((value: pwdMapping, index: number) => {
+                (document.querySelector(`#pwd${index}-checkbox`) as HTMLInputElement)!.checked = !(document.querySelector(`#pwd${index}-checkbox`) as HTMLInputElement)!.checked;
+            })
+        })
+        document.querySelector("#delete")?.addEventListener("click", () => {
+            nowFolders.forEach((value: folderMapping, index: number) => {
+                if ((document.querySelector(`#folder${index}-checkbox`) as HTMLInputElement)!.checked) deleteItem(Type.Folder, index, dir, false);
+            })
+            nowPwds.forEach((value: pwdMapping, index: number) => {
+                if ((document.querySelector(`#pwd${index}-checkbox`) as HTMLInputElement)!.checked){
+                    deleteItem(Type.Password, index, dir, false);
+                }
+            })
+            init(dir);
+        })
+    }
     document.querySelector("#newFolder")?.addEventListener("click", () => {
         let k : Set<number> = new Set()
         for (let i = 0; i < folderList.length; i++){
@@ -518,8 +550,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
             showPwd(pwdList, i, dir);
         });
 
-        const pwd = document.querySelector(`#pwd${i}`);
-        pwd!.addEventListener("dragstart", (e) => {
+        info!.addEventListener("dragstart", (e) => {
             if (folderIsEditing) return;
             (e as DragEvent)?.dataTransfer?.setData("text/plain", "p" + nowPwds[i].idx.toString());
         });
@@ -557,15 +588,13 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 folderIsEditing = false;
                 if (folderList.findIndex(v => (v.isSame(newFolder))) != -1 && !newFolder.isSame(folderList[i])){
                     window.msg.warning("警告", "文件夹名已存在");
-                    saveData();
-                    update(dir);
+                    init(dir);
                     return;
                 }
                 for(let j = 0; j < newFolder.name.length; j++){
                     if (newFolder.name[j] == "/"){
                         window.msg.warning("警告", "文件夹名不能包含“/”");
-                        saveData();
-                        update(dir);
+                        init(dir);
                         return;
                     }
                     }
@@ -580,8 +609,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
                     }
                 }
                 folderList[i] = new Folder(newFolder);
-                saveData();
-                update(dir);
+                init(dir);
             });
         });
 
@@ -601,7 +629,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
 
         folder!.addEventListener("dragstart", (e) => {
             if (folderIsEditing) return;
-            (e as DragEvent)?.dataTransfer?.setData("text/plain", "f" + i.toString());
+            (e as DragEvent)?.dataTransfer?.setData("text/plain", "f" + nowFolders[i].idx.toString());
         });
         folder!.addEventListener("dragover", (e) => {
             if (folderIsEditing) return;
@@ -614,10 +642,17 @@ function update(dir: Folder, checkable: boolean = false) : void{
             if (index[0] == "p"){
                 pwdList[parseInt(index.substring(1))].dir = folderList[i];
             } else if (index[0] == "f"){
-                folderList[parseInt(index.substring(1))].setParent(folderList[i]);
+                let flag: boolean = false;
+                folderList.forEach((v, idx) => {
+                    if (v.parent == folderList[i].stringify() && idx != parseInt(index.substring(1)) && v.name == folderList[idx].name){
+                        flag = true;
+                    }
+                })
+                if (!flag) folderList[parseInt(index.substring(1))].setParent(folderList[i]);
+                else window.msg.warning("警告", `文件夹已存在`);
             }
-            saveData()
-            update(dir);
+            saveData();
+            update(dir, checkable)
         });
 
         if (checkable){
@@ -689,8 +724,7 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
         }
         const dir = by[index].dir;
         by[index] = new Password(name, uname, pwd, note, email, phone, dir);
-        saveData()
-        update(dir);
+        init(dir);
     });
     document.querySelector("#cancel")?.addEventListener("click", () => {
         if (isAppend){
@@ -724,14 +758,18 @@ function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean 
         folderList.splice(index, 1);
     }
     if (_save){
-        saveData();
-        update(dir_from);
+        init(dir_from)
     }
 }
 
-function deleterecentItem(index: number) : void{
+function deleterecentItem(index: number | Array<number>) : void{
     // 删除最近删除的密码
-    recentItem.splice(index, 1);
+    if (Array.isArray(index)){
+        recentItem = recentItem.filter((item, i) => {
+            return !index.includes(i);
+        });
+    }
+    else recentItem.splice(index, 1);
     saveData();
 }
 
@@ -869,7 +907,11 @@ function showRecent(checkable: boolean = false) : void{
     let inner : string = `<div class="title">最近删除</div>
     <div id="MainToolBar">
     ${checkable ?
-        `<p class="tool" id="checkable">取消选择</p>`
+        `<p class="tool" id="checkable">取消选择</p>
+        <p class="tool" id="check-all">全部选择</p>
+        <p class="tool" id="check-invert">反向选择</p>
+        <p class="tool" id="delete">删除</p>
+        <p class="tool" id="recover">恢复</p>`
     :
         `<p class="tool" id="checkable">选择</p>`
     }
@@ -889,9 +931,46 @@ function showRecent(checkable: boolean = false) : void{
     <div class="action" id="back"><p>返回</p></div>
     `;
     main!.innerHTML = inner;
-    document.querySelector("div#MainToolBar")?.addEventListener("click", () => {
+    document.querySelector("#checkable")?.addEventListener("click", () => {
         showRecent(!checkable);
     });
+    if (checkable){
+        document.querySelector("#check-all")?.addEventListener("click", () => {
+            recentItem.forEach((item: Item, index: number) => {
+                (document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked = true;
+            })
+        });
+        document.querySelector("#check-invert")?.addEventListener("click", () => {
+            recentItem.forEach((item: Item, index: number) => {
+                (document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked = !(document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked;
+            })
+        });
+        document.querySelector("#delete")?.addEventListener("click", () => {
+            let cnt: number = 0;
+            recentItem.forEach((item: Item, index: number) => {
+                if ((document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked) cnt++;
+            })
+            if (cnt == 0) return;
+            let result = window.msg.warning("警告", `此操作不可撤销，你确定要永久删除${cnt}项吗？`, ["确定", "取消"])
+            .then((res) => {
+                if (res == 0){
+                    let de: Array<number> = [];
+                    recentItem.forEach((item: Item, index: number) => {
+                        if ((document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked) 
+                            de.push(index);
+                    })
+                    deleterecentItem(de);
+                    showRecent();
+                }
+            });
+        });
+        document.querySelector("#recover")?.addEventListener("click", () => {
+            for(let i = recentItem.length - 1; i >= 0; i--){
+                if ((document.querySelector(`#recent${i}-checkbox`) as HTMLInputElement)!.checked) recoverPwd(i);
+            }
+            showRecent();
+        });
+    }
     for(let i = 0; i < recentItem.length; i++){
         const recoverBtn = document.querySelector(`#recent${i}-recover`);
         recoverBtn!.addEventListener("click", (e) => {
@@ -950,8 +1029,7 @@ function setting() : void {
     document.querySelector("#save")?.addEventListener("click", () => {
         mainPwd = (document.querySelector("#mainPwd") as HTMLInputElement).value;
         isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
-        saveData();
-        update(Folder.root());
+        init(Folder.root());
     })
     document.querySelector("#cancel")?.addEventListener("click", () => {
         update(Folder.root());

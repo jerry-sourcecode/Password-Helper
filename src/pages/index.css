@@ -200,7 +200,8 @@ div.content{
     width: 39vw;
 }
 div#MainToolBar{
-    position: absolute; top: 15px; right: 45px;
+    margin-left: auto;
+    margin-right: 5vw;
 }
 img.tool{
     width: 30px;height: 30px;
