@@ -18,12 +18,12 @@ class Password{ // 密码类
     note: string; // 备注
     dir: Folder; // 文件夹
     type: Type = Type.Password; // 类型
-    moDate: Date; // 创建日期
-    rmDate: Date | null = null; // 删除日期
+    moDate: string; // 创建日期
+    rmDate: string | null = null; // 删除日期
     constructor(fromOrdata: string | Password = "", uname: string = "", pwd: string = "", note: string = "", email: string = "", phone: string = "", dir: Folder = Folder.root()){ // 构造函数
         this.type = Type.Password;
         if (typeof fromOrdata === "string") {
-            this.moDate = new Date();
+            this.moDate = Date.now().toString();
             this.rmDate = null;
             this.from = fromOrdata;
             this.uname = uname;
@@ -113,9 +113,6 @@ class Password{ // 密码类
         // 检查当前密码是否在folder或folder的子孙目录的目录下
         const f = folder.stringify()
         return f == this.dir.stringify().slice(0, f.length);
-    }
-    updateDate(){
-        this.moDate = new Date();
     }
 }
 
@@ -224,16 +221,12 @@ class Folder {
         }
         return lans;
     }
-    updateDate(){
-        this.moDate = new Date();
-    }
 }
 
-function encrypt(data: Item, key: string): Item{ // 加密
+function encrypt(data: Item, key: string, index: number = 0): Item{ // 加密
     let enc: Item;
     if (data instanceof Password) enc = new Password(data);
     else enc = new Folder(data);
-    let index : number = 0;
     function getKey(): string{
         let dkey: string = key + key; // 重复主密码
         let res: string = dkey.slice(index, index + key.length); // 取出主密码
@@ -241,18 +234,21 @@ function encrypt(data: Item, key: string): Item{ // 加密
         if (index >= key.length) index = 0;
         return res;
     }
-    for (let v of Object.keys(data) as (keyof (Item))[]){
+    let keyList: Array<keyof Item> = <Array<keyof Item>>Object.keys(data);
+    keyList.sort();
+    for (let v of keyList){
         if (typeof data[v] === "string"){
             (enc as any)[v] = window.cryp.encrypt(data[v], getKey())
+        } else if (data[v] instanceof Folder){
+            (enc as any)[v] = new Folder(<Folder>encrypt(data[v], key, index));
         }
     }
     return enc;
 }
-function decrypt(data:Item, key: string): Item{ // 解密
+function decrypt(data:Item, key: string, index: number = 0): Item{ // 解密
     let dec: Item;
     if (data instanceof Password) dec = new Password(data);
     else dec = new Folder(data);
-    let index : number = 0;
     function getKey(): string{
         let dkey: string = key + key; // 重复主密码
         let res: string = dkey.slice(index, index + key.length); // 取出主密码
@@ -260,9 +256,13 @@ function decrypt(data:Item, key: string): Item{ // 解密
         if (index >= key.length) index = 0;
         return res;
     }
-    for (let v of Object.keys(data) as (keyof (Item))[]){
+    let keyList: Array<keyof Item> = <Array<keyof Item>>Object.keys(data);
+    keyList.sort();
+    for (let v of keyList){
         if (typeof data[v] == "string"){
             (dec as any)[v] = window.cryp.decrypt(data[v], getKey());
+        } else if (data[v] instanceof Folder){
+            (dec as any)[v] = new Folder(<Folder>decrypt(data[v], key, index));
         }
     }
     return dec;
@@ -311,12 +311,13 @@ function getScroll(): {top: number, left: number}{
         left: main!.scrollLeft || main!.scrollLeft
     }
 }
-function getReadableTime(time: Date): string{
+function getReadableTime(time: Date | string): string{
+    if (typeof time === "string") time = new Date(Number(time));
     let minite = time.getMinutes(), strminite: string = minite.toString();
     if (minite < 10) strminite = "0" + minite;
     let sec = time.getSeconds(), strsec: string = sec.toString();
     if (sec < 10) strsec = "0" + sec;
-    return time.getFullYear() + "." + (time.getMonth() + 1) + "." + time.getDate() + " " + time.getHours() + ":" + strminite + ":" + strsec;
+    return time.getFullYear() + "/" + (time.getMonth() + 1) + "/" + time.getDate() + " " + time.getHours() + ":" + strminite + ":" + strsec;
 }
 
 function saveData(): void{ // 保存数据
@@ -359,7 +360,21 @@ function mkdir(dir: Folder): void{ // 创建文件夹
     }
     folderList.push(dir);
     saveData();
-
+}
+function deepCopy<T>(value: T): T {
+    if (value === null || typeof value !== "object") {
+        return value;
+    }
+    if (Array.isArray(value)) {
+        return value.map(item => deepCopy(item)) as unknown as T;
+    }
+    const copied = {} as T;
+    for (const key in value) {
+        if (Object.prototype.hasOwnProperty.call(value, key)) {
+        copied[key] = deepCopy(value[key]);
+        }
+    }
+    return copied;
 }
 
 
@@ -680,7 +695,7 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
 function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean = true) : void{
     if (type == Type.Password) {
         pwdList[index].dir = Folder.fromString(Folder.bin().stringify() + pwdList[index].dir.stringify().slice(2));
-        pwdList[index].rmDate = new Date();
+        pwdList[index].rmDate = Date.now().toString();
         recentItem.unshift(new Password(pwdList[index]));
         pwdList.splice(index, 1);
     } else {

@@ -13,7 +13,7 @@ class Password {
         this.rmDate = null; // 删除日期
         this.type = Type.Password;
         if (typeof fromOrdata === "string") {
-            this.moDate = new Date();
+            this.moDate = Date.now().toString();
             this.rmDate = null;
             this.from = fromOrdata;
             this.uname = uname;
@@ -110,9 +110,6 @@ class Password {
         // 检查当前密码是否在folder或folder的子孙目录的目录下
         const f = folder.stringify();
         return f == this.dir.stringify().slice(0, f.length);
-    }
-    updateDate() {
-        this.moDate = new Date();
     }
 }
 class Folder {
@@ -225,17 +222,13 @@ class Folder {
         }
         return lans;
     }
-    updateDate() {
-        this.moDate = new Date();
-    }
 }
-function encrypt(data, key) {
+function encrypt(data, key, index = 0) {
     let enc;
     if (data instanceof Password)
         enc = new Password(data);
     else
         enc = new Folder(data);
-    let index = 0;
     function getKey() {
         let dkey = key + key; // 重复主密码
         let res = dkey.slice(index, index + key.length); // 取出主密码
@@ -244,20 +237,24 @@ function encrypt(data, key) {
             index = 0;
         return res;
     }
-    for (let v of Object.keys(data)) {
+    let keyList = Object.keys(data);
+    keyList.sort();
+    for (let v of keyList) {
         if (typeof data[v] === "string") {
             enc[v] = window.cryp.encrypt(data[v], getKey());
+        }
+        else if (data[v] instanceof Folder) {
+            enc[v] = new Folder(encrypt(data[v], key, index));
         }
     }
     return enc;
 }
-function decrypt(data, key) {
+function decrypt(data, key, index = 0) {
     let dec;
     if (data instanceof Password)
         dec = new Password(data);
     else
         dec = new Folder(data);
-    let index = 0;
     function getKey() {
         let dkey = key + key; // 重复主密码
         let res = dkey.slice(index, index + key.length); // 取出主密码
@@ -266,9 +263,14 @@ function decrypt(data, key) {
             index = 0;
         return res;
     }
-    for (let v of Object.keys(data)) {
+    let keyList = Object.keys(data);
+    keyList.sort();
+    for (let v of keyList) {
         if (typeof data[v] == "string") {
             dec[v] = window.cryp.decrypt(data[v], getKey());
+        }
+        else if (data[v] instanceof Folder) {
+            dec[v] = new Folder(decrypt(data[v], key, index));
         }
     }
     return dec;
@@ -315,13 +317,15 @@ function getScroll() {
     };
 }
 function getReadableTime(time) {
+    if (typeof time === "string")
+        time = new Date(Number(time));
     let minite = time.getMinutes(), strminite = minite.toString();
     if (minite < 10)
         strminite = "0" + minite;
     let sec = time.getSeconds(), strsec = sec.toString();
     if (sec < 10)
         strsec = "0" + sec;
-    return time.getFullYear() + "." + (time.getMonth() + 1) + "." + time.getDate() + " " + time.getHours() + ":" + strminite + ":" + strsec;
+    return time.getFullYear() + "/" + (time.getMonth() + 1) + "/" + time.getDate() + " " + time.getHours() + ":" + strminite + ":" + strsec;
 }
 function saveData() {
     let salt = randstr(16);
@@ -361,6 +365,21 @@ function mkdir(dir) {
     }
     folderList.push(dir);
     saveData();
+}
+function deepCopy(value) {
+    if (value === null || typeof value !== "object") {
+        return value;
+    }
+    if (Array.isArray(value)) {
+        return value.map(item => deepCopy(item));
+    }
+    const copied = {};
+    for (const key in value) {
+        if (Object.prototype.hasOwnProperty.call(value, key)) {
+            copied[key] = deepCopy(value[key]);
+        }
+    }
+    return copied;
 }
 // 渲染main界面
 function update(dir, checkable = false) {
@@ -682,7 +701,7 @@ function changePwd(by, index, dir, isAppend = false) {
 function deleteItem(type, index, dir_from, _save = true) {
     if (type == Type.Password) {
         pwdList[index].dir = Folder.fromString(Folder.bin().stringify() + pwdList[index].dir.stringify().slice(2));
-        pwdList[index].rmDate = new Date();
+        pwdList[index].rmDate = Date.now().toString();
         recentItem.unshift(new Password(pwdList[index]));
         pwdList.splice(index, 1);
     }
