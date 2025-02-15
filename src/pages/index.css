@@ -35,7 +35,7 @@ body{
 
 div.background{
     background-color: white;
-    width: 50vw;
+    width: 55vw;
     position: fixed;
     top: 0;
     bottom: 0;
@@ -46,7 +46,7 @@ div.main{
     align-items: center;
     flex-direction: column;
     margin: 15px;
-    width: 50vw;
+    width: 55vw;
     height: 96vh;
     overflow: auto;
     position: relative;

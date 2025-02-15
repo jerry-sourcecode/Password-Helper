@@ -10,7 +10,10 @@ var Type;
 class Password {
     constructor(fromOrdata = "", uname = "", pwd = "", note = "", email = "", phone = "", dir = Folder.root()) {
         this.type = Type.Password; // 类型
+        this.rmDate = null; // 删除日期
         this.type = Type.Password;
+        this.mkDate = new Date();
+        this.rmDate = null;
         if (typeof fromOrdata === "string") {
             this.from = fromOrdata;
             this.uname = uname;
@@ -52,7 +55,7 @@ class Password {
     getHtmlRecent(id, checkable = false) {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
                 <p class="icon" id="recent${id}-recover" style="margin-right: 8px;">恢复</p>
-                <p class="icon" id="recent${id}-delete">彻底删除</p>
+                <p class="icon" id="recent${id}-delete">删除</p>
             </div>`;
         if (checkable)
             return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
@@ -119,6 +122,8 @@ class Folder {
     constructor(nameOrClass, parent = ":") {
         this.type = Type.Folder;
         this.type = Type.Folder;
+        this.mkDate = new Date();
+        this.rmDate = null;
         if (typeof nameOrClass === "string") {
             this.name = nameOrClass;
             this.parent = parent;
@@ -150,7 +155,7 @@ class Folder {
     getHtmlRecent(id, checkable = false) {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
                 <p class="icon" id="recent${id}-recover" style="margin-right: 8px;">恢复</p>
-                <p class="icon" id="recent${id}-delete">彻底删除</p>
+                <p class="icon" id="recent${id}-delete">删除</p>
             </div>`;
         if (checkable)
             return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
@@ -359,7 +364,10 @@ function update(dir, checkable = false) {
     ${dir.isSame(Folder.root()) ? "" : `<div class="subtitle">当前位置：${Password.format(dir.toReadable(), showPathMaxLength, "front")}</div>`}
     <div id="MainToolBar">
     ${checkable ?
-        `<p class="tool" id="checkable">取消选择</p>`
+        `<p class="tool" id="checkable">取消选择</p>
+        <p class="tool" id="checkable">全部选择</p>
+        <p class="tool" id="checkable">反向选择</p>
+        <img src="../pages/resources/delete.png" title="删除" class="tool" id="delete">`
         :
             `<p class="tool" id="checkable">选择</p>
         <img src="../pages/resources/setting.png" title="设置" class="tool" id="setting">
@@ -367,19 +375,33 @@ function update(dir, checkable = false) {
     	${dir.isSame(Folder.root()) ? "" : `<img src="../pages/resources/up.png" title="上移到${faname == ":" ? "主文件夹" : faname}" class="tool" id="up">`}`}
     </div>
     `;
+    let nowPwds = [];
+    let nowFolders = [];
     let has = false;
     for (let i = 0; i < folderList.length; i++) {
         if (dir.isInclude(folderList[i])) {
-            inner += folderList[i].getHtml(i, checkable);
+            nowFolders.push(folderList[i]);
             has = true;
         }
     }
     for (let i = 0; i < pwdList.length; i++) {
         if (dir.isInclude(pwdList[i])) {
-            inner += pwdList[i].getHtml(i, checkable);
+            nowPwds.push(pwdList[i]);
             has = true;
         }
     }
+    nowFolders.sort((a, b) => {
+        return a.name.localeCompare(b.name);
+    });
+    nowPwds.sort((a, b) => {
+        return a.from.localeCompare(b.from);
+    });
+    nowFolders.forEach((value, idx) => {
+        inner += value.getHtml(idx, checkable);
+    });
+    nowPwds.forEach((value, idx) => {
+        inner += value.getHtml(idx, checkable);
+    });
     if (!has) {
         inner += `<p>暂无密码</p>`;
     }
@@ -433,9 +455,7 @@ function update(dir, checkable = false) {
     addBtn === null || addBtn === void 0 ? void 0 : addBtn.addEventListener("click", () => {
         addPwd(dir);
     });
-    for (let i = 0; i < pwdList.length; i++) {
-        if (!dir.isInclude(pwdList[i]))
-            continue;
+    for (let i = 0; i < nowPwds.length; i++) {
         const editBtn = document.querySelector(`#pwd${i}-edit`);
         editBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
@@ -471,9 +491,7 @@ function update(dir, checkable = false) {
             });
         }
     }
-    for (let i = 0; i < folderList.length; i++) {
-        if (!dir.isInclude(folderList[i]))
-            continue;
+    for (let i = 0; i < nowFolders.length; i++) {
         const feditBtn = document.querySelector(`#folder${i}-edit`);
         feditBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
@@ -640,10 +658,11 @@ function changePwd(by, index, dir, isAppend = false) {
         update(dir);
     });
 }
-// 删除密码，type为类型，index为索引，dir_from为来源文件夹，dir_rm为删除到的文件夹，默认为回收站，在外部的调用中，save不应被填写
-function deleteItem(type, index, dir_from, save = true) {
+// 删除密码，type为类型，index为索引，dir_from为来源文件夹，在外部的调用中，_save不应被填写
+function deleteItem(type, index, dir_from, _save = true) {
     if (type == Type.Password) {
         pwdList[index].dir = Folder.fromString(Folder.bin().stringify() + pwdList[index].dir.stringify().slice(2));
+        pwdList[index].rmDate = new Date();
         recentItem.unshift(new Password(pwdList[index]));
         pwdList.splice(index, 1);
     }
@@ -659,10 +678,11 @@ function deleteItem(type, index, dir_from, save = true) {
             }
         });
         folderList[index] = Folder.fromString(Folder.bin().stringify() + folderList[index].stringify().slice(2));
+        folderList[index].rmDate = new Date();
         recentItem.unshift(new Folder(folderList[index]));
         folderList.splice(index, 1);
     }
-    if (save) {
+    if (_save) {
         saveData();
         update(dir_from);
     }
@@ -674,6 +694,7 @@ function deleterecentItem(index) {
 }
 function recoverPwd(index) {
     // 恢复最近删除的密码
+    recentItem[index].rmDate = null;
     if (recentItem[index] instanceof Password) {
         recentItem[index].dir = Folder.fromString(Folder.root().stringify() + recentItem[index].dir.stringify().slice(2));
         mkdir(recentItem[index].dir);
@@ -812,8 +833,14 @@ function showRecent(checkable = false) {
     // 显示最近删除的密码
     let inner = `<div class="title">最近删除</div>
     <div id="MainToolBar">
-        <img src="../pages/resources/checkable.png" title="多选" class="tool" id="checkable">
+    ${checkable ?
+        `<p class="tool" id="checkable">取消选择</p>`
+        :
+            `<p class="tool" id="checkable">选择</p>`}
     </div>`;
+    recentItem.sort((a, b) => {
+        return a.rmDate > b.rmDate ? -1 : 1;
+    });
     for (let i = 0; i < recentItem.length; i++) {
         inner += recentItem[i].getHtmlRecent(i, checkable);
     }
