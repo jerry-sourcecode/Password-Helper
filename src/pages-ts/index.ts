@@ -1,3 +1,4 @@
+
 const simplePwd: Array<string> = [
     "12345",
     "123456",
@@ -31,7 +32,6 @@ const simplePwd: Array<string> = [
     "zxcvbnm",
     "1q2w3e",
 ]
-
 const lessSimplePwd: Array<string> = [
     "g_czechout",
     "zinch",
@@ -196,19 +196,15 @@ const lessSimplePwd: Array<string> = [
     "741852963",
     "a12345678"
   ];
-
 const showNoteMaxLength: number = 152; // 在main页面显示备注的最大长度
 const showOtherMaxLength: number = 60; // 在main页面显示来源、用户名、密码的最大长度
 const showPathMaxLength: number = 65; // 在main页面显示路径的最大长度
-
 enum Type{ // 类型枚举
     Folder, // 文件夹
     Password, // 密码
 }
-
 type Item = Folder | Password; // 项类型
 type clipboardItem = {type: Type, index: number};
-
 class Password{ // 密码类
     from: string; // 来源
     uname: string // 用户名
@@ -245,18 +241,18 @@ class Password{ // 密码类
         }
     }
     getHtml(id: number, checkable: boolean = false): string{
-		let tool = `<div class="tool" style="width: ${checkable?"39vw":"43vw"};">
-			<img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="编辑">
-			<img class="icon" id="pwd${id}-delete" src="./resources/delete.png" title="删除">
-		</div>`
-		if (checkable) return `<div class="info" style="flex-direction: row;" id="pwd${id}" draggable="true">
-			<div class="checkbox" id="pwd${id}-checkboxDiv"><input type="checkbox" id="pwd${id}-checkbox"></div>
-			<div class="content">
-				${this.getBaseHtml()}
-				${tool}
-			</div>
+        let tool = `<div class="tool" style="width: ${checkable?"39vw":"43vw"};">
+            <img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="编辑">
+            <img class="icon" id="pwd${id}-delete" src="./resources/delete.png" title="删除">
+        </div>`
+        if (checkable) return `<div class="info" style="flex-direction: row;" id="pwd${id}" draggable="true">
+            <div class="checkbox" id="pwd${id}-checkboxDiv"><input type="checkbox" id="pwd${id}-checkbox"></div>
+            <div class="content">
+                ${this.getBaseHtml()}
+                ${tool}
+            </div>
         </div>`;
-		else return `<div class="info" id="pwd${id}" draggable="true">
+        else return `<div class="info" id="pwd${id}" draggable="true">
             ${this.getBaseHtml()}
             ${tool}
         </div>`;
@@ -268,10 +264,10 @@ class Password{ // 密码类
             </div>`
         if (checkable) return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
             <div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
-			<div class="content">
-				${this.getBaseHtml(true)}
-				${tool}
-			</div>
+            <div class="content">
+                ${this.getBaseHtml(true)}
+                ${tool}
+            </div>
         </div>`;
         else return `<div class="info" id="recent${id}" draggable="true">
             ${this.getBaseHtml(true)}
@@ -315,7 +311,6 @@ class Password{ // 密码类
         return f == this.dir.stringify().slice(0, f.length);
     }
 }
-
 class Folder {
     name: string;
     parent: string;
@@ -328,7 +323,6 @@ class Folder {
     parent的格式如下：
     ":/a/"表示在主文件夹下的a文件夹内
     ""表示在主文件夹下
-
     特别的，主文件夹的name为":"，parent为""，在回收站中的文件name为"~"，parent为""
     */
     constructor(nameOrClass: string | Folder, parent: string = ":", time: string = Date.now().toString()){
@@ -345,20 +339,20 @@ class Folder {
             this.rmDate = nameOrClass.rmDate;
         }
     }
-	getHtml(id: number, checkable: boolean = false): string{
-		let tool = `<div class="tool" style="width: ${checkable?"39vw":"43vw"};">
-			<img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="重命名">
-			<img class="icon" id="folder${id}-delete" src="./resources/delete.png" title="删除">
-		</div>`
-		if (checkable) return `<div class="info" style="flex-direction: row;" id="folder${id}" draggable="true">
-			<div class="checkbox" id="folder${id}-checkboxDiv"><input type="checkbox" id="folder${id}-checkbox"></div>
-			<div class="content">
-				<p>${this.name}</p>
+    getHtml(id: number, checkable: boolean = false): string{
+        let tool = `<div class="tool" style="width: ${checkable?"39vw":"43vw"};">
+            <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="重命名">
+            <img class="icon" id="folder${id}-delete" src="./resources/delete.png" title="删除">
+        </div>`
+        if (checkable) return `<div class="info" style="flex-direction: row;" id="folder${id}" draggable="true">
+            <div class="checkbox" id="folder${id}-checkboxDiv"><input type="checkbox" id="folder${id}-checkbox"></div>
+            <div class="content">
+                <p>${this.name}</p>
                 <p>修改日期：${getReadableTime(this.moDate)}</p>
-				${tool}
-			</div>
+                ${tool}
+            </div>
         </div>`;
-		else return `<div class="info" id="folder${id}" draggable="true">
+        else return `<div class="info" id="folder${id}" draggable="true">
             <p>${this.name}</p>
             <p>修改日期：${getReadableTime(this.moDate)}</p>
             ${tool}
@@ -370,12 +364,12 @@ class Folder {
                 <p class="icon" id="recent${id}-delete">删除</p>
             </div>`;
         if (checkable) return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
-			<div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
-			<div class="content">
-				<p>${this.name}</p>
+            <div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
+            <div class="content">
+                <p>${this.name}</p>
                 <p>删除日期：${getReadableTime(this.rmDate!)}</p>
-				${tool}
-			</div>
+                ${tool}
+            </div>
         </div>`;
         return `
         <div class="info" id="recent${id}" draggable="true">
@@ -397,7 +391,7 @@ class Folder {
         let k = arr.slice(0, arr.length - 2).join("/");
         return new Folder(arr[arr.length - 2], k == "" ? "" : k + "/", time);
     }
-	stringify(): string{
+    stringify(): string{
         return this.parent + this.name + "/";
     }
     isSame(folder: Folder): boolean{
@@ -406,9 +400,9 @@ class Folder {
     setParent(parent: Folder){
         this.parent = parent.stringify();
     }
-	getParent(): Folder{
+    getParent(): Folder{
         return Folder.fromString(this.parent);
-	}
+    }
     // 判断item是否包含在当前文件夹中
     isInclude(item : Item): boolean{
         if (item instanceof Folder) return item.parent == this.stringify();
@@ -428,7 +422,6 @@ class Folder {
         return lans;
     }
 }
-
 function encrypt(data: Item, key: string, index: number = 0): Item{ // 加密
     let enc: Item;
     if (data instanceof Password) enc = new Password(data);
@@ -474,7 +467,6 @@ function decrypt(data:Item, key: string, index: number = 0): Item{ // 解密
     return dec;
 }
     
-
 let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
 const main = document.querySelector("#mainDiv"); // main界面
 let pwdList : Array<Password> = []; // 密码列表
@@ -485,7 +477,6 @@ let isremember : boolean = false; // 是否记住密码
 let folderIsEditing : boolean = false; // 是否正在编辑文件夹
 let currentFolder : Folder = Folder.root();
 let clipboard: Set<clipboardItem> = new Set();
-
 // 一些工具函数
 function random(a: number, b: number): number{ // 生成[a, b]之间的随机数
     return Math.floor(Math.random() * (b - a) + a);
@@ -526,14 +517,20 @@ function getReadableTime(time: Date | string): string{
     if (sec < 10) strsec = "0" + sec;
     return time.getFullYear() + "/" + (time.getMonth() + 1) + "/" + time.getDate() + " " + time.getHours() + ":" + strminite + ":" + strsec;
 }
-
+function hasDir(path: string, name: string, exceptIndex: Array<number> = []): boolean{
+    for(let i = 0; i < folderList.length; i++){
+        if (folderList[i].name == name && folderList[i].parent == path && exceptIndex.indexOf(i) == -1){
+            return true;
+        }
+    }
+    return false;
+}
 function saveData(): void{ // 保存数据
     let salt: string = randstr(16);
     let enc = window.cryp.pbkdf2(mainPwd, salt)
     let pwdListUpdated : Array<Password> = []
     let folderListUpdated : Array<Folder> = [];
     let recentItemUpdated : Array<Item> = [];
-
     for (let index = 0; index < pwdList.length; index++) {
         pwdListUpdated.push(encrypt(pwdList[index], enc) as Password);
     }
@@ -543,7 +540,6 @@ function saveData(): void{ // 保存数据
     for (let index = 0; index < recentItem.length; index++) {
         recentItemUpdated.push(encrypt(recentItem[index], enc));
     }
-
     // 数据保存
     let data = JSON.stringify({
         version: "1.0",
@@ -584,7 +580,6 @@ function deepCopy<T>(value: T): T {
     return copied;
 }
 
-
 function init(dir: Folder): void{
     saveData();
     update(dir);
@@ -619,7 +614,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
         <p class="tool" id="checkable">选择</p>
         <img src="../pages/resources/setting.png" title="设置" class="tool" id="setting">
         <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" id="newFolder">
-    	${dir.isSame(Folder.root())?"":`<img src="../pages/resources/up.png" title="上移到${faname == ":"?"主文件夹":faname}" class="tool" id="up">`}`
+        ${dir.isSame(Folder.root())?"":`<img src="../pages/resources/up.png" title="上移到${faname == ":"?"主文件夹":faname}" class="tool" id="up">`}`
     }
     </div>
     `;
@@ -640,21 +635,18 @@ function update(dir: Folder, checkable: boolean = false) : void{
             has = true;
         }
     }
-
     nowFolders.sort((a: folderMapping, b: folderMapping) => {
         return a.item.name.localeCompare(b.item.name);
     });
     nowPwds.sort((a: pwdMapping, b: pwdMapping) => {
         return a.item.from.localeCompare(b.item.from);
     });
-
     nowFolders.forEach((value: folderMapping, idx: number) => {
         inner += value.item.getHtml(idx, checkable);
     });
     nowPwds.forEach((value: pwdMapping, idx: number) => {
         inner += value.item.getHtml(idx, checkable);
     });
-
     if (!has){
         inner += `<p>暂无密码</p>`;
     }
@@ -671,9 +663,9 @@ function update(dir: Folder, checkable: boolean = false) : void{
     document.querySelector("#setting")?.addEventListener("click", () => {
         setting();
     });
-	document.querySelector("#up")?.addEventListener("click", () => {
-	    update(dir.getParent());
-	});
+    document.querySelector("#up")?.addEventListener("click", () => {
+        update(dir.getParent());
+    });
     document.querySelector("#checkable")?.addEventListener("click", () => {
         update(dir, !checkable);
     });
@@ -686,21 +678,13 @@ function update(dir: Folder, checkable: boolean = false) : void{
             const num: number = parseInt(index.substring(1));
             parent!.style.display = "none";
             if (index[0] == "p"){
-                pwdList[num].dir.parent = Folder.fromString(dir.parent).parent;
-                pwdList[num].dir.name = Folder.fromString(dir.parent).name;
+                moveItem(Type.Password, num, Folder.fromString(dir.parent));
             } else {
-                for(let i = 0; i < folderList.length; i++){
-                    if (folderList[i].name == folderList[num].name && i != num && folderList[i].parent == Folder.fromString(folderList[num].parent).parent){
-                        window.msg.warning("警告",`在${faname == ":"?"主文件夹":"“"+faname+"”"}下已存在名为“${folderList[i].name}”的文件夹`);
-                        return;
-                    }
-                }
-                folderList[num].parent = Folder.fromString(folderList[num].parent).parent;
+                moveItem(Type.Folder, num, Folder.fromString(dir.parent));
             }
             saveData();
             update(dir, checkable)
         });
-
         parent!.addEventListener("dragover", (e) => {
             if (folderIsEditing) return;
             e.preventDefault();
@@ -734,7 +718,6 @@ function update(dir: Folder, checkable: boolean = false) : void{
             })
             init(dir);
         })
-
         let copy = document.querySelector("#copy") as HTMLImageElement;
         copy?.addEventListener("click", () => {
             clipboard.clear();
@@ -752,40 +735,15 @@ function update(dir: Folder, checkable: boolean = false) : void{
             }, 1000);
         })
     } else {
-        function p(isMove: boolean = false): void {
-            for(let i of clipboard){
-                if (i.type == Type.Folder) {
-                    let have = false;
-                    for(let j = 0; j < folderList.length; j++){
-                        if (j != i.index && folderList[j].name == folderList[i.index].name && folderList[j].parent == dir.stringify()) {
-                            window.msg.warningSync("警告", `“${folderList[i.index].name}”已存在`);
-                            have = true;
-                            break;
-                        }
-                    }
-                    if (!have){
-                        let newFolder = new Folder(folderList[i.index]);
-                        newFolder.parent = dir.stringify();
-                        if (newFolder.isin(folderList[i.index])) window.msg.warningSync("警告", `目标文件夹“${folderList[i.index].name}”是源文件夹的子文件夹`);
-                        continue;
-                    }
-                    if (!have) folderList[folderList.push(new Folder(folderList[i.index])) - 1].parent = dir.stringify();
-                    if (have && isMove) clipboard.delete(i);
-                }
-                else {
-                    pwdList[pwdList.push(new Password(pwdList[i.index])) - 1].dir = new Folder(dir);
-                }
-            }
-        }
         document.querySelector("#paste")?.addEventListener("click", () => {
-            p();
+            for(let i of clipboard){
+                moveItem(i.type, i.index, dir, true);
+            }
             init(dir);
         })
         document.querySelector("#move")?.addEventListener("click", () => {
-            p(true);
             for(let i of clipboard){
-                if (i.type == Type.Folder) folderList.splice(i.index, 1);
-                else pwdList.splice(i.index, 1);
+                moveItem(i.type, i.index, dir);
             }
             clipboard.clear();
             init(dir)
@@ -830,25 +788,21 @@ function update(dir: Folder, checkable: boolean = false) : void{
             e?.stopPropagation();
             changePwd(pwdList, nowPwds[i].idx, dir);
         });
-
         const deleteBtn = document.querySelector(`#pwd${i}-delete`);
         deleteBtn!.addEventListener("click", (e) => {
             e?.stopPropagation();
             deleteItem(Type.Password, nowPwds[i].idx, dir);
         });
-
         const info = document.querySelector(`#pwd${i}`);
         info!.addEventListener("click", () => {
             if (folderIsEditing) return;
             showPwd(pwdList, nowPwds[i].idx, dir);
         });
-
         info!.addEventListener("dragstart", (e) => {
             if (folderIsEditing) return;
             if (!dir.isSame(Folder.root())) (document.querySelector("#parent") as HTMLElement)!.style.display = "flex";
             (e as DragEvent)?.dataTransfer?.setData("text/plain", "p" + nowPwds[i].idx.toString());
         });
-
         if (checkable){
             const check = document.querySelector(`#pwd${i}-checkboxDiv`) as HTMLDivElement;
             const checkBox = document.querySelector(`#pwd${i}-checkbox`) as HTMLInputElement;
@@ -906,7 +860,6 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 init(dir);
             });
         });
-
         const fdeleteBtn = document.querySelector(`#folder${i}-delete`);
         fdeleteBtn!.addEventListener("click", (e) => {
             if (folderIsEditing) return;
@@ -914,13 +867,11 @@ function update(dir: Folder, checkable: boolean = false) : void{
             deleteItem(Type.Folder, nowFolders[i].idx, dir);
             update(dir);
         });
-
         const folder = document.querySelector(`#folder${i}`);
         folder!.addEventListener("click", () => {
             if (folderIsEditing) return;
             update(nowFolders[i].item);
         });
-
         folder!.addEventListener("dragstart", (e) => {
             if (folderIsEditing) return;
             if (!dir.isSame(Folder.root())) (document.querySelector("#parent") as HTMLElement)!.style.display = "flex";
@@ -939,16 +890,9 @@ function update(dir: Folder, checkable: boolean = false) : void{
             function move(info: string){
                 let id: number = parseInt(info.substring(1))
                 if (info[0] == "p"){
-                    pwdList[id].dir = nowFolders[i].item;
+                    moveItem(Type.Password, id, nowFolders[i].item);
                 } else if (info[0] == "f"){
-                    let flag: boolean = false;
-                    folderList.forEach((v, idx) => {
-                        if (idx != id && v.name == folderList[id].name && v.parent == nowFolders[i].item.stringify()){
-                            flag = true;
-                        }
-                    })
-                    if (!flag) folderList[id].setParent(folderList[nowFolders[i].idx]);
-                    else error += `在“${folderList[nowFolders[i].idx].name}”中，文件夹“${folderList[id].name}”已存在\n`;
+                    moveItem(Type.Folder, id, nowFolders[i].item);
                 }
             }
             move(index);
@@ -956,7 +900,6 @@ function update(dir: Folder, checkable: boolean = false) : void{
             saveData();
             update(dir, checkable)
         });
-
         if (checkable){
             const check = document.querySelector(`#folder${i}-checkboxDiv`) as HTMLDivElement;
             const checkBox = document.querySelector(`#folder${i}-checkbox`) as HTMLInputElement;
@@ -975,7 +918,35 @@ function update(dir: Folder, checkable: boolean = false) : void{
     });
     main?.scrollTo(topScroll)
 }
-
+function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = false) : void {
+    if (type == Type.Password) {
+        if (isCopy) pwdList[pwdList.push(new Password(pwdList[index])) - 1].dir = new Folder(dir_to);
+        else pwdList[index].dir = dir_to;
+    } else {
+        if (hasDir(dir_to.stringify(), folderList[index].name)){
+            window.msg.warningSync("警告", `“${folderList[index].name}”已存在`);
+            return;
+        }
+        let newFolder = new Folder(folderList[index]);
+        newFolder.parent = dir_to.stringify();
+        if (newFolder.isin(folderList[index])) {
+            window.msg.warningSync("警告", `目标文件夹“${folderList[index].name}”是源文件夹的子文件夹`);
+            return;
+        }
+        folderList.forEach((item, idx) => {
+            if (folderList[index].isInclude(item)) {
+                moveItem(Type.Folder, idx, Folder.fromString(dir_to.stringify() + folderList[index].name), isCopy);
+            }
+        });
+        pwdList.forEach((item, idx) => {
+            if (folderList[index].isInclude(item)) {
+                moveItem(Type.Password, idx, Folder.fromString(dir_to.stringify() + folderList[index].name), isCopy);
+            }
+        });
+        if (isCopy) folderList[folderList.push(new Folder(folderList[index])) - 1].parent = dir_to.stringify();
+        else folderList[index].parent = dir_to.stringify();
+    }
+}
 // 渲染编辑密码界面，并更改密码，isAppend表示是否是添加密码，为true时，取消将会删除该密码，会返回main界面
 function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : boolean = false) : void{
     let inner : string = `
@@ -1035,7 +1006,6 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
         update(dir);
     });
 }
-
 // 删除密码，type为类型，index为索引，dir_from为来源文件夹，在外部的调用中，_save不应被填写
 function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean = true) : void{
     if (type == Type.Password) {
@@ -1065,7 +1035,6 @@ function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean 
         init(dir_from)
     }
 }
-
 function deleterecentItem(index: number | Array<number>) : void{
     // 删除最近删除的密码
     if (Array.isArray(index)){
@@ -1076,7 +1045,6 @@ function deleterecentItem(index: number | Array<number>) : void{
     else recentItem.splice(index, 1);
     saveData();
 }
-
 function recoverPwd(index: number) : void{
     // 恢复最近删除的密码
     recentItem[index].rmDate = null;
@@ -1101,14 +1069,12 @@ function recoverPwd(index: number) : void{
     recentItem.splice(index, 1);
     saveData();
 }
-
 function addPwd(dir: Folder) : void{
     // 添加密码
     let tgt : number = pwdList.length;
     pwdList.push(new Password("", "", "", "", "", "", dir));
     changePwd(pwdList, tgt, dir, true);
 }
-
 // 显示密码， from表示从哪个页面跳转过来的，如果是从最近删除跳转过来的，返回时会返回到最近删除页面，否则返回到主页面，需要填写Page枚举
 function showPwd(by: Array<Password>, index: number, from : Folder) : void{
     let inner : string = `
@@ -1126,7 +1092,6 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
     <div class="action" id="back"><p>返回</p></div>
     `
     main!.innerHTML = inner;
-
     const safety : HTMLDivElement = document.querySelector("#safety")!;
     if (from != Folder.bin()) {
         let list : Array<number> = [];
@@ -1142,7 +1107,6 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
         } else if (list.length > 2){
             safety.innerHTML += `<p style="color: red">此密码与${pwdList[list[0]].from}、${pwdList[list[1]].from}等${list.length}个来源的密码是重复的。</p>`;
         }
-
         let isR : boolean = false;
         for(let i = 0; i < simplePwd.length; i++){
             if (by[index].pwd == simplePwd[i]){
@@ -1155,7 +1119,6 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
                 safety.innerHTML += `<p style="color: orange">此密码比较容易暴露。</p>`;
                 isR = true;
             }
-
         }
         if (!isR){
             if (!isNaN(Number(by[index].pwd)))
@@ -1238,7 +1201,6 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
         }
     });
 }
-
 function showRecent(checkable: boolean = false) : void{
     let pos : {top: number, left: number};
     if (currentFolder.isSame(Folder.bin())){
@@ -1260,11 +1222,9 @@ function showRecent(checkable: boolean = false) : void{
         `<p class="tool" id="checkable">选择</p>`
     }
     </div>`;
-
     recentItem.sort((a: Item, b: Item) => {
         return a.rmDate! > b.rmDate! ? -1 : 1;
     })
-
     for (let i = 0; i < recentItem.length; i++){
         inner += recentItem[i].getHtmlRecent(i, checkable);
     }
@@ -1322,7 +1282,6 @@ function showRecent(checkable: boolean = false) : void{
             recoverPwd(i);
             showRecent();
         });
-
         const deleteBtn = document.querySelector(`#recent${i}-delete`);
         deleteBtn!.addEventListener("click", (e) => {
             e?.stopPropagation();
@@ -1334,12 +1293,10 @@ function showRecent(checkable: boolean = false) : void{
                 }
             })
         });
-
         const info = document.querySelector(`#recent${i}`);
         info!.addEventListener("click", () => {
             if (recentItem[i] instanceof Password) showPwd(<Array<Password>>recentItem, i, Folder.bin());
         });
-
         if (checkable){
             const check = document.querySelector(`#recent${i}-checkboxDiv`);
             const checkbox = document.querySelector(`#recent${i}-checkbox`) as HTMLInputElement;
@@ -1351,14 +1308,12 @@ function showRecent(checkable: boolean = false) : void{
                 e.stopPropagation();
             })
         }
-
     }
     document.querySelector("#back")?.addEventListener("click", () => {
         update(Folder.root());
     });
     main?.scrollTo(pos);
 }
-
 function setting() : void {
     // 显示设置页面
     main!.innerHTML = `
@@ -1379,12 +1334,10 @@ function setting() : void {
         update(Folder.root());
     });
 }
-
 window.fs.read("./data").then((data) => {
     data = data.replace(/\s/g,'')
     let obj = JSON.parse(data);
     const salt = obj.salt;
-
     if (obj.isPwdNull){
         enc(window.cryp.pbkdf2("", salt));
     } else {
@@ -1419,7 +1372,6 @@ window.fs.read("./data").then((data) => {
             });
         }
     }
-
     function enc(key: string) : void{
         obj.pwd.forEach((element: any) => {
             pwdList.push(<Password>decrypt(new Password(element), key));
