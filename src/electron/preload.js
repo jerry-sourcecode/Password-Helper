@@ -1,4 +1,4 @@
-const {contextBridge, ipcRenderer} = require('electron');
+const {contextBridge, ipcRenderer, dialog} = require('electron');
 const crypto = require('crypto-js');
 
 contextBridge.exposeInMainWorld("fs",{
@@ -11,12 +11,10 @@ contextBridge.exposeInMainWorld("fs",{
 });
 
 contextBridge.exposeInMainWorld("msg",{
-    info(title, msg, choice = ["确定"]){
-        return ipcRenderer.invoke("msg", title, "info", msg, choice);
-    },
-    warning(title, msg, choice = ["确定"]){
-        return ipcRenderer.invoke("msg", title, "warning", msg, choice);
-    },
+    info: (title, msg, choice = ["确定"]) => ipcRenderer.send("msg", title, "info", msg, choice),
+    warning: (title, msg, choice = ["确定"]) => ipcRenderer.send("msg", title, "warning", msg, choice),
+    infoSync: (title, msg, choice = ["确定"]) => ipcRenderer.sendSync("msg", title, "info", msg, choice),
+    warningSync: (title, msg, choice = ["确定"]) => ipcRenderer.sendSync("msg", title, "warning", msg, choice)
 });
 
 contextBridge.exposeInMainWorld("cryp",{

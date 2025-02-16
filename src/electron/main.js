@@ -21,8 +21,8 @@ function setIpc(win){
         }
         return k;
     });
-    ipcMain.handle("msg", (event, title, type, msg, choice)=>{
-        return dialog.showMessageBoxSync(win, {
+    ipcMain.on("msg", (event, title, type, msg, choice)=>{
+        event.returnValue = dialog.showMessageBoxSync(win, {
             type: type,
             title: title,
             message: msg,

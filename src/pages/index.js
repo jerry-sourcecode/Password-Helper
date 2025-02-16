@@ -487,6 +487,7 @@ let mainPwd = ""; // 主密码
 let isremember = false; // 是否记住密码
 let folderIsEditing = false; // 是否正在编辑文件夹
 let currentFolder = Folder.root();
+let clipboard = new Set();
 // 一些工具函数
 function random(a, b) {
     return Math.floor(Math.random() * (b - a) + a);
@@ -590,7 +591,7 @@ function init(dir) {
 }
 // 渲染main界面
 function update(dir, checkable = false) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
     if (dir.stringify() == "~/") {
         showRecent();
         return;
@@ -611,9 +612,13 @@ function update(dir, checkable = false) {
         `<p class="tool" id="checkable">取消选择</p>
         <p class="tool" id="check-all">全部选择</p>
         <p class="tool" id="check-invert">反向选择</p>
-        <img src="../pages/resources/delete.png" title="删除" class="tool" id="delete">`
+        <img src="../pages/resources/delete.png" title="删除" class="tool" id="delete">
+        <img src="../pages/resources/copy.png" title="复制" class="tool" id="copy">`
         :
-            `<p class="tool" id="checkable">选择</p>
+            `
+        <p class="${clipboard.size == 0 ? "invaildTool" : "tool"}" id="paste">粘贴</p>
+        <p class="${clipboard.size == 0 ? "invaildTool" : "tool"}" id="move">移动</p>
+        <p class="tool" id="checkable">选择</p>
         <img src="../pages/resources/setting.png" title="设置" class="tool" id="setting">
         <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" id="newFolder">
     	${dir.isSame(Folder.root()) ? "" : `<img src="../pages/resources/up.png" title="上移到${faname == ":" ? "主文件夹" : faname}" class="tool" id="up">`}`}
@@ -729,8 +734,70 @@ function update(dir, checkable = false) {
             });
             init(dir);
         });
+        let copy = document.querySelector("#copy");
+        copy === null || copy === void 0 ? void 0 : copy.addEventListener("click", () => {
+            clipboard.clear();
+            nowFolders.forEach((value, index) => {
+                if (document.querySelector(`#folder${index}-checkbox`).checked)
+                    clipboard.add({ type: Type.Folder, index: nowFolders[index].idx });
+            });
+            nowPwds.forEach((value, index) => {
+                if (document.querySelector(`#pwd${index}-checkbox`).checked) {
+                    clipboard.add({ type: Type.Password, index: nowPwds[index].idx });
+                }
+            });
+            copy.src = "../pages/resources/copy_done.png";
+            setTimeout(() => {
+                copy.src = "../pages/resources/copy.png";
+            }, 1000);
+        });
     }
-    (_g = document.querySelector("#newFolder")) === null || _g === void 0 ? void 0 : _g.addEventListener("click", () => {
+    else {
+        function p(isMove = false) {
+            for (let i of clipboard) {
+                if (i.type == Type.Folder) {
+                    let have = false;
+                    for (let j = 0; j < folderList.length; j++) {
+                        if (j != i.index && folderList[j].name == folderList[i.index].name && folderList[j].parent == dir.stringify()) {
+                            window.msg.warningSync("警告", `“${folderList[i.index].name}”已存在`);
+                            have = true;
+                            break;
+                        }
+                    }
+                    if (!have) {
+                        let newFolder = new Folder(folderList[i.index]);
+                        newFolder.parent = dir.stringify();
+                        if (newFolder.isin(folderList[i.index]))
+                            window.msg.warningSync("警告", `目标文件夹“${folderList[i.index].name}”是源文件夹的子文件夹`);
+                        continue;
+                    }
+                    if (!have)
+                        folderList[folderList.push(new Folder(folderList[i.index])) - 1].parent = dir.stringify();
+                    if (have && isMove)
+                        clipboard.delete(i);
+                }
+                else {
+                    pwdList[pwdList.push(new Password(pwdList[i.index])) - 1].dir = new Folder(dir);
+                }
+            }
+        }
+        (_g = document.querySelector("#paste")) === null || _g === void 0 ? void 0 : _g.addEventListener("click", () => {
+            p();
+            init(dir);
+        });
+        (_h = document.querySelector("#move")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", () => {
+            p(true);
+            for (let i of clipboard) {
+                if (i.type == Type.Folder)
+                    folderList.splice(i.index, 1);
+                else
+                    pwdList.splice(i.index, 1);
+            }
+            clipboard.clear();
+            init(dir);
+        });
+    }
+    (_j = document.querySelector("#newFolder")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
         let k = new Set();
         for (let i = 0; i < folderList.length; i++) {
             if (dir.isInclude(folderList[i])) {
@@ -918,7 +985,7 @@ function update(dir, checkable = false) {
             });
         }
     }
-    (_h = document.querySelector("#recent")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", () => {
+    (_k = document.querySelector("#recent")) === null || _k === void 0 ? void 0 : _k.addEventListener("click", () => {
         if (folderIsEditing)
             return;
         showRecent();
@@ -989,12 +1056,14 @@ function changePwd(by, index, dir, isAppend = false) {
 // 删除密码，type为类型，index为索引，dir_from为来源文件夹，在外部的调用中，_save不应被填写
 function deleteItem(type, index, dir_from, _save = true) {
     if (type == Type.Password) {
+        clipboard.delete({ type: Type.Password, index: index });
         pwdList[index].dir = Folder.fromString(Folder.bin().stringify() + pwdList[index].dir.stringify().slice(2));
         pwdList[index].rmDate = Date.now().toString();
         recentItem.unshift(new Password(pwdList[index]));
         pwdList.splice(index, 1);
     }
     else {
+        clipboard.delete({ type: Type.Folder, index: index });
         pwdList.forEach((item, i) => {
             if (folderList[index].isInclude(item)) {
                 deleteItem(Type.Password, i, dir_from, false);

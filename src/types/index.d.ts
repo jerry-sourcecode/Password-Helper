@@ -8,6 +8,8 @@ interface fs {
 interface msg {
     info: (title: string, msg: string, choice?: string[]) => Promise<number>;
     warning: (title: string, msg: string, choice?: string[]) => Promise<number>;
+    infoSync: (title: string, msg: string, choice?: string[]) => number;
+    warningSync: (title: string, msg: string, choice?: string[]) => number;
 }
 
 interface cryp {

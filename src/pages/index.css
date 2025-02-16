@@ -13,7 +13,7 @@ p, span, label{
     cursor: pointer;
 }
 textarea{
-    height: 45vh;
+    height: 40vh;
     width: 33vw;
     font-size: 17px;
     margin-bottom: 5px;
@@ -35,7 +35,7 @@ body{
 
 div.background{
     background-color: white;
-    width: 55vw;
+    width: 50vw;
     position: fixed;
     top: 0;
     bottom: 0;
@@ -46,7 +46,7 @@ div.main{
     align-items: center;
     flex-direction: column;
     margin: 15px;
-    width: 55vw;
+    width: 50vw;
     height: 96vh;
     overflow: auto;
     position: relative;
@@ -215,6 +215,14 @@ p.tool{
     user-select: none;
     cursor: pointer;
     color: blue;
+    display: inline-block;
+}
+p.invaildTool{
+    height: 30px;
+    margin: 4px;
+    user-select: none;
+    cursor: pointer;
+    color: gray;
     display: inline-block;
 }
 p.tool:hover{
