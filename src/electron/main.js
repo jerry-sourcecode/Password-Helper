@@ -37,11 +37,15 @@ function createWindow(){
         width: 800,
         height: 600,
         autoHideMenuBar: true,
+        show: false,
         webPreferences: {
             preload: path.join(__dirname, './preload.js'),
             sandbox: false,
         }
     })
+
+    win.maximize();
+    win.show();
 
     setIpc(win);
 
