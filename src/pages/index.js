@@ -456,6 +456,9 @@ function update(dir, checkable = false) {
     <div class="info" id="recent">
         <p>最近删除</p>
     </div>
+    ${dir.isSame(Folder.root()) ? "" : `<div class="info" style="display: none" id="parent">
+        <p>推拽到此可以上移到${faname == ":" ? "主文件夹" : "“" + faname + "”"}</p>
+    </div>`}
     <div class="action" id="addPwd"><p>添加密码</p></div>
     `;
     main.innerHTML = inner;
@@ -468,6 +471,38 @@ function update(dir, checkable = false) {
     (_c = document.querySelector("#checkable")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
         update(dir, !checkable);
     });
+    if (!dir.isSame(Folder.root())) {
+        const parent = document.querySelector("#parent");
+        parent.addEventListener("drop", (e) => {
+            var _a;
+            if (folderIsEditing)
+                return;
+            e.preventDefault();
+            const index = (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData("text/plain");
+            const num = parseInt(index.substring(1));
+            parent.style.display = "none";
+            if (index[0] == "p") {
+                pwdList[num].dir.parent = Folder.fromString(dir.parent).parent;
+                pwdList[num].dir.name = Folder.fromString(dir.parent).name;
+            }
+            else {
+                for (let i = 0; i < folderList.length; i++) {
+                    if (folderList[i].name == folderList[num].name && i != num && folderList[i].parent == Folder.fromString(folderList[num].parent).parent) {
+                        window.msg.warning("警告", `在${faname == ":" ? "主文件夹" : "“" + faname + "”"}下已存在名为“${folderList[i].name}”的文件夹`);
+                        return;
+                    }
+                }
+                folderList[num].parent = Folder.fromString(folderList[num].parent).parent;
+            }
+            saveData();
+            update(dir, checkable);
+        });
+        parent.addEventListener("dragover", (e) => {
+            if (folderIsEditing)
+                return;
+            e.preventDefault();
+        });
+    }
     if (checkable) {
         (_d = document.querySelector("#check-all")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
             nowFolders.forEach((value, index) => {
@@ -536,23 +571,25 @@ function update(dir, checkable = false) {
         const editBtn = document.querySelector(`#pwd${i}-edit`);
         editBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
-            changePwd(pwdList, i, dir);
+            changePwd(pwdList, nowPwds[i].idx, dir);
         });
         const deleteBtn = document.querySelector(`#pwd${i}-delete`);
         deleteBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
-            deleteItem(Type.Password, i, dir);
+            deleteItem(Type.Password, nowPwds[i].idx, dir);
         });
         const info = document.querySelector(`#pwd${i}`);
         info.addEventListener("click", () => {
             if (folderIsEditing)
                 return;
-            showPwd(pwdList, i, dir);
+            showPwd(pwdList, nowPwds[i].idx, dir);
         });
         info.addEventListener("dragstart", (e) => {
             var _a;
             if (folderIsEditing)
                 return;
+            if (!dir.isSame(Folder.root()))
+                document.querySelector("#parent").style.display = "flex";
             (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData("text/plain", "p" + nowPwds[i].idx.toString());
         });
         if (checkable) {
@@ -572,7 +609,7 @@ function update(dir, checkable = false) {
         feditBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
             const div = document.querySelector(`#folder${i}`);
-            div.innerHTML = `<input type="text" value="${folderList[i].name}" id="folder${i}-input">`;
+            div.innerHTML = `<input type="text" value="${nowFolders[i].item.name}" id="folder${i}-input">`;
             const input = document.querySelector(`#folder${i}-input`);
             folderIsEditing = true;
             input.focus();
@@ -583,10 +620,10 @@ function update(dir, checkable = false) {
                 }
             });
             input.addEventListener("blur", () => {
-                let newFolder = new Folder(folderList[i]);
+                let newFolder = new Folder(nowFolders[i].item);
                 newFolder.name = input.value;
                 folderIsEditing = false;
-                if (folderList.findIndex(v => (v.isSame(newFolder))) != -1 && !newFolder.isSame(folderList[i])) {
+                if (nowFolders.findIndex(v => (v.item.isSame(newFolder))) != -1 && !newFolder.isSame(nowFolders[i].item)) {
                     window.msg.warning("警告", "文件夹名已存在");
                     init(dir);
                     return;
@@ -599,16 +636,16 @@ function update(dir, checkable = false) {
                     }
                 }
                 for (let j = 0; j < pwdList.length; j++) {
-                    if (folderList[i].isInclude(pwdList[j])) {
+                    if (nowFolders[i].item.isInclude(pwdList[j])) {
                         pwdList[j].dir = newFolder;
                     }
                 }
                 for (let j = 0; j < folderList.length; j++) {
-                    if (folderList[i].isInclude(folderList[j])) {
+                    if (nowFolders[i].item.isInclude(folderList[j])) {
                         folderList[j].setParent(newFolder);
                     }
                 }
-                folderList[i] = new Folder(newFolder);
+                folderList[nowFolders[i].idx] = new Folder(newFolder);
                 init(dir);
             });
         });
@@ -617,19 +654,21 @@ function update(dir, checkable = false) {
             if (folderIsEditing)
                 return;
             e === null || e === void 0 ? void 0 : e.stopPropagation();
-            deleteItem(Type.Folder, i, dir);
+            deleteItem(Type.Folder, nowFolders[i].idx, dir);
             update(dir);
         });
         const folder = document.querySelector(`#folder${i}`);
         folder.addEventListener("click", () => {
             if (folderIsEditing)
                 return;
-            update(folderList[i]);
+            update(nowFolders[i].item);
         });
         folder.addEventListener("dragstart", (e) => {
             var _a;
             if (folderIsEditing)
                 return;
+            if (!dir.isSame(Folder.root()))
+                document.querySelector("#parent").style.display = "flex";
             (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.setData("text/plain", "f" + nowFolders[i].idx.toString());
         });
         folder.addEventListener("dragover", (e) => {
@@ -643,21 +682,30 @@ function update(dir, checkable = false) {
                 return;
             e.preventDefault();
             const index = (_a = e === null || e === void 0 ? void 0 : e.dataTransfer) === null || _a === void 0 ? void 0 : _a.getData("text/plain");
-            if (index[0] == "p") {
-                pwdList[parseInt(index.substring(1))].dir = folderList[i];
+            if (parseInt(index.substring(1)) == nowFolders[i].idx)
+                return;
+            let error = "";
+            function move(info) {
+                let id = parseInt(info.substring(1));
+                if (info[0] == "p") {
+                    pwdList[id].dir = nowFolders[i].item;
+                }
+                else if (info[0] == "f") {
+                    let flag = false;
+                    folderList.forEach((v, idx) => {
+                        if (idx != id && v.name == folderList[id].name && v.parent == nowFolders[i].item.stringify()) {
+                            flag = true;
+                        }
+                    });
+                    if (!flag)
+                        folderList[id].setParent(folderList[nowFolders[i].idx]);
+                    else
+                        error += `在“${folderList[nowFolders[i].idx].name}”中，文件夹“${folderList[id].name}”已存在\n`;
+                }
             }
-            else if (index[0] == "f") {
-                let flag = false;
-                folderList.forEach((v, idx) => {
-                    if (v.parent == folderList[i].stringify() && idx != parseInt(index.substring(1)) && v.name == folderList[idx].name) {
-                        flag = true;
-                    }
-                });
-                if (!flag)
-                    folderList[parseInt(index.substring(1))].setParent(folderList[i]);
-                else
-                    window.msg.warning("警告", `文件夹已存在`);
-            }
+            move(index);
+            if (error != "")
+                window.msg.warning("警告", error);
             saveData();
             update(dir, checkable);
         });
