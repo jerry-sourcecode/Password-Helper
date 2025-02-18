@@ -121,6 +121,9 @@ div.form{
     align-items: flex-start;
     flex-direction: column;
 }
+div.form input[type="checkbox"]{
+    margin-right: 10px;
+}
 div.formItem{
     margin: 5px;
 }
@@ -227,4 +230,8 @@ p.invaildTool{
 }
 p.tool:hover{
     font-weight: bold;
+}
+div.settingFormItem{
+    margin: 20px;
+    margin-top: 3px;
 }

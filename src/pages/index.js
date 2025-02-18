@@ -425,6 +425,11 @@ class Folder {
         return lans;
     }
 }
+class MainSetting {
+    constructor() {
+        this.autoCopy = false;
+    }
+}
 function encrypt(data, key, index = 0) {
     let enc;
     if (data instanceof Password)
@@ -487,6 +492,7 @@ let isremember = false; // 是否记住密码
 let folderIsEditing = false; // 是否正在编辑文件夹
 let currentFolder = Folder.root();
 let clipboard = new Set();
+let mainSetting = new MainSetting();
 // 一些工具函数
 function random(a, b) {
     return Math.floor(Math.random() * (b - a) + a);
@@ -560,6 +566,7 @@ function saveData() {
         folder: folderListUpdated,
         recent: recentItemUpdated,
         mainPwd: window.cryp.pbkdf2(enc, salt),
+        mainSetting: mainSetting,
         salt: salt,
         memory: isremember ? mainPwd : null,
         isPwdNull: mainPwd === "",
@@ -672,7 +679,7 @@ function update(dir, checkable = false) {
     `;
     main.innerHTML = inner;
     (_a = document.querySelector("#setting")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
-        setting();
+        setting(dir);
     });
     (_b = document.querySelector("#up")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
         update(dir.getParent());
@@ -816,6 +823,11 @@ function update(dir, checkable = false) {
         info.addEventListener("click", () => {
             if (folderIsEditing)
                 return;
+            if (mainSetting.autoCopy) {
+                copyToClipboard(pwdList[nowPwds[i].idx].pwd);
+                window.msg.infoSync("消息", "密码已复制到剪贴板。");
+                return;
+            }
             showPwd(pwdList, nowPwds[i].idx, dir);
         });
         info.addEventListener("dragstart", (e) => {
@@ -1380,14 +1392,20 @@ function showRecent(checkable = false) {
     });
     main === null || main === void 0 ? void 0 : main.scrollTo(pos);
 }
-function setting() {
+function setting(dir) {
     var _a, _b;
     // 显示设置页面
     main.innerHTML = `
     <div class="title">设置</div>
     <div class="form">
-    <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
-    <div><input type="checkbox" id="rememberPwd" ${isremember ? "checked" : ""} style="margin-right: 10px;"/><label for="rememberPwd">记住密钥</label></div>
+    <p>安全设置</p>
+    <div class="settingFormItem">
+        <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
+        <div><input type="checkbox" id="rememberPwd" ${isremember ? "checked" : ""}/><label for="rememberPwd">记住密钥</label></div>
+    </div>
+    <p>其他个性化设置</p>
+    <div class="settingFormItem">
+        <input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label></div>
     </div>
     <div class="action" id="save"><p>保存</p></div>
     <div class="action" id="cancel"><p>取消</p></div>
@@ -1395,16 +1413,18 @@ function setting() {
     (_a = document.querySelector("#save")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
         mainPwd = document.querySelector("#mainPwd").value;
         isremember = document.querySelector("#rememberPwd").checked;
-        init(Folder.root());
+        mainSetting.autoCopy = document.querySelector("#autoCopy").checked;
+        init(dir);
     });
     (_b = document.querySelector("#cancel")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
-        update(Folder.root());
+        update(dir);
     });
 }
 window.fs.read("./data").then((data) => {
     var _a;
     data = data.replace(/\s/g, '');
     let obj = JSON.parse(data);
+    mainSetting = obj.mainSetting;
     const salt = obj.salt;
     if (obj.isPwdNull) {
         enc(window.cryp.pbkdf2("", salt));
@@ -1462,5 +1482,6 @@ window.fs.read("./data").then((data) => {
     console.log(err);
     pwdList = [];
     recentItem = [];
+    mainSetting = new MainSetting();
     update(Folder.root());
 });

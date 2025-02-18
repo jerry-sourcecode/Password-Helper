@@ -422,6 +422,11 @@ class Folder {
         return lans;
     }
 }
+
+class MainSetting{
+    autoCopy: boolean = false;
+}
+
 function encrypt(data: Item, key: string, index: number = 0): Item{ // 加密
     let enc: Item;
     if (data instanceof Password) enc = new Password(data);
@@ -477,6 +482,8 @@ let isremember : boolean = false; // 是否记住密码
 let folderIsEditing : boolean = false; // 是否正在编辑文件夹
 let currentFolder : Folder = Folder.root();
 let clipboard: Set<clipboardItem> = new Set();
+let mainSetting: MainSetting = new MainSetting();
+
 // 一些工具函数
 function random(a: number, b: number): number{ // 生成[a, b]之间的随机数
     return Math.floor(Math.random() * (b - a) + a);
@@ -547,6 +554,7 @@ function saveData(): void{ // 保存数据
         folder: folderListUpdated,
         recent: recentItemUpdated,
         mainPwd: window.cryp.pbkdf2(enc, salt),
+        mainSetting: mainSetting,
         salt: salt,
         memory: isremember? mainPwd : null,
         isPwdNull: mainPwd === "",
@@ -661,7 +669,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
     `;
     main!.innerHTML = inner;
     document.querySelector("#setting")?.addEventListener("click", () => {
-        setting();
+        setting(dir);
     });
     document.querySelector("#up")?.addEventListener("click", () => {
         update(dir.getParent());
@@ -796,6 +804,11 @@ function update(dir: Folder, checkable: boolean = false) : void{
         const info = document.querySelector(`#pwd${i}`);
         info!.addEventListener("click", () => {
             if (folderIsEditing) return;
+            if (mainSetting.autoCopy){
+                copyToClipboard(pwdList[nowPwds[i].idx].pwd);
+                window.msg.infoSync("消息","密码已复制到剪贴板。");
+                return;
+            }
             showPwd(pwdList, nowPwds[i].idx, dir);
         });
         info!.addEventListener("dragstart", (e) => {
@@ -1314,13 +1327,19 @@ function showRecent(checkable: boolean = false) : void{
     });
     main?.scrollTo(pos);
 }
-function setting() : void {
+function setting(dir: Folder) : void {
     // 显示设置页面
     main!.innerHTML = `
     <div class="title">设置</div>
     <div class="form">
-    <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
-    <div><input type="checkbox" id="rememberPwd" ${isremember ? "checked" : ""} style="margin-right: 10px;"/><label for="rememberPwd">记住密钥</label></div>
+    <p>安全设置</p>
+    <div class="settingFormItem">
+        <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
+        <div><input type="checkbox" id="rememberPwd" ${isremember ? "checked" : ""}/><label for="rememberPwd">记住密钥</label></div>
+    </div>
+    <p>其他个性化设置</p>
+    <div class="settingFormItem">
+        <input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label></div>
     </div>
     <div class="action" id="save"><p>保存</p></div>
     <div class="action" id="cancel"><p>取消</p></div>
@@ -1328,15 +1347,17 @@ function setting() : void {
     document.querySelector("#save")?.addEventListener("click", () => {
         mainPwd = (document.querySelector("#mainPwd") as HTMLInputElement).value;
         isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
-        init(Folder.root());
+        mainSetting.autoCopy = (document.querySelector("#autoCopy") as HTMLInputElement).checked;
+        init(dir);
     })
     document.querySelector("#cancel")?.addEventListener("click", () => {
-        update(Folder.root());
+        update(dir);
     });
 }
 window.fs.read("./data").then((data) => {
     data = data.replace(/\s/g,'')
     let obj = JSON.parse(data);
+    mainSetting = obj.mainSetting;
     const salt = obj.salt;
     if (obj.isPwdNull){
         enc(window.cryp.pbkdf2("", salt));
@@ -1389,5 +1410,6 @@ window.fs.read("./data").then((data) => {
     console.log(err);
     pwdList = [];
     recentItem = [];
+    mainSetting = new MainSetting();
     update(Folder.root());
 });
