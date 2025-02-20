@@ -417,7 +417,7 @@ class Folder {
     toReadable() {
         let ans = this.stringify(), lans = "主文件夹 > ";
         for (let i = 2; i < ans.length; i++) {
-            if (ans[i] == "/")
+            if (ans[i] == "/" && i != ans.length - 1)
                 lans += " > ";
             else
                 lans += ans[i];
