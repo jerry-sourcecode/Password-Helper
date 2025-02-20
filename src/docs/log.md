@@ -3,8 +3,8 @@
 在项目处运行一下命令
 ```bash
 npm i electron --save-dev
-npm i nodemon
-npm i typescript
+npm i nodemon --save--dev
+npm i typescript --save--dev
 npm i crypto-js
 ```
 如果想要启动程序，运行以下命令

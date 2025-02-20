@@ -17,13 +17,16 @@
   "scripts": {
     "w": "tsc --watch",
     "start": "nodemon --exec electron .",
-    "test": "electron ."
+    "test": "electron .",
+    "build": "electron-packager ./ Password-Helper --platform=win32 --arch=x64 --out=./out --overwrite"
   },
   "devDependencies": {
     "electron": "^34.0.1"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "nodemon": "^3.1.9"
+    "electron-packager": "^17.1.2",
+    "nodemon": "^3.1.9",
+    "typescript": "^5.7.3"
   }
 }
