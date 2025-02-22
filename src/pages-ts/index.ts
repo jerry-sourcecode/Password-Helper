@@ -198,7 +198,7 @@ const lessSimplePwd: Array<string> = [
   ];
 const showNoteMaxLength: number = 152; // 在main页面显示备注的最大长度
 const showOtherMaxLength: number = 60; // 在main页面显示来源、用户名、密码的最大长度
-const showPathMaxLength: number = 65; // 在main页面显示路径的最大长度
+const showPathMaxLength: number = 40; // 在main页面显示路径的最大长度
 enum Type{ // 类型枚举
     Folder, // 文件夹
     Password, // 密码
@@ -299,7 +299,7 @@ class Password{ // 密码类
     private getBaseHtml(isRecent: boolean = false): string{ // 获取密码的基本html
         return `<p>来源：${Password.format(this.from)}</p>
             <p>用户名：${Password.format(this.uname)}</p>
-            <p>密码：${Password.format(this.pwd)}</p>
+            <p>密码：******</p>
             ${this.email == ""?"":`<p>邮箱：${Password.format(this.email)}</p>`}
             ${this.phone == ""?"":`<p>电话：${Password.format(this.phone)}</p>`}
             ${this.note == ""?"":`<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}
@@ -413,14 +413,46 @@ class Folder {
         const f = folder.stringify()
         return f == this.parent.slice(0, f.length);
     }
-    toReadable(): string{
-        let ans : string = this.stringify(), lans : string = "主文件夹 > ";
+    toReadable(): {html: string, num: number}{
+        let ans : string = this.stringify(), lans : Array<{text: string, index: number}> = [{text: "主文件夹", index: 1}], tmp: string = "";
         for(let i = 2; i < ans.length; i++){
-            if (i == ans.length - 1) continue;
-            if (ans[i] == "/") lans += " > ";
-            else lans += ans[i];
+            if (ans[i] == "/") {
+                lans.push({text: tmp, index: i});
+                tmp = "";
+            }
+            else tmp += ans[i];
         }
-        return lans;
+        // 检查长度
+        let length = 0, maxindex = 0;
+        for (let i = lans.length - 1; i >= 0; i--){
+            length += lans[i].text.length;
+            if (length > showPathMaxLength){
+                if (i == lans.length - 1){
+                    lans[i].text = Password.format(lans[i].text, showPathMaxLength, "front");
+                    maxindex = i;
+                }
+                else maxindex = i + 1;
+                break;
+            }
+            length += 2;
+        }
+        let tgtHtml: string = "";
+        if (maxindex != 0)
+            tgtHtml += `<li class="breadcrumb-item active"><p>...</p></li>`;
+        for(let i = maxindex; i < lans.length; i++){
+            if (i == lans.length - 1){
+                tgtHtml += `<li class="breadcrumb-item active" aria-current="page"><p data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
+            } else {
+                tgtHtml += `<li class="breadcrumb-item"><p data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
+            }
+        }
+        return {html: `
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                ${tgtHtml}
+            </ol>
+        </nav>
+        `, num: lans.length};
     }
 }
 
@@ -607,8 +639,9 @@ function update(dir: Folder, checkable: boolean = false) : void{
     }
     currentFolder = dir;
     let faname = Folder.fromString(dir.parent).name;
+    let location = dir.toReadable();
     let inner : string = `<div class="title">密码列表</div>
-    ${dir.isSame(Folder.root())?"":`<div class="subtitle">当前位置：${Password.format(dir.toReadable(), showPathMaxLength, "front")}</div>`}
+    ${dir.isSame(Folder.root())?"":`<div class="subtitle"><p>当前位置：</p>${location.html}</div>`}
     <div id="MainToolBar">
     ${checkable?
         `<p class="tool" id="checkable">取消选择</p>
@@ -691,6 +724,11 @@ function update(dir: Folder, checkable: boolean = false) : void{
             if (folderIsEditing) return;
             e.preventDefault();
         });
+        for(let i = 0; i < location.num; i++){
+            document.querySelector(`#dirItem${i}`)?.addEventListener("click", (e) => {
+                update(Folder.fromString((e.target as HTMLDivElement).dataset.location!));
+            })
+        }
     }
     if (checkable){
         document.querySelector("#check-all")?.addEventListener("click", () => {
@@ -842,13 +880,13 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 newFolder.name = input!.value;
                 folderIsEditing = false;
                 if (nowFolders.findIndex(v => (v.item.isSame(newFolder))) != -1 && !newFolder.isSame(nowFolders[i].item)){
-                    mkDialog("重命名失败！", "文件夹名已存在");
+                    mkDialog("重命名失败！", "文件夹名已存在。");
                     init(dir);
                     return;
                 }
                 for(let j = 0; j < newFolder.name.length; j++){
                     if (newFolder.name[j] == "/"){
-                        mkDialog("重命名失败！", "文件夹名不能包含“/”");
+                        mkDialog("重命名失败！", "文件夹名不能包含“/”。");
                         init(dir);
                         return;
                     }
@@ -925,13 +963,13 @@ function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = f
         else pwdList[index].dir = dir_to;
     } else {
         if (hasDir(dir_to.stringify(), folderList[index].name)){
-            mkDialog("移动失败！", `“${folderList[index].name}”已存在`);
+            mkDialog("移动失败！", `“${folderList[index].name}”已存在。`);
             return;
         }
         let newFolder = new Folder(folderList[index]);
         newFolder.parent = dir_to.stringify();
         if (newFolder.isin(folderList[index])) {
-            mkDialog("移动失败！", `目标文件夹“${folderList[index].name}”是源文件夹的子文件夹`);
+            mkDialog("移动失败！", `目标文件夹“${folderList[index].name}”是源文件夹的子文件夹。`);
             return;
         }
         folderList.forEach((item, idx) => {
@@ -1082,7 +1120,7 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
     <div class="form">
     <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${by[index].uname}" readonly /><img class="icon" src="./resources/copy.png" id="unameCopy" title="复制"></div>
-    <div class="formItem_Copy"><label for="pwd">密码：</label><input type="text" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="pwd">密码：</label><input type="password" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制"></div>
     <div class="formItem" id="safety"></div>
     <div class="formItem_Copy"><label for="email">邮箱：</label><input type="text" id="email" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="emailCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制"></div>
@@ -1129,6 +1167,10 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
         }
         if (safety.innerHTML == "") safety.style.display = "none";
     }
+    document.querySelector("input#pwd")?.addEventListener("click", (e) => {
+        if ((e.target as HTMLInputElement).type == "password") (e.target as HTMLInputElement).type = "text";
+        else (document.querySelector("input#pwd") as HTMLInputElement).type = "password";
+    });
     document.querySelector("#fromCopy")?.addEventListener("click", () => {
         if (document.querySelector("#from")?.getAttribute("copyed") == "true"){
             return;
@@ -1232,9 +1274,6 @@ function showRecent(checkable: boolean = false) : void{
     if (recentItem.length == 0){
         inner += `<p>暂无删除密码</p>`;
     }
-    inner += `
-    <div class="action" id="back"><p>返回</p></div>
-    `;
     main!.innerHTML = inner;
     document.querySelector("#checkable")?.addEventListener("click", () => {
         showRecent(!checkable);
@@ -1323,84 +1362,26 @@ function setting(dir: Folder) : void {
     <p>安全设置</p>
     <div class="settingFormItem">
         <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
-        <div><input type="checkbox" id="rememberPwd" ${isremember ? "checked" : ""}/><label for="rememberPwd">记住密钥</label></div>
+        <div><input type="checkbox" id="rememberPwd" ${mainPwd == "" ? "disabled" : `${isremember ? "checked" : ""}`}><label for="rememberPwd">记住密钥</label></div>
     </div>
     <p>其他个性化设置</p>
     <div class="settingFormItem">
         <input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label></div>
     </div>
-    <div class="action" id="save"><p>保存</p></div>
-    <div class="action" id="cancel"><p>取消</p></div>
+    <div class="action" id="apply"><p>应用</p></div>
     `;
-    document.querySelector("#save")?.addEventListener("click", () => {
+    const saveKey = document.querySelector("#rememberPwd") as HTMLInputElement;
+    document.querySelector("#mainPwd")?.addEventListener("change", (e) => {
+        saveKey.disabled = (<HTMLInputElement>e.target).value == "";
+    });
+    document.querySelector("#apply")?.addEventListener("click", () => {
         mainPwd = (document.querySelector("#mainPwd") as HTMLInputElement).value;
         isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
         mainSetting.autoCopy = (document.querySelector("#autoCopy") as HTMLInputElement).checked;
-        init(dir);
-    })
-    document.querySelector("#cancel")?.addEventListener("click", () => {
-        update(dir);
+        saveData()
+        mkDialog("成功！", "设置已顺利应用到程序。");
     });
 }
-window.fs.read("./data").then((data) => {
-    data = data.replace(/\s/g,'')
-    let obj = JSON.parse(data);
-    mainSetting = obj.mainSetting;
-    const salt = obj.salt;
-    if (obj.isPwdNull){
-        enc(window.cryp.pbkdf2("", salt));
-    } else {
-        if (obj.memory !== null && obj.memory !== undefined){
-            let m = obj.memory;
-            let dpwd = window.cryp.pbkdf2(m, salt);
-            if (window.cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
-                isremember = true;
-                mainPwd = m;
-                enc(dpwd);
-            } else {
-                isremember = false;
-            }
-        }
-        if (!isremember) {
-            main!.innerHTML = `
-            <div class="title">请输入访问密钥</div>
-            <div class="form">
-            <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild"/></div>
-            <div><input type="checkbox" id="rememberPwd"} style="margin-right: 10px;"/><label for="rememberPwd">记住密钥</label></div>
-            </div>
-            <div class="action" id="Yes"><p>确定</p></div>
-            `;
-            document.querySelector("#Yes")?.addEventListener("click", () => {
-                let m = (document.querySelector("#mainPwd") as HTMLInputElement).value;
-                let dpwd = window.cryp.pbkdf2(m, salt);
-                if (window.cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
-                    isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
-                    mainPwd = m;
-                    enc(dpwd);
-                };
-            });
-        }
-    }
-    function enc(key: string) : void{
-        obj.pwd.forEach((element: any) => {
-            pwdList.push(<Password>decrypt(new Password(element), key));
-        });
-        obj.folder.forEach((element: any) => {
-            folderList.push(<Folder>decrypt(new Folder(element), key));
-        })
-        obj.recent.forEach((element: any) => {
-            if (element.type == Type.Password) recentItem.push(decrypt(new Password(element), key));
-            else recentItem.push(decrypt(new Folder(element), key));
-        });
-        update(Folder.root());
-    }
-}).catch((err) => {
-    console.log(err);
-    pwdList = [];
-    recentItem = [];
-    mainSetting = new MainSetting();
-    update(Folder.root());
-});
 
 document.querySelector("span#nav-mainPage")!.addEventListener("click", (e) => {
     (e.target as HTMLSpanElement).classList.add("active");
@@ -1432,3 +1413,75 @@ document.querySelector("span#nav-home")!.addEventListener("click", (e) => {
 });
 
 (document.querySelector("#nav-home") as HTMLSpanElement).click();
+
+window.fs.read("./data").then((data) => {
+    data = data.replace(/\s/g,'')
+    let obj = JSON.parse(data);
+    mainSetting = obj.mainSetting;
+    const salt = obj.salt;
+    if (obj.isPwdNull){
+        enc(window.cryp.pbkdf2("", salt));
+    } else {
+        if (obj.memory !== null && obj.memory !== undefined){
+            let m = obj.memory;
+            let dpwd = window.cryp.pbkdf2(m, salt);
+            if (window.cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
+                isremember = true;
+                mainPwd = m;
+                enc(dpwd);
+            } else {
+                isremember = false;
+            }
+        }
+        if (!isremember) {
+            main!.innerHTML = `
+            <div class="title">请输入访问密钥</div>
+            <div class="form">
+            <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild"/></div>
+            <div><input type="checkbox" id="rememberPwd"} style="margin-right: 10px;"/><label for="rememberPwd">记住密钥</label></div>
+            </div>
+            <div class="action" id="Yes"><p>确定</p></div>
+            <div id="error"></div>
+            `;
+            (<HTMLDivElement>document.querySelector("#navBar")).style.display = "none";
+            document.querySelector("#Yes")?.addEventListener("click", () => {
+                let m = (document.querySelector("#mainPwd") as HTMLInputElement).value;
+                let dpwd = window.cryp.pbkdf2(m, salt);
+                if (window.cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
+                    isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
+                    mainPwd = m;
+                    (<HTMLDivElement>document.querySelector("#navBar")).style.display = "flex";
+                    enc(dpwd);
+                } else {
+                    document.querySelector("#error")!.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>密钥错误！</strong>你需要检查你的密钥。
+                    </div>`;
+                    let alert = new bootstrap.Alert(document.querySelector(".alert") as HTMLDivElement);
+                    setTimeout(() => {
+                        alert.close();
+                    }, 1000);
+                }
+            });
+        }
+    }
+    function enc(key: string) : void{
+        obj.pwd.forEach((element: any) => {
+            pwdList.push(<Password>decrypt(new Password(element), key));
+        });
+        obj.folder.forEach((element: any) => {
+            folderList.push(<Folder>decrypt(new Folder(element), key));
+        })
+        obj.recent.forEach((element: any) => {
+            if (element.type == Type.Password) recentItem.push(decrypt(new Password(element), key));
+            else recentItem.push(decrypt(new Folder(element), key));
+        });
+        update(Folder.root());
+    }
+}).catch((err) => {
+    console.log(err);
+    pwdList = [];
+    recentItem = [];
+    mainSetting = new MainSetting();
+    update(Folder.root());
+});

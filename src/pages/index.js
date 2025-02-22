@@ -198,7 +198,7 @@ const lessSimplePwd = [
 ];
 const showNoteMaxLength = 152; // 在main页面显示备注的最大长度
 const showOtherMaxLength = 60; // 在main页面显示来源、用户名、密码的最大长度
-const showPathMaxLength = 65; // 在main页面显示路径的最大长度
+const showPathMaxLength = 40; // 在main页面显示路径的最大长度
 var Type;
 (function (Type) {
     Type[Type["Folder"] = 0] = "Folder";
@@ -296,7 +296,7 @@ class Password {
     getBaseHtml(isRecent = false) {
         return `<p>来源：${Password.format(this.from)}</p>
             <p>用户名：${Password.format(this.uname)}</p>
-            <p>密码：${Password.format(this.pwd)}</p>
+            <p>密码：******</p>
             ${this.email == "" ? "" : `<p>邮箱：${Password.format(this.email)}</p>`}
             ${this.phone == "" ? "" : `<p>电话：${Password.format(this.phone)}</p>`}
             ${this.note == "" ? "" : `<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}
@@ -415,16 +415,48 @@ class Folder {
         return f == this.parent.slice(0, f.length);
     }
     toReadable() {
-        let ans = this.stringify(), lans = "主文件夹 > ";
+        let ans = this.stringify(), lans = [{ text: "主文件夹", index: 1 }], tmp = "";
         for (let i = 2; i < ans.length; i++) {
-            if (i == ans.length - 1)
-                continue;
-            if (ans[i] == "/")
-                lans += " > ";
+            if (ans[i] == "/") {
+                lans.push({ text: tmp, index: i });
+                tmp = "";
+            }
             else
-                lans += ans[i];
+                tmp += ans[i];
         }
-        return lans;
+        // 检查长度
+        let length = 0, maxindex = 0;
+        for (let i = lans.length - 1; i >= 0; i--) {
+            length += lans[i].text.length;
+            if (length > showPathMaxLength) {
+                if (i == lans.length - 1) {
+                    lans[i].text = Password.format(lans[i].text, showPathMaxLength, "front");
+                    maxindex = i;
+                }
+                else
+                    maxindex = i + 1;
+                break;
+            }
+            length += 2;
+        }
+        let tgtHtml = "";
+        if (maxindex != 0)
+            tgtHtml += `<li class="breadcrumb-item active"><p>...</p></li>`;
+        for (let i = maxindex; i < lans.length; i++) {
+            if (i == lans.length - 1) {
+                tgtHtml += `<li class="breadcrumb-item active" aria-current="page"><p data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
+            }
+            else {
+                tgtHtml += `<li class="breadcrumb-item"><p data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
+            }
+        }
+        return { html: `
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                ${tgtHtml}
+            </ol>
+        </nav>
+        `, num: lans.length };
     }
 }
 class MainSetting {
@@ -607,7 +639,7 @@ function init(dir) {
 }
 // 渲染main界面
 function update(dir, checkable = false) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     if (dir.stringify() == "~/") {
         showRecent();
         return;
@@ -621,8 +653,9 @@ function update(dir, checkable = false) {
     }
     currentFolder = dir;
     let faname = Folder.fromString(dir.parent).name;
+    let location = dir.toReadable();
     let inner = `<div class="title">密码列表</div>
-    ${dir.isSame(Folder.root()) ? "" : `<div class="subtitle">当前位置：${Password.format(dir.toReadable(), showPathMaxLength, "front")}</div>`}
+    ${dir.isSame(Folder.root()) ? "" : `<div class="subtitle"><p>当前位置：</p>${location.html}</div>`}
     <div id="MainToolBar">
     ${checkable ?
         `<p class="tool" id="checkable">取消选择</p>
@@ -706,9 +739,14 @@ function update(dir, checkable = false) {
                 return;
             e.preventDefault();
         });
+        for (let i = 0; i < location.num; i++) {
+            (_c = document.querySelector(`#dirItem${i}`)) === null || _c === void 0 ? void 0 : _c.addEventListener("click", (e) => {
+                update(Folder.fromString(e.target.dataset.location));
+            });
+        }
     }
     if (checkable) {
-        (_c = document.querySelector("#check-all")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
+        (_d = document.querySelector("#check-all")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
             nowFolders.forEach((value, index) => {
                 document.querySelector(`#folder${index}-checkbox`).checked = true;
             });
@@ -716,7 +754,7 @@ function update(dir, checkable = false) {
                 document.querySelector(`#pwd${index}-checkbox`).checked = true;
             });
         });
-        (_d = document.querySelector("#check-invert")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
+        (_e = document.querySelector("#check-invert")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
             nowFolders.forEach((value, index) => {
                 document.querySelector(`#folder${index}-checkbox`).checked = !document.querySelector(`#folder${index}-checkbox`).checked;
             });
@@ -724,7 +762,7 @@ function update(dir, checkable = false) {
                 document.querySelector(`#pwd${index}-checkbox`).checked = !document.querySelector(`#pwd${index}-checkbox`).checked;
             });
         });
-        (_e = document.querySelector("#delete")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
+        (_f = document.querySelector("#delete")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
             nowFolders.forEach((value, index) => {
                 if (document.querySelector(`#folder${index}-checkbox`).checked)
                     deleteItem(Type.Folder, index, dir, false);
@@ -755,13 +793,13 @@ function update(dir, checkable = false) {
         });
     }
     else {
-        (_f = document.querySelector("#paste")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
+        (_g = document.querySelector("#paste")) === null || _g === void 0 ? void 0 : _g.addEventListener("click", () => {
             for (let i of clipboard) {
                 moveItem(i.type, i.index, dir, true);
             }
             init(dir);
         });
-        (_g = document.querySelector("#move")) === null || _g === void 0 ? void 0 : _g.addEventListener("click", () => {
+        (_h = document.querySelector("#move")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", () => {
             for (let i of clipboard) {
                 moveItem(i.type, i.index, dir);
             }
@@ -769,7 +807,7 @@ function update(dir, checkable = false) {
             init(dir);
         });
     }
-    (_h = document.querySelector("#newFolder")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", () => {
+    (_j = document.querySelector("#newFolder")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
         let k = new Set();
         for (let i = 0; i < folderList.length; i++) {
             if (dir.isInclude(folderList[i])) {
@@ -865,13 +903,13 @@ function update(dir, checkable = false) {
                 newFolder.name = input.value;
                 folderIsEditing = false;
                 if (nowFolders.findIndex(v => (v.item.isSame(newFolder))) != -1 && !newFolder.isSame(nowFolders[i].item)) {
-                    mkDialog("重命名失败！", "文件夹名已存在");
+                    mkDialog("重命名失败！", "文件夹名已存在。");
                     init(dir);
                     return;
                 }
                 for (let j = 0; j < newFolder.name.length; j++) {
                     if (newFolder.name[j] == "/") {
-                        mkDialog("重命名失败！", "文件夹名不能包含“/”");
+                        mkDialog("重命名失败！", "文件夹名不能包含“/”。");
                         init(dir);
                         return;
                     }
@@ -961,13 +999,13 @@ function moveItem(type, index, dir_to, isCopy = false) {
     }
     else {
         if (hasDir(dir_to.stringify(), folderList[index].name)) {
-            mkDialog("移动失败！", `“${folderList[index].name}”已存在`);
+            mkDialog("移动失败！", `“${folderList[index].name}”已存在。`);
             return;
         }
         let newFolder = new Folder(folderList[index]);
         newFolder.parent = dir_to.stringify();
         if (newFolder.isin(folderList[index])) {
-            mkDialog("移动失败！", `目标文件夹“${folderList[index].name}”是源文件夹的子文件夹`);
+            mkDialog("移动失败！", `目标文件夹“${folderList[index].name}”是源文件夹的子文件夹。`);
             return;
         }
         folderList.forEach((item, idx) => {
@@ -1121,12 +1159,12 @@ function addPwd(dir) {
 }
 // 显示密码， from表示从哪个页面跳转过来的，如果是从最近删除跳转过来的，返回时会返回到最近删除页面，否则返回到主页面，需要填写Page枚举
 function showPwd(by, index, from) {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g;
     let inner = `
     <div class="form">
     <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${by[index].uname}" readonly /><img class="icon" src="./resources/copy.png" id="unameCopy" title="复制"></div>
-    <div class="formItem_Copy"><label for="pwd">密码：</label><input type="text" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="pwd">密码：</label><input type="password" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制"></div>
     <div class="formItem" id="safety"></div>
     <div class="formItem_Copy"><label for="email">邮箱：</label><input type="text" id="email" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="emailCopy" title="复制"></div>
     <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制"></div>
@@ -1177,7 +1215,13 @@ function showPwd(by, index, from) {
         if (safety.innerHTML == "")
             safety.style.display = "none";
     }
-    (_a = document.querySelector("#fromCopy")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+    (_a = document.querySelector("input#pwd")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", (e) => {
+        if (e.target.type == "password")
+            e.target.type = "text";
+        else
+            document.querySelector("input#pwd").type = "password";
+    });
+    (_b = document.querySelector("#fromCopy")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
         var _a, _b, _c;
         if (((_a = document.querySelector("#from")) === null || _a === void 0 ? void 0 : _a.getAttribute("copyed")) == "true") {
             return;
@@ -1192,7 +1236,7 @@ function showPwd(by, index, from) {
             }, 1000);
         }
     });
-    (_b = document.querySelector("#unameCopy")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
+    (_c = document.querySelector("#unameCopy")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
         var _a, _b, _c;
         if (((_a = document.querySelector("#uname")) === null || _a === void 0 ? void 0 : _a.getAttribute("copyed")) == "true") {
             return;
@@ -1207,7 +1251,7 @@ function showPwd(by, index, from) {
             }, 1000);
         }
     });
-    (_c = document.querySelector("#pwdCopy")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
+    (_d = document.querySelector("#pwdCopy")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
         var _a, _b, _c;
         if (((_a = document.querySelector("#pwd")) === null || _a === void 0 ? void 0 : _a.getAttribute("copyed")) == "true") {
             return;
@@ -1222,7 +1266,7 @@ function showPwd(by, index, from) {
             }, 1000);
         }
     });
-    (_d = document.querySelector("#emailCopy")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
+    (_e = document.querySelector("#emailCopy")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
         var _a, _b, _c;
         if (((_a = document.querySelector("#email")) === null || _a === void 0 ? void 0 : _a.getAttribute("copyed")) == "true") {
             return;
@@ -1237,7 +1281,7 @@ function showPwd(by, index, from) {
             }, 1000);
         }
     });
-    (_e = document.querySelector("#phoneCopy")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
+    (_f = document.querySelector("#phoneCopy")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
         var _a, _b, _c;
         if (((_a = document.querySelector("#phone")) === null || _a === void 0 ? void 0 : _a.getAttribute("copyed")) == "true") {
             return;
@@ -1252,7 +1296,7 @@ function showPwd(by, index, from) {
             }, 1000);
         }
     });
-    (_f = document.querySelector("#back")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
+    (_g = document.querySelector("#back")) === null || _g === void 0 ? void 0 : _g.addEventListener("click", () => {
         if (from == Folder.bin()) {
             showRecent();
         }
@@ -1292,9 +1336,6 @@ function showRecent(checkable = false) {
     if (recentItem.length == 0) {
         inner += `<p>暂无删除密码</p>`;
     }
-    inner += `
-    <div class="action" id="back"><p>返回</p></div>
-    `;
     main.innerHTML = inner;
     (_a = document.querySelector("#checkable")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
         showRecent(!checkable);
@@ -1388,25 +1429,55 @@ function setting(dir) {
     <p>安全设置</p>
     <div class="settingFormItem">
         <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
-        <div><input type="checkbox" id="rememberPwd" ${isremember ? "checked" : ""}/><label for="rememberPwd">记住密钥</label></div>
+        <div><input type="checkbox" id="rememberPwd" ${mainPwd == "" ? "disabled" : `${isremember ? "checked" : ""}`}><label for="rememberPwd">记住密钥</label></div>
     </div>
     <p>其他个性化设置</p>
     <div class="settingFormItem">
         <input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label></div>
     </div>
-    <div class="action" id="save"><p>保存</p></div>
-    <div class="action" id="cancel"><p>取消</p></div>
+    <div class="action" id="apply"><p>应用</p></div>
     `;
-    (_a = document.querySelector("#save")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+    const saveKey = document.querySelector("#rememberPwd");
+    (_a = document.querySelector("#mainPwd")) === null || _a === void 0 ? void 0 : _a.addEventListener("change", (e) => {
+        saveKey.disabled = e.target.value == "";
+    });
+    (_b = document.querySelector("#apply")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
         mainPwd = document.querySelector("#mainPwd").value;
         isremember = document.querySelector("#rememberPwd").checked;
         mainSetting.autoCopy = document.querySelector("#autoCopy").checked;
-        init(dir);
-    });
-    (_b = document.querySelector("#cancel")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
-        update(dir);
+        saveData();
+        mkDialog("成功！", "设置已顺利应用到程序。");
     });
 }
+document.querySelector("span#nav-mainPage").addEventListener("click", (e) => {
+    e.target.classList.add("active");
+    document.querySelector("span#nav-setting").classList.remove("active");
+    document.querySelector("span#nav-bin").classList.remove("active");
+    document.querySelector("span#nav-home").classList.remove("active");
+    update(Folder.root());
+});
+document.querySelector("span#nav-setting").addEventListener("click", (e) => {
+    e.target.classList.add("active");
+    document.querySelector("span#nav-mainPage").classList.remove("active");
+    document.querySelector("span#nav-bin").classList.remove("active");
+    document.querySelector("span#nav-home").classList.remove("active");
+    setting(Folder.root());
+});
+document.querySelector("span#nav-bin").addEventListener("click", (e) => {
+    e.target.classList.add("active");
+    document.querySelector("span#nav-setting").classList.remove("active");
+    document.querySelector("span#nav-mainPage").classList.remove("active");
+    document.querySelector("span#nav-home").classList.remove("active");
+    update(Folder.bin());
+});
+document.querySelector("span#nav-home").addEventListener("click", (e) => {
+    e.target.classList.add("active");
+    document.querySelector("span#nav-setting").classList.remove("active");
+    document.querySelector("span#nav-bin").classList.remove("active");
+    document.querySelector("span#nav-mainPage").classList.remove("active");
+    update(Folder.root());
+});
+document.querySelector("#nav-home").click();
 window.fs.read("./data").then((data) => {
     var _a;
     data = data.replace(/\s/g, '');
@@ -1437,16 +1508,28 @@ window.fs.read("./data").then((data) => {
             <div><input type="checkbox" id="rememberPwd"} style="margin-right: 10px;"/><label for="rememberPwd">记住密钥</label></div>
             </div>
             <div class="action" id="Yes"><p>确定</p></div>
+            <div id="error"></div>
             `;
+            document.querySelector("#navBar").style.display = "none";
             (_a = document.querySelector("#Yes")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
                 let m = document.querySelector("#mainPwd").value;
                 let dpwd = window.cryp.pbkdf2(m, salt);
                 if (window.cryp.pbkdf2(dpwd, salt) == obj.mainPwd) {
                     isremember = document.querySelector("#rememberPwd").checked;
                     mainPwd = m;
+                    document.querySelector("#navBar").style.display = "flex";
                     enc(dpwd);
                 }
-                ;
+                else {
+                    document.querySelector("#error").innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>密钥错误！</strong>你需要检查你的密钥。
+                    </div>`;
+                    let alert = new bootstrap.Alert(document.querySelector(".alert"));
+                    setTimeout(() => {
+                        alert.close();
+                    }, 1000);
+                }
             });
         }
     }
@@ -1472,32 +1555,3 @@ window.fs.read("./data").then((data) => {
     mainSetting = new MainSetting();
     update(Folder.root());
 });
-document.querySelector("span#nav-mainPage").addEventListener("click", (e) => {
-    e.target.classList.add("active");
-    document.querySelector("span#nav-setting").classList.remove("active");
-    document.querySelector("span#nav-bin").classList.remove("active");
-    document.querySelector("span#nav-home").classList.remove("active");
-    update(Folder.root());
-});
-document.querySelector("span#nav-setting").addEventListener("click", (e) => {
-    e.target.classList.add("active");
-    document.querySelector("span#nav-mainPage").classList.remove("active");
-    document.querySelector("span#nav-bin").classList.remove("active");
-    document.querySelector("span#nav-home").classList.remove("active");
-    setting(Folder.root());
-});
-document.querySelector("span#nav-bin").addEventListener("click", (e) => {
-    e.target.classList.add("active");
-    document.querySelector("span#nav-setting").classList.remove("active");
-    document.querySelector("span#nav-mainPage").classList.remove("active");
-    document.querySelector("span#nav-home").classList.remove("active");
-    update(Folder.bin());
-});
-document.querySelector("span#nav-home").addEventListener("click", (e) => {
-    e.target.classList.add("active");
-    document.querySelector("span#nav-setting").classList.remove("active");
-    document.querySelector("span#nav-bin").classList.remove("active");
-    document.querySelector("span#nav-mainPage").classList.remove("active");
-    update(Folder.root());
-});
-document.querySelector("#nav-home").click();
