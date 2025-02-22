@@ -416,7 +416,8 @@ class Folder {
     toReadable(): string{
         let ans : string = this.stringify(), lans : string = "主文件夹 > ";
         for(let i = 2; i < ans.length; i++){
-            if (ans[i] == "/" && i != ans.length - 1) lans += " > ";
+            if (i == ans.length - 1) continue;
+            if (ans[i] == "/") lans += " > ";
             else lans += ans[i];
         }
         return lans;
@@ -898,7 +899,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
             if (folderIsEditing) return;
             e.preventDefault();
             const index : string = (e as DragEvent)?.dataTransfer?.getData("text/plain") as string;
-            if (parseInt(index.substring(1)) == nowFolders[i].idx) return;
+            if (parseInt(index.substring(1)) == nowFolders[i].idx && index[0] == "f") return;
             let error : string = "";
             function move(info: string){
                 let id: number = parseInt(info.substring(1))
