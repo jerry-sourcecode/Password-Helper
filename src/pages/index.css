@@ -7,6 +7,7 @@
     overflow: hidden;
 }
 p, span, label{
+    margin-bottom: 0;
     user-select: none;
     line-height: 30px;
     font-size: 18px;
@@ -22,6 +23,8 @@ textarea{
 }
 input[type="text"]{
     width: 25vw;
+    line-height: normal;
+    font-size: small;
 }
 ul{
     list-style-type: none;
@@ -45,9 +48,16 @@ div.main{
     display: flex;
     align-items: center;
     flex-direction: column;
-    margin: 15px;
     width: 50vw;
     height: 96vh;
+}
+div.main div.content{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin: 15px;
+    width: 50vw;
+    height: 89vh;
     overflow: auto;
     position: relative;
 }
@@ -92,6 +102,7 @@ div.action{
 }
 div.action *{
     font-size: 16px;
+    margin: 0;
 }
 div.action:hover{
     font-weight: bold;
@@ -99,7 +110,6 @@ div.action:hover{
 div.action:hover *{
     cursor: pointer;
     user-select: none;
-    margin: 0;
 }
 div.action:active{
     box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.3);
@@ -211,6 +221,7 @@ img.tool{
     margin: 4px;
     user-select: none;
     cursor: pointer;
+    vertical-align: baseline;
 }
 p.tool{
     height: 30px;
@@ -234,4 +245,13 @@ p.tool:hover{
 div.settingFormItem{
     margin: 20px;
     margin-top: 3px;
+}
+div.settingFormItem label{
+    display: inline;
+}
+div.formItem label{
+    display: inline;
+}
+div.formItem_Copy label{
+    display: inline;
 }

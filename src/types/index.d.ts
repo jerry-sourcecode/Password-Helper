@@ -25,3 +25,5 @@ declare global {
         cryp: cryp;
     }
 }
+
+declare function mkDialog(title: string, message: string, option: Array<string>): void;

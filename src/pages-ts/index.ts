@@ -474,7 +474,7 @@ function decrypt(data:Item, key: string, index: number = 0): Item{ // 解密
 }
     
 let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
-const main = document.querySelector("#mainDiv"); // main界面
+const main = document.querySelector("#contentDiv"); // main界面
 let pwdList : Array<Password> = []; // 密码列表
 let recentItem : Array<Item> = []; // 最近删除的密码列表
 let folderList : Array<Folder> = []; // 文件夹列表
@@ -621,7 +621,6 @@ function update(dir: Folder, checkable: boolean = false) : void{
         <p class="${clipboard.size == 0? "invaildTool":"tool"}" id="paste">粘贴</p>
         <p class="${clipboard.size == 0? "invaildTool":"tool"}" id="move">移动</p>
         <p class="tool" id="checkable">选择</p>
-        <img src="../pages/resources/setting.png" title="设置" class="tool" id="setting">
         <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" id="newFolder">
         ${dir.isSame(Folder.root())?"":`<img src="../pages/resources/up.png" title="上移到${faname == ":"?"主文件夹":faname}" class="tool" id="up">`}`
     }
@@ -660,18 +659,12 @@ function update(dir: Folder, checkable: boolean = false) : void{
         inner += `<p>暂无密码</p>`;
     }
     inner += `
-    <div class="info" id="recent">
-        <p>最近删除</p>
-    </div>
     ${dir.isSame(Folder.root())?"":`<div class="info" style="display: none" id="parent">
         <p>推拽到此可以上移到${faname==":"?"主文件夹":"“"+faname+"”"}</p>
     </div>`}
     <div class="action" id="addPwd"><p>添加密码</p></div>
     `;
     main!.innerHTML = inner;
-    document.querySelector("#setting")?.addEventListener("click", () => {
-        setting(dir);
-    });
     document.querySelector("#up")?.addEventListener("click", () => {
         update(dir.getParent());
     });
@@ -807,7 +800,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
             if (folderIsEditing) return;
             if (mainSetting.autoCopy){
                 copyToClipboard(pwdList[nowPwds[i].idx].pwd);
-                window.msg.infoSync("消息","密码已复制到剪贴板。");
+                mkDialog("成功复制！", "密码已复制到剪贴板。<br>如果想要查看详情，请在设置中设置。");
                 return;
             }
             showPwd(pwdList, nowPwds[i].idx, dir);
@@ -849,13 +842,13 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 newFolder.name = input!.value;
                 folderIsEditing = false;
                 if (nowFolders.findIndex(v => (v.item.isSame(newFolder))) != -1 && !newFolder.isSame(nowFolders[i].item)){
-                    window.msg.warning("警告", "文件夹名已存在");
+                    mkDialog("重命名失败！", "文件夹名已存在");
                     init(dir);
                     return;
                 }
                 for(let j = 0; j < newFolder.name.length; j++){
                     if (newFolder.name[j] == "/"){
-                        window.msg.warning("警告", "文件夹名不能包含“/”");
+                        mkDialog("重命名失败！", "文件夹名不能包含“/”");
                         init(dir);
                         return;
                     }
@@ -900,7 +893,6 @@ function update(dir: Folder, checkable: boolean = false) : void{
             e.preventDefault();
             const index : string = (e as DragEvent)?.dataTransfer?.getData("text/plain") as string;
             if (parseInt(index.substring(1)) == nowFolders[i].idx && index[0] == "f") return;
-            let error : string = "";
             function move(info: string){
                 let id: number = parseInt(info.substring(1))
                 if (info[0] == "p"){
@@ -910,7 +902,6 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 }
             }
             move(index);
-            if (error != "") window.msg.warning("警告", error);
             saveData();
             update(dir, checkable)
         });
@@ -926,10 +917,6 @@ function update(dir: Folder, checkable: boolean = false) : void{
             });
         }
     }
-    document.querySelector("#recent")?.addEventListener("click", () => {
-        if (folderIsEditing) return;
-        showRecent();
-    });
     main?.scrollTo(topScroll)
 }
 function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = false) : void {
@@ -938,13 +925,13 @@ function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = f
         else pwdList[index].dir = dir_to;
     } else {
         if (hasDir(dir_to.stringify(), folderList[index].name)){
-            window.msg.warningSync("警告", `“${folderList[index].name}”已存在`);
+            mkDialog("移动失败！", `“${folderList[index].name}”已存在`);
             return;
         }
         let newFolder = new Folder(folderList[index]);
         newFolder.parent = dir_to.stringify();
         if (newFolder.isin(folderList[index])) {
-            window.msg.warningSync("警告", `目标文件夹“${folderList[index].name}”是源文件夹的子文件夹`);
+            mkDialog("移动失败！", `目标文件夹“${folderList[index].name}”是源文件夹的子文件夹`);
             return;
         }
         folderList.forEach((item, idx) => {
@@ -1269,7 +1256,7 @@ function showRecent(checkable: boolean = false) : void{
                 if ((document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked) cnt++;
             })
             if (cnt == 0) return;
-            let result = window.msg.warning("警告", `此操作不可撤销，你确定要永久删除${cnt}项吗？`, ["确定", "取消"])
+            mkDialog("警告", "此操作不可撤销，你确定要永久删除吗？", ["确定", "取消"])
             .then((res) => {
                 if (res == 0){
                     let de: Array<number> = [];
@@ -1299,8 +1286,8 @@ function showRecent(checkable: boolean = false) : void{
         const deleteBtn = document.querySelector(`#recent${i}-delete`);
         deleteBtn!.addEventListener("click", (e) => {
             e?.stopPropagation();
-            let result = window.msg.warning("警告", "此操作不可撤销，你确定要永久删除吗？", ["确定", "取消"]);
-            result.then((res) => {
+            mkDialog("警告", "此操作不可撤销，你确定要永久删除吗？", ["确定", "取消"])
+            .then((res) => {
                 if (res == 0){
                     deleterecentItem(i);
                     showRecent();
@@ -1414,3 +1401,34 @@ window.fs.read("./data").then((data) => {
     mainSetting = new MainSetting();
     update(Folder.root());
 });
+
+document.querySelector("span#nav-mainPage")!.addEventListener("click", (e) => {
+    (e.target as HTMLSpanElement).classList.add("active");
+    document.querySelector("span#nav-setting")!.classList.remove("active");
+    document.querySelector("span#nav-bin")!.classList.remove("active");
+    document.querySelector("span#nav-home")!.classList.remove("active");
+    update(Folder.root());
+});
+document.querySelector("span#nav-setting")!.addEventListener("click", (e) => {
+    (e.target as HTMLSpanElement).classList.add("active");
+    document.querySelector("span#nav-mainPage")!.classList.remove("active");
+    document.querySelector("span#nav-bin")!.classList.remove("active");
+    document.querySelector("span#nav-home")!.classList.remove("active");
+    setting(Folder.root());
+});
+document.querySelector("span#nav-bin")!.addEventListener("click", (e) => {
+    (e.target as HTMLSpanElement).classList.add("active");
+    document.querySelector("span#nav-setting")!.classList.remove("active");
+    document.querySelector("span#nav-mainPage")!.classList.remove("active");
+    document.querySelector("span#nav-home")!.classList.remove("active");
+    update(Folder.bin());
+});
+document.querySelector("span#nav-home")!.addEventListener("click", (e) => {
+    (e.target as HTMLSpanElement).classList.add("active");
+    document.querySelector("span#nav-setting")!.classList.remove("active");
+    document.querySelector("span#nav-bin")!.classList.remove("active");
+    document.querySelector("span#nav-mainPage")!.classList.remove("active");
+    update(Folder.root());
+});
+
+(document.querySelector("#nav-home") as HTMLSpanElement).click();
