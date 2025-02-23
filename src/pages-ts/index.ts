@@ -245,7 +245,7 @@ class Folder {
             if (i == lans.length - 1){
                 tgtHtml += `<li class="breadcrumb-item active" aria-current="page"><p data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
             } else {
-                tgtHtml += `<li class="breadcrumb-item"><p class="breadcrumb-loaction-item" data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
+                tgtHtml += `<li class="breadcrumb-item"><p class="action" data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
             }
         }
         return {html: `
@@ -366,35 +366,6 @@ function hasDir(path: string, name: string, exceptIndex: Array<number> = []): bo
         }
     }
     return false;
-}
-function saveData(): void{ // 保存数据
-    let salt: string = randstr(16);
-    let enc = window.cryp.pbkdf2(mainPwd, salt)
-    let pwdListUpdated : Array<Password> = []
-    let folderListUpdated : Array<Folder> = [];
-    let recentItemUpdated : Array<Item> = [];
-    for (let index = 0; index < pwdList.length; index++) {
-        pwdListUpdated.push(encrypt(pwdList[index], enc) as Password);
-    }
-    for (let index = 0; index < folderList.length; index++) {
-        folderListUpdated.push(encrypt(folderList[index], enc) as Folder);
-    }
-    for (let index = 0; index < recentItem.length; index++) {
-        recentItemUpdated.push(encrypt(recentItem[index], enc));
-    }
-    // 数据保存
-    let data = JSON.stringify({
-        version: "1.0",
-        pwd: pwdListUpdated,
-        folder: folderListUpdated,
-        recent: recentItemUpdated,
-        mainPwd: window.cryp.pbkdf2(enc, salt),
-        mainSetting: mainSetting,
-        salt: salt,
-        memory: isremember? mainPwd : null,
-        isPwdNull: mainPwd === "",
-    });
-    window.fs.save("./data", data);
 }
 function mkdir(dir: Folder): void{ // 创建文件夹
     let parent = Folder.fromString(dir.parent);
@@ -829,20 +800,38 @@ function setting(dir: Folder) : void {
     main!.innerHTML = `
     <div class="title">设置</div>
     <div class="form">
-    <p>安全设置</p>
-    <div class="settingFormItem">
-        <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
-        <div><input type="checkbox" id="rememberPwd" ${mainPwd == "" ? "disabled" : `${isremember ? "checked" : ""}`}><label for="rememberPwd">记住密钥</label></div>
-    </div>
-    <p>其他个性化设置</p>
-    <div class="settingFormItem">
-        <input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label></div>
+        <p>安全设置</p>
+        <div class="settingFormItem">
+            <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
+            <div><input type="checkbox" id="rememberPwd" ${mainPwd == "" ? "disabled" : `${isremember ? "checked" : ""}`}><label for="rememberPwd">记住密钥</label></div>
+        </div>
+        <p>其他个性化设置</p>
+        <div class="settingFormItem">
+            <input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label>
+        </div>
+        <p>导出设置</p>
+        <div class="settingFormItem" style="text-indent: 2em">
+            <p>用户迁移凭证是一个加密的文件，你可以将它导出到本地，然后在另一台设备上导入。你可以使用用户迁移凭证来快速且安全的转移你的数据。</p>
+            <p>请注意，用户迁移凭证是加密的，你需要输入你的访问密钥才能导入。</p>
+            <div id="exportUMC"><p class="action">点此导出用户迁移凭证</p></div>
+            <div id="importUMC"><p class="action">点此导入用户迁移凭证</p></div>
+        </div>
     </div>
     <div class="action" id="apply"><p>应用</p></div>
     `;
     const saveKey = document.querySelector("#rememberPwd") as HTMLInputElement;
     document.querySelector("#mainPwd")?.addEventListener("change", (e) => {
         saveKey.disabled = (<HTMLInputElement>e.target).value == "";
+    });
+    document.querySelector("div#exportUMC")?.addEventListener("click", () => {
+        let ans: string | undefined = window.msg.showSaveDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }])
+        if (ans === undefined) return;
+        saveUMC(ans);
+    });
+    document.querySelector("div#importUMC")?.addEventListener("click", () => {
+        let ans: string | undefined = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }])
+        if (ans === undefined) return;
+        readUMC(ans);
     });
     document.querySelector("#apply")?.addEventListener("click", () => {
         mainPwd = (document.querySelector("#mainPwd") as HTMLInputElement).value;

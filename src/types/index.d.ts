@@ -1,5 +1,7 @@
 export {};
 
+import { FileFilter } from 'electron';
+
 interface fs {
     save: (filename: string, data: string) => void;
     read: (filename: string) => Promise<string>;
@@ -10,6 +12,8 @@ interface msg {
     warning: (title: string, msg: string, choice?: string[]) => Promise<number>;
     infoSync: (title: string, msg: string, choice?: string[]) => number;
     warningSync: (title: string, msg: string, choice?: string[]) => number;
+    showOpenDialogSync: (title: string, msg: string, filters: Electron.FileFilter[]) => string | undefined;
+    showSaveDialogSync: (title: string, msg: string, filters: Electron.FileFilter[]) => string | undefined;
 }
 
 interface cryp {
@@ -25,9 +29,3 @@ declare global {
         cryp: cryp;
     }
 }
-
-declare function mkDialog(title: string, message: string, option: Array<string>): void;
-declare function goHome(): void;
-declare function update(dir: Folder, checkable: boolean) : void;
-declare const simplePwd: Array<string>;
-declare const lessSimplePwd: Array<string>;

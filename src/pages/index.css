@@ -134,6 +134,7 @@ div.form{
     display: flex;
     align-items: flex-start;
     flex-direction: column;
+    width: 40em;
 }
 div.form input[type="checkbox"]{
     margin-right: 10px;
@@ -260,7 +261,20 @@ div.formItem_Copy label{
     display: inline;
 }
 
-p.breadcrumb-loaction-item:hover{
+p.action:hover{
     text-decoration: underline;
     cursor: pointer;
+}
+p.action{
+    font-weight: bold;
+}
+
+
+div.accordion{
+    width: 40vw;
+    margin: 10px;
+}
+div.accordion p{
+    text-indent: 2em;
+    margin: 7px;
 }

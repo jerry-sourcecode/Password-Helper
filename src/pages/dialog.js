@@ -1,5 +1,5 @@
 "use strict";
-function mkDialog(title, message, option = ["确定"]) {
+function mkDialog(title, message, option = ["确定"], isStatic = false) {
     const modalDiv = document.querySelector("#modal");
     let optionHTML = "";
     for (let i = 0; i < option.length; i++) {
@@ -20,7 +20,11 @@ function mkDialog(title, message, option = ["确定"]) {
         </div>
     </div>
     `;
-    let myModal = new bootstrap.Modal(modalDiv);
+    let myModal;
+    if (isStatic)
+        myModal = new bootstrap.Modal(modalDiv, { backdrop: "static" });
+    else
+        myModal = new bootstrap.Modal(modalDiv);
     myModal.show();
     return new Promise((resolve, reject) => {
         var _a;

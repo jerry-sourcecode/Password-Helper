@@ -1,4 +1,4 @@
-function mkDialog(title: string, message: string, option: Array<string> = ["确定"]): Promise<Number>{
+function mkDialog(title: string, message: string, option: Array<string> = ["确定"], isStatic: boolean = false): Promise<Number>{
     const modalDiv = document.querySelector("#modal") as HTMLDivElement;
     let optionHTML = "";
     for(let i = 0; i < option.length; i++){
@@ -19,7 +19,9 @@ function mkDialog(title: string, message: string, option: Array<string> = ["确�
         </div>
     </div>
     `
-    let myModal = new bootstrap.Modal(modalDiv);
+    let myModal: bootstrap.Modal;
+    if (isStatic) myModal = new bootstrap.Modal(modalDiv, {backdrop: "static"});
+    else myModal = new bootstrap.Modal(modalDiv);
     myModal.show();
     return new Promise((resolve, reject) => {
         for(let i = 0; i < option.length; i++){
