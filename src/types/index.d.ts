@@ -27,3 +27,7 @@ declare global {
 }
 
 declare function mkDialog(title: string, message: string, option: Array<string>): void;
+declare function goHome(): void;
+declare function update(dir: Folder, checkable: boolean) : void;
+declare const simplePwd: Array<string>;
+declare const lessSimplePwd: Array<string>;

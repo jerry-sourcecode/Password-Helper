@@ -41,7 +41,8 @@ function createWindow(){
         webPreferences: {
             preload: path.join(__dirname, './preload.js'),
             sandbox: false,
-        }
+        },
+        title: "Password Helper"
     })
 
     win.maximize();
