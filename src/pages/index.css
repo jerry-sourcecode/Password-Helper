@@ -17,7 +17,7 @@ label{
     display: inline;
 }
 textarea{
-    height: 40vh;
+    height: 33vh;
     width: 33vw;
     font-size: 17px;
     margin-bottom: 5px;
@@ -258,4 +258,9 @@ div.formItem label{
 }
 div.formItem_Copy label{
     display: inline;
+}
+
+p.breadcrumb-loaction-item:hover{
+    text-decoration: underline;
+    cursor: pointer;
 }

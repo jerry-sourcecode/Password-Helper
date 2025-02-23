@@ -198,7 +198,7 @@ const lessSimplePwd: Array<string> = [
   ];
 const showNoteMaxLength: number = 152; // 在main页面显示备注的最大长度
 const showOtherMaxLength: number = 60; // 在main页面显示来源、用户名、密码的最大长度
-const showPathMaxLength: number = 40; // 在main页面显示路径的最大长度
+const showPathMaxLength: number = 35; // 在main页面显示路径的最大长度
 enum Type{ // 类型枚举
     Folder, // 文件夹
     Password, // 密码
@@ -443,7 +443,7 @@ class Folder {
             if (i == lans.length - 1){
                 tgtHtml += `<li class="breadcrumb-item active" aria-current="page"><p data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
             } else {
-                tgtHtml += `<li class="breadcrumb-item"><p data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
+                tgtHtml += `<li class="breadcrumb-item"><p class="breadcrumb-loaction-item" data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
             }
         }
         return {html: `
@@ -627,7 +627,7 @@ function init(dir: Folder): void{
 }
 // 渲染main界面
 function update(dir: Folder, checkable: boolean = false) : void{
-    if (dir.stringify() == "~/"){
+    if (dir.isSame(Folder.bin())){
         showRecent();
         return;
     }
@@ -1031,7 +1031,7 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
         let phone = (document.querySelector("#phone") as HTMLInputElement).value;
         let note = (document.querySelector("#note") as HTMLTextAreaElement).value;
         if (name == "" || uname == "" || pwd == ""){
-            alert("请填写完整信息");
+            mkDialog("提交失败！", "来源、用户名和密码不能为空。");
             return;
         }
         const dir = by[index].dir;
