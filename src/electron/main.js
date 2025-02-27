@@ -70,6 +70,7 @@ function setIpc(win){
 }
 
 function createWindow(){
+    const isDebug = true;
     const win = new BrowserWindow({
         width: 800,
         height: 600,
@@ -78,9 +79,18 @@ function createWindow(){
         webPreferences: {
             preload: path.join(__dirname, './preload.js'),
             sandbox: false,
+            devTools: isDebug
         },
         title: "Password Helper"
     })
+
+    if (!isDebug){
+        win.webContents.on('before-input-event', (event, input) => {
+            if ((input.control || input.meta) && input.key.toLowerCase() === 'r') {
+              event.preventDefault();
+            }
+        });
+    }
 
     win.maximize();
     win.show();

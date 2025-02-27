@@ -1,7 +1,193 @@
 function update(dir: Folder, checkable: boolean = false) : void{
+    dir = new Folder(dir);
+    document.querySelector("span#nav-setting")!.classList.remove("active");
+    document.querySelector("span#nav-bin")!.classList.remove("active");
+    document.querySelector("span#nav-home")!.classList.remove("active");
+    document.querySelector("span#nav-mainPage")!.classList.remove("active");
+    function setting() : void {
+        // 显示设置页面
+        main!.innerHTML = `
+        <div class="title">设置</div>
+        <div class="form">
+            <p>安全设置</p>
+            <div class="settingFormItem">
+                <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
+                <div><input type="checkbox" id="rememberPwd" ${mainPwd == "" ? "disabled" : `${isremember ? "checked" : ""}`}><label for="rememberPwd">记住密钥</label></div>
+            </div>
+            <p>其他个性化设置</p>
+            <div class="settingFormItem">
+                <input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label>
+            </div>
+            <p>导出设置</p>
+            <div class="settingFormItem" style="text-indent: 2em">
+                <p>用户迁移凭证是一个加密的文件，你可以将它导出到本地，然后在另一台设备上导入。你可以使用用户迁移凭证来快速且安全的转移你的数据。</p>
+                <p>请注意，用户迁移凭证是强制加密的，你需要输入你的访问密钥才能导入，即使你选中了“记住密码”。</p>
+                <div id="exportUMC"><p class="action">点此导出用户迁移凭证</p></div>
+                <div id="importUMC"><p class="action">点此导入用户迁移凭证</p></div>
+            </div>
+            <div id="reset"><p class="action">点此重置</p></div>
+        </div>
+        <div class="action" id="apply"><p>应用</p></div>
+        `;
+        const saveKey = document.querySelector("#rememberPwd") as HTMLInputElement;
+        document.querySelector("#mainPwd")?.addEventListener("change", (e) => {
+            saveKey.disabled = (<HTMLInputElement>e.target).value == "";
+
+        });
+        document.querySelector("div#exportUMC")?.addEventListener("click", () => {
+            let ans: string | undefined = window.msg.showSaveDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }])
+            if (ans === undefined) return;
+            saveUMC(ans);
+        });
+        document.querySelector("div#importUMC")?.addEventListener("click", () => {
+            let ans: string | undefined = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }])
+            if (ans === undefined) return;
+            readUMC(ans);
+        });
+        document.querySelector("#apply")?.addEventListener("click", () => {
+            mainPwd = (document.querySelector("#mainPwd") as HTMLInputElement).value;
+            isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
+            mainSetting.autoCopy = (document.querySelector("#autoCopy") as HTMLInputElement).checked;
+            if (mainPwd != "") Task.tryDone("妈妈再也不用担心我密码泄露啦！");
+            saveData()
+            mkDialog("成功！", "设置已顺利应用到程序。");
+        });
+        document.querySelector("#reset")?.addEventListener("click", () => {
+            mkDialog("警告", "此操作会清空所有数据并立即重启，你确定要继续吗？", ["确定", "取消"])
+            .then((res) => {
+                if (res == 0){
+                    window.fs.save("./data", "");
+                    location.reload();
+                }
+            })
+        });
+    }
+    function showRecent(checkable: boolean = false) : void{
+        let pos : {top: number, left: number};
+        if (currentFolder.isSame(Folder.bin())){
+            pos = getScroll();
+        } else {
+            pos = {top: 0, left: 0};
+        }
+        currentFolder = Folder.bin();
+        // 显示最近删除的密码
+        let inner : string = `<div class="title">最近删除</div>
+        <div id="MainToolBar">
+        ${checkable ?
+            `<p class="tool" id="checkable">取消选择</p>
+            <p class="tool" id="check-all">全部选择</p>
+            <p class="tool" id="check-invert">反向选择</p>
+            <p class="tool" id="delete">删除</p>
+            <p class="tool" id="recover">恢复</p>`
+        :
+            `<p class="tool" id="checkable">选择</p>`
+        }
+        </div>`;
+        recentItem.sort((a: Item, b: Item) => {
+            return a.rmDate! > b.rmDate! ? -1 : 1;
+        })
+        for (let i = 0; i < recentItem.length; i++){
+            inner += recentItem[i].getHtmlRecent(i, checkable);
+        }
+        if (recentItem.length == 0){
+            inner += `<p>暂无删除密码</p>`;
+        }
+        main!.innerHTML = inner;
+        document.querySelector("#checkable")?.addEventListener("click", () => {
+            showRecent(!checkable);
+        });
+        if (checkable){
+            document.querySelector("#check-all")?.addEventListener("click", () => {
+                recentItem.forEach((item: Item, index: number) => {
+                    (document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked = true;
+                })
+            });
+            document.querySelector("#check-invert")?.addEventListener("click", () => {
+                recentItem.forEach((item: Item, index: number) => {
+                    (document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked = !(document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked;
+                })
+            });
+            document.querySelector("#delete")?.addEventListener("click", () => {
+                let cnt: number = 0;
+                recentItem.forEach((item: Item, index: number) => {
+                    if ((document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked) cnt++;
+                })
+                if (cnt == 0) return;
+                mkDialog("警告", "此操作不可撤销，你确定要永久删除吗？", ["确定", "取消"])
+                .then((res) => {
+                    if (res == 0){
+                        Task.tryDone("选择操作，轻松掌控！");
+                        let de: Array<number> = [];
+                        recentItem.forEach((item: Item, index: number) => {
+                            if ((document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked) 
+                                de.push(index);
+                        })
+                        deleterecentItem(de);
+                        init(Folder.bin());
+                    }
+                });
+            });
+            document.querySelector("#recover")?.addEventListener("click", () => {
+                for(let i = recentItem.length - 1; i >= 0; i--){
+                    if ((document.querySelector(`#recent${i}-checkbox`) as HTMLInputElement)!.checked) recoverPwd(i);
+                }
+                Task.tryDone("选择操作，轻松掌控！");
+                init(Folder.bin());
+            });
+        }
+        for(let i = 0; i < recentItem.length; i++){
+            const recoverBtn = document.querySelector(`#recent${i}-recover`);
+            recoverBtn!.addEventListener("click", (e) => {
+                e?.stopPropagation();
+                recoverPwd(i);
+                init(Folder.bin());
+            });
+            const deleteBtn = document.querySelector(`#recent${i}-delete`);
+            deleteBtn!.addEventListener("click", (e) => {
+                e?.stopPropagation();
+                mkDialog("警告", "此操作不可撤销，你确定要永久删除吗？", ["确定", "取消"])
+                .then((res) => {
+                    if (res == 0){
+                        deleterecentItem(i);
+                        init(Folder.bin());
+                    }
+                })
+            });
+            const info = document.querySelector(`#recent${i}`);
+            info!.addEventListener("click", () => {
+                if (recentItem[i] instanceof Password) showPwd(<Array<Password>>recentItem, i, Folder.bin());
+            });
+            if (checkable){
+                const check = document.querySelector(`#recent${i}-checkboxDiv`);
+                const checkbox = document.querySelector(`#recent${i}-checkbox`) as HTMLInputElement;
+                check!.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    checkbox.checked = !checkbox.checked;
+                });
+                checkbox.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                })
+            }
+        }
+        document.querySelector("#back")?.addEventListener("click", () => {
+            update(Folder.root());
+        });
+        main?.scrollTo(pos);
+    }
     if (dir.isSame(Folder.bin())){
+        document.querySelector("span#nav-bin")!.classList.add("active");
         showRecent();
         return;
+    } else if (dir.isSame(Folder.home())){
+        document.querySelector("span#nav-home")!.classList.add("active");
+        goHome();
+        return;
+    } else if (dir.isSame(Folder.setting())){
+        document.querySelector("span#nav-setting")!.classList.add("active");
+        setting();
+        return;
+    } else {
+        document.querySelector("span#nav-mainPage")!.classList.add("active");
     }
     let topScroll
     if (dir.isSame(currentFolder)){
@@ -11,9 +197,9 @@ function update(dir: Folder, checkable: boolean = false) : void{
     }
     currentFolder = dir;
     let faname = Folder.fromString(dir.parent).name;
-    let location = dir.toReadable();
+    let loca = dir.toReadable(); // location
     let inner : string = `<div class="title">密码列表</div>
-    ${dir.isSame(Folder.root())?"":`<div class="subtitle"><p>当前位置：</p>${location.html}</div>`}
+    ${dir.isSame(Folder.root())?"":`<div class="subtitle"><p>当前位置：</p>${loca.html}</div>`}
     <div id="MainToolBar">
     ${checkable?
         `<p class="tool" id="checkable">取消选择</p>
@@ -89,6 +275,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
             } else {
                 moveItem(Type.Folder, num, Folder.fromString(dir.parent));
             }
+            Task.tryDone("文件向上冲");
             saveData();
             update(dir, checkable)
         });
@@ -96,7 +283,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
             if (folderIsEditing) return;
             e.preventDefault();
         });
-        for(let i = 0; i < location.num; i++){
+        for(let i = 0; i < loca.num; i++){
             document.querySelector(`#dirItem${i}`)?.addEventListener("click", (e) => {
                 update(Folder.fromString((e.target as HTMLDivElement).dataset.location!));
             })
@@ -128,6 +315,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
                     deleteItem(Type.Password, index, dir, false);
                 }
             })
+            Task.tryDone("文件大扫除");
             init(dir);
         })
         let copy = document.querySelector("#copy") as HTMLImageElement;
@@ -151,12 +339,14 @@ function update(dir: Folder, checkable: boolean = false) : void{
             for(let i of clipboard){
                 moveItem(i.type, i.index, dir, true);
             }
+            Task.tryDone("文件搬运大法");
             init(dir);
         })
         document.querySelector("#move")?.addEventListener("click", () => {
             for(let i of clipboard){
                 moveItem(i.type, i.index, dir);
             }
+            Task.tryDone("文件搬运大法");
             clipboard.clear();
             init(dir)
         })
@@ -188,7 +378,8 @@ function update(dir: Folder, checkable: boolean = false) : void{
             lowerBound++;
         }
         mkdir(new Folder(`新建文件夹${lowerBound == 0 ? "" : lowerBound}`, dir.stringify()));
-        update(dir);
+        Task.tryDone("文件夹，你好！");
+        init(dir);
     });
     addBtn = document.querySelector("#addPwd");
     addBtn?.addEventListener("click", () => {
@@ -219,6 +410,9 @@ function update(dir: Folder, checkable: boolean = false) : void{
             if (folderIsEditing) return;
             if (!dir.isSame(Folder.root())) (document.querySelector("#parent") as HTMLElement)!.style.display = "flex";
             (e as DragEvent)?.dataTransfer?.setData("text/plain", "p" + nowPwds[i].idx.toString());
+        });
+        info!.addEventListener("dragend", () => {
+            (document.querySelector("#parent") as HTMLElement)!.style.display = "none";
         });
         if (checkable){
             const check = document.querySelector(`#pwd${i}-checkboxDiv`) as HTMLDivElement;
@@ -262,7 +456,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
                         init(dir);
                         return;
                     }
-                    }
+                }
                 for(let j = 0; j < pwdList.length; j++){
                     if (nowFolders[i].item.isInclude(pwdList[j])) {
                         pwdList[j].dir = newFolder;
@@ -273,6 +467,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
                         folderList[j].setParent(newFolder);
                     }
                 }
+                Task.tryDone("文件夹改名记");
                 folderList[nowFolders[i].idx] = new Folder(newFolder);
                 init(dir);
             });
@@ -282,11 +477,12 @@ function update(dir: Folder, checkable: boolean = false) : void{
             if (folderIsEditing) return;
             e?.stopPropagation();
             deleteItem(Type.Folder, nowFolders[i].idx, dir);
-            update(dir);
+            init(dir);
         });
         const folder = document.querySelector(`#folder${i}`);
         folder!.addEventListener("click", () => {
             if (folderIsEditing) return;
+            Task.tryDone("新世界");
             update(nowFolders[i].item);
         });
         folder!.addEventListener("dragstart", (e) => {
@@ -297,6 +493,9 @@ function update(dir: Folder, checkable: boolean = false) : void{
         folder!.addEventListener("dragover", (e) => {
             if (folderIsEditing) return;
             e.preventDefault();
+        });
+        folder!.addEventListener("dragend", () => {
+            (document.querySelector("#parent") as HTMLElement)!.style.display = "none";
         });
         folder!.addEventListener("drop", (e) => {
             if (folderIsEditing) return;
@@ -312,6 +511,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 }
             }
             move(index);
+            Task.tryDone("幻影显形");
             saveData();
             update(dir, checkable)
         });

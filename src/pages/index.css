@@ -62,7 +62,7 @@ div.main div.content{
     margin: 15px;
     width: 50vw;
     height: 89vh;
-    overflow: auto;
+    overflow-y: scroll;
     position: relative;
 }
 
@@ -211,7 +211,7 @@ div.checkbox{
 div.checkbox:active{
     box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.3);
 }
-div.content{
+div.check-content{
     display: flex;
     align-items: center;
     flex-direction: column;
@@ -277,4 +277,24 @@ div.accordion{
 div.accordion p{
     text-indent: 2em;
     margin: 7px;
+}
+
+div.taskCard{
+    width: 40vw;
+}
+
+div.taskCard h5{
+    font-weight: bold;
+}
+div.taskCard .btn{
+    margin-top: 8px;
+}
+
+div.toast p{
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+div.toast strong,div.toast small{
+    user-select: none;
+    cursor: default;
 }
