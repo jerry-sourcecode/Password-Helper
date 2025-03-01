@@ -36,10 +36,8 @@ function encrypt(data: Item | Task, key: string, index: number = 0): Item | Task
         if (data[v] === null){
             (enc as any)[v] = null
         } else if (typeof data[v] === "string"){
-            console.log("encrypt string:", data[v]);
             (enc as any)[v] = cryp.encrypt(data[v], key)
         } else if (typeof data[v] === "number"){
-            console.log("encrypt number:", (<number>data[v]).toString());
             (enc as any)[v] = cryp.encrypt((<number>data[v]).toString(), key)
         } else if (typeof data[v] === "object" && (<Folder>data[v]).type == Type.Folder){
             (enc as any)[v] = new Folder(<Folder>encrypt(data[v], key, index));
@@ -61,10 +59,8 @@ function decrypt(data:Item | Task, key: string, index: number = 0): Item | Task{
         if (data[v] === null){
             (dec as any)[v] = null
         } else if (typeof data[v] === "string"){
-            console.log("decrypt string:", data[v]);
             (dec as any)[v] = cryp.decrypt(data[v], key)
         } else if (typeof data[v] === "number"){
-            console.log("decrypt number:", (<number>data[v]).toString());
             (dec as any)[v] = cryp.decrypt((<number>data[v]).toString(), key)
         } else if (typeof data[v] === "object" && (<Folder>data[v]).type == Type.Folder){
             (dec as any)[v] = new Folder(<Folder>decrypt(data[v], key, index));
@@ -250,13 +246,21 @@ function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean 
 }
 function deleterecentItem(index: number | Array<number>) : void{
     // 删除最近删除的密码
-    Task.tryDone("密码清除？不留痕迹！")
     if (Array.isArray(index)){
+        for(let i of index){
+            if (recentItem[i].type == Type.Password) {
+                Task.tryDone("密码清除？不留痕迹！");
+                break;
+            }
+        }
         recentItem = recentItem.filter((item, i) => {
             return !index.includes(i);
         });
     }
-    else recentItem.splice(index, 1);
+    else {
+        if (recentItem[index].type == Type.Password) Task.tryDone("密码清除？不留痕迹！");
+        recentItem.splice(index, 1);
+    }
     saveData();
 }
 function recoverPwd(index: number) : void{
@@ -510,8 +514,11 @@ function fmain(){
                 if (element.type == Type.Password) recentItem.push(<Item>decrypt(new Password(element), key));
                 else recentItem.push(<Item>decrypt(new Folder(element), key));
             });
+            obj.TODOTasks.forEach((element: any) => {
+                TODOTasks.push(TaskMap.dec(element, key));
+            })
             for(let i = 0; i < obj.TODOTasks.length; i++){
-                TODOTasks.push(new Task(obj.TODOTasks[i]));
+                TODOTasks.push(new TaskMap(obj.TODOTasks[i]));
             }
             score = Number(cryp.decrypt(obj.score, key));
             level = Number(cryp.decrypt(obj.level, key));
@@ -520,7 +527,7 @@ function fmain(){
     }).catch((err) => {
         console.log(err);
         for(let i = 0; i < tasks.length; i++){
-            TODOTasks.push(tasks[i]);
+            TODOTasks.push(new TaskMap(i, 0));
         }
         (document.querySelector("#nav-home") as HTMLSpanElement).click();
     });

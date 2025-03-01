@@ -1,6 +1,7 @@
 "use strict";
 function update(dir, checkable = false) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });
     dir = new Folder(dir);
     document.querySelector("span#nav-setting").classList.remove("active");
     document.querySelector("span#nav-bin").classList.remove("active");
@@ -186,7 +187,7 @@ function update(dir, checkable = false) {
     }
     if (dir.isSame(Folder.bin())) {
         document.querySelector("span#nav-bin").classList.add("active");
-        showRecent();
+        showRecent(checkable);
         return;
     }
     else if (dir.isSame(Folder.home())) {
@@ -219,15 +220,15 @@ function update(dir, checkable = false) {
         `<p class="tool" id="checkable">取消选择</p>
         <p class="tool" id="check-all">全部选择</p>
         <p class="tool" id="check-invert">反向选择</p>
-        <img src="../pages/resources/delete.png" title="删除" class="tool" id="delete">
-        <img src="../pages/resources/copy.png" title="复制" class="tool" id="copy">`
+        <img src="../pages/resources/delete.png" title="删除" class="tool" data-bs-toggle="tooltip" data-bs-placement="top" id="delete">
+        <img src="../pages/resources/copy.png" title="复制" data-bs-toggle="tooltip" data-bs-placement="top" class="tool" id="copy">`
         :
             `
         <p class="${clipboard.size == 0 ? "invaildTool" : "tool"}" id="paste">粘贴</p>
         <p class="${clipboard.size == 0 ? "invaildTool" : "tool"}" id="move">移动</p>
         <p class="tool" id="checkable">选择</p>
-        <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" id="newFolder">
-        ${dir.isSame(Folder.root()) ? "" : `<img src="../pages/resources/up.png" title="上移到${faname == ":" ? "主文件夹" : faname}" class="tool" id="up">`}`}
+        <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" data-bs-toggle="tooltip" data-bs-placement="top" id="newFolder">
+        ${dir.isSame(Folder.root()) ? "" : `<img src="../pages/resources/up.png" title="上移到${faname == ":" ? "主文件夹" : faname}" data-bs-toggle="tooltip" data-bs-placement="top" class="tool" id="up">`}`}
     </div>
     `;
     let nowPwds = [];
@@ -267,6 +268,7 @@ function update(dir, checkable = false) {
     <div class="action" id="addPwd"><p>添加密码</p></div>
     `;
     main.innerHTML = inner;
+    [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(t => new bootstrap.Tooltip(t));
     (_a = document.querySelector("#up")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
         update(dir.getParent());
     });
@@ -300,6 +302,7 @@ function update(dir, checkable = false) {
         });
         for (let i = 0; i < loca.num; i++) {
             (_c = document.querySelector(`#dirItem${i}`)) === null || _c === void 0 ? void 0 : _c.addEventListener("click", (e) => {
+                Task.tryDone("快速穿梭");
                 update(Folder.fromString(e.target.dataset.location));
             });
         }
@@ -421,7 +424,7 @@ function update(dir, checkable = false) {
                 return;
             if (mainSetting.autoCopy) {
                 copyToClipboard(pwdList[nowPwds[i].idx].pwd);
-                mkDialog("成功复制！", "密码已复制到剪贴板。<br>如果想要查看详情，请在设置中设置。");
+                mkToast("成功复制！", "", "<p>密码已复制到剪贴板。<br>如果想要查看详情，请在设置中设置。</p>");
                 return;
             }
             showPwd(pwdList, nowPwds[i].idx, dir);

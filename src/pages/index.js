@@ -43,11 +43,9 @@ function encrypt(data, key, index = 0) {
             enc[v] = null;
         }
         else if (typeof data[v] === "string") {
-            console.log("encrypt string:", data[v]);
             enc[v] = cryp.encrypt(data[v], key);
         }
         else if (typeof data[v] === "number") {
-            console.log("encrypt number:", data[v].toString());
             enc[v] = cryp.encrypt(data[v].toString(), key);
         }
         else if (typeof data[v] === "object" && data[v].type == Type.Folder) {
@@ -76,11 +74,9 @@ function decrypt(data, key, index = 0) {
             dec[v] = null;
         }
         else if (typeof data[v] === "string") {
-            console.log("decrypt string:", data[v]);
             dec[v] = cryp.decrypt(data[v], key);
         }
         else if (typeof data[v] === "number") {
-            console.log("decrypt number:", data[v].toString());
             dec[v] = cryp.decrypt(data[v].toString(), key);
         }
         else if (typeof data[v] === "object" && data[v].type == Type.Folder) {
@@ -277,14 +273,22 @@ function deleteItem(type, index, dir_from, _save = true) {
 }
 function deleterecentItem(index) {
     // 删除最近删除的密码
-    Task.tryDone("密码清除？不留痕迹！");
     if (Array.isArray(index)) {
+        for (let i of index) {
+            if (recentItem[i].type == Type.Password) {
+                Task.tryDone("密码清除？不留痕迹！");
+                break;
+            }
+        }
         recentItem = recentItem.filter((item, i) => {
             return !index.includes(i);
         });
     }
-    else
+    else {
+        if (recentItem[index].type == Type.Password)
+            Task.tryDone("密码清除？不留痕迹！");
         recentItem.splice(index, 1);
+    }
     saveData();
 }
 function recoverPwd(index) {
@@ -560,8 +564,11 @@ function fmain() {
                 else
                     recentItem.push(decrypt(new Folder(element), key));
             });
+            obj.TODOTasks.forEach((element) => {
+                TODOTasks.push(TaskMap.dec(element, key));
+            });
             for (let i = 0; i < obj.TODOTasks.length; i++) {
-                TODOTasks.push(new Task(obj.TODOTasks[i]));
+                TODOTasks.push(new TaskMap(obj.TODOTasks[i]));
             }
             score = Number(cryp.decrypt(obj.score, key));
             level = Number(cryp.decrypt(obj.level, key));
@@ -570,7 +577,7 @@ function fmain() {
     }).catch((err) => {
         console.log(err);
         for (let i = 0; i < tasks.length; i++) {
-            TODOTasks.push(tasks[i]);
+            TODOTasks.push(new TaskMap(i, 0));
         }
         document.querySelector("#nav-home").click();
     });

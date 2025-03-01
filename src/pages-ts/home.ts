@@ -5,7 +5,6 @@ class Task{
     reward: number;
     id: string;
     times: number;
-    doTimes: number = 0;
     type: Type;
     constructor(title: string | Task, description: string = "", location: Folder | null = null, reward: number = 0, times: number = 1, id: string = (typeof title === "string" ? title : title.id)){
         this.type = Type.Task;
@@ -23,23 +22,17 @@ class Task{
             this.reward = title.reward;
             this.id = title.id;
             this.times = title.times;
-            this.doTimes = title.doTimes;
         }
-    }
-    fitNumber(): void{
-        this.reward = Number(this.reward);
-        this.times = Number(this.times);
-        this.doTimes = Number(this.doTimes);
     }
     static tryDone(id: string): boolean{
         let index: number = -1;
-        if (TODOTasks.length >= 1 && TODOTasks[0].id === id && !TODOTasks[0].done()) index = 0;
-        else if (TODOTasks.length >= 2 && TODOTasks[1].id === id && !TODOTasks[1].done()) index = 1;
+        if (TODOTasks.length >= 1 &&TODOTasks[0].id() === id && !TODOTasks[0].done()) index = 0;
+        else if (TODOTasks.length >= 2 && TODOTasks[1].id() === id && !TODOTasks[1].done()) index = 1;
         else return false;
         TODOTasks[index].doTimes++;
         saveData();
         if (TODOTasks[index].done()) {
-            mkToast("任务", "任务完成", `<p>你已经成功完成了任务：${TODOTasks[index].title}</p>`, ["去看看"])
+            mkToast("任务", "任务完成", `<p>你已经成功完成了任务：${TODOTasks[index].title()}</p>`, ["去看看"])
             .then((res) => {
                 if (res == 0){
                     update(Folder.home());
@@ -48,8 +41,57 @@ class Task{
         }
         return true
     }
-    done(): boolean{
-        return this.doTimes >= this.times;
+    done(doTimes: number): boolean{
+        return doTimes >= this.times;
+    }
+}
+
+type TaskMapCrypto = {task: string, doTimes: string};
+class TaskMap{
+    private task: number;
+    doTimes: number;
+    constructor(task: number | TaskMap, doTimes?: number){
+        if (typeof task == "number"){
+            this.task = task;
+            this.doTimes = doTimes || 0;
+        }
+        else{
+            this.task = task.task;
+            this.doTimes = task.doTimes;
+        }
+    }
+    enc(key: string): TaskMapCrypto{
+        return{
+            task: cryp.encrypt(this.task.toString(), key),
+            doTimes: cryp.encrypt(this.doTimes.toString(), key)
+        };
+    }
+    static dec(obj: TaskMapCrypto, key: string): TaskMap{
+        return new TaskMap(
+            parseInt(cryp.decrypt(obj.task, key)),
+            parseInt(cryp.decrypt(obj.doTimes, key))
+        );
+    }
+    done(){
+        return this.doTimes >= tasks[this.task].times
+    }
+    title(): string{
+        return tasks[this.task].title;
+    }
+    description(): string{
+        return tasks[this.task].description;
+    }
+    location(): Folder | null{
+        return tasks[this.task].location;
+    }
+    reward(): number{
+        return tasks[this.task].reward;
+    }
+    id(): string{
+        return tasks[this.task].id;
+    }
+    times(): number{
+        return tasks[this.task].times;
     }
 }
 
@@ -65,6 +107,7 @@ const tasks: Array<Task> = [
     new Task("文件夹，你好！", "创建你的第一个文件夹。可以在主界面点击右上角工具栏的新建文件夹功能来添加一个文件夹。", Folder.root(), 100),
     new Task("文件夹改名记", "给你的文件夹进行一次重命名。可以在主界面点击文件夹右下角工具栏的重命名图标来重命名一个文件夹。", Folder.root(), 50),
     new Task("新世界", "尝试进入一个文件夹。你可以通过在主界面直接点击一个文件夹来进入它。", Folder.root(), 50),
+    new Task("快速穿梭", "尝试通过点击主页面顶端“当前位置”中的文件夹名字实现快速移动。温馨提示：在根目录下，“当前位置”模块会被隐藏，你可以进入任意一个文件夹来完成任务。", Folder.root(), 50),
     new Task("幻影显形", "将你的一个密码或文件夹使用鼠标拖拽到另外一个文件夹之中。", Folder.root(), 100),
     new Task("文件向上冲", "将你的一个密码或文件夹上移。你可以使用鼠标将其拖拽到最下方的“拖拽到此上移到……”。", Folder.root(), 100),
     new Task("文件大扫除", "尝试批量删除文件。你可以在主界面点击右上角工具栏的选择功能，在选择了合适的文件后，再次点击右上角工具栏的删除图标。", Folder.root(), 100),
@@ -78,25 +121,25 @@ const tasks: Array<Task> = [
     new Task("妈妈再也不用担心我密码泄露啦！", "设置访问密钥。你可以在设置界面设置访问密钥。如果你设置了访问密钥，每一次访问你都需要填写，你也可以选中“记住密码”来让程序自动填写。", Folder.setting(), 100),
 ]
 
-let TODOTasks: Array<Task> = [];
+let TODOTasks: Array<TaskMap> = [];
 
 function goHome(): void {
     let taskHTML = ``;
     for (let i = 0; i < Math.min(TODOTasks.length, 2); i++){
-        const finPer = Math.round(TODOTasks[i].doTimes / TODOTasks[i].times * 1000)/10;
+        const finPer = Math.round(TODOTasks[i].doTimes / TODOTasks[i].times() * 1000)/10;
         taskHTML += `
         <div class="card taskCard">
             <div class="card-body">
-                <h5 class="card-title">${TODOTasks[i].title}</h5>
-                <p class="card-text" style="text-indent: 2em">${TODOTasks[i].description}</p>
-                <p class="card-text" style="text-indent: 2em">你可以获得${TODOTasks[i].reward}kgCO₂e的碳排放配额。</p>
+                <h5 class="card-title">${TODOTasks[i].title()}</h5>
+                <p class="card-text" style="text-indent: 2em">${TODOTasks[i].description()}</p>
+                <p class="card-text" style="text-indent: 2em">你可以获得${TODOTasks[i].reward()}kgCO₂e的碳排放配额。</p>
                 <div class="progress">
                     <div class="progress-bar" role="progressbar" style="width: ${finPer}%;" aria-valuenow="${finPer}" aria-valuemin="0" aria-valuemax="100">${finPer}%</div>
                 </div>
                 ${TODOTasks[i].done()?
                 `<p class="btn btn-warning" id="task${i+1}-btn">领取奖励</p>`
                 :
-                `<p class="btn ${TODOTasks[i].location === null?`btn-secondary`:`btn-primary`}" id="task${i+1}-btn">${TODOTasks[i].location === null?`待完成`:`去完成`}</p>`
+                `<p class="btn ${TODOTasks[i].location() === null?`btn-secondary`:`btn-primary`}" id="task${i+1}-btn">${TODOTasks[i].location() === null?`待完成`:`去完成`}</p>`
                 }
             </div>
         </div>`
@@ -109,9 +152,9 @@ function goHome(): void {
     } else if (level == 3){
         maxScore = 1050;
     } else if (level == 4){
-        maxScore = 1450;
+        maxScore = 1500;
     } else{
-        maxScore = 1450;
+        maxScore = 1500;
     }
 
     if (level >= 1){
@@ -199,7 +242,8 @@ function goHome(): void {
     </div>
     <div class="card taskCard">
         <div class="card-body">
-            <p class="card-text">你获得的碳排放额度：${score} / ${maxScore}kgCO₂e</p>
+            <p class="card-text">当前等级：Level ${level}</p>
+            <p class="card-text">你获得的碳排放额度：${score}/${maxScore}kgCO₂e</p>
             ${level < 5?`<p class="card-text">升级还需要：${Math.max(maxScore-score, 0)}kgCO₂e</p>`:``}
             <div class="progress">
                 <div class="progress-bar" role="progressbar" style="width: ${scorePercent}%;" aria-valuenow="${scorePercent}" aria-valuemin="0" aria-valuemax="100">${scorePercent}%</div>
@@ -215,25 +259,25 @@ function goHome(): void {
     `;
     if (TODOTasks.length > 0) document.querySelector("#task1-btn")?.addEventListener("click", () => {
         if (TODOTasks[0].done()) {
-            score += TODOTasks[0].reward;
-            mkDialog("领取成功", `你已经成功领取了${TODOTasks[0].reward}kgCO₂e的碳排放配额。`);
+            score += TODOTasks[0].reward();
+            mkDialog("领取成功", `你已经成功领取了${TODOTasks[0].reward()}kgCO₂e的碳排放配额。`);
             TODOTasks.splice(0, 1);
             saveData()
             update(Folder.home());
             return;
         }
-        if (TODOTasks[0].location !== null) update(TODOTasks[0].location!);
+        if (TODOTasks[0].location() !== null) update(TODOTasks[0].location()!);
     })
     if (TODOTasks.length > 1) document.querySelector("#task2-btn")?.addEventListener("click", () => {
         if (TODOTasks[1].done()) {
-            score += TODOTasks[1].reward;
-            mkDialog("领取成功", `你已经成功领取了${TODOTasks[1].reward}kgCO₂e的碳排放配额。`);
+            score += TODOTasks[1].reward();
+            mkDialog("领取成功", `你已经成功领取了${TODOTasks[1].reward()}kgCO₂e的碳排放配额。`);
             TODOTasks.splice(1, 1);
             saveData();
             update(Folder.home());
             return;
         }
-        if (TODOTasks[1].location !== null) update(TODOTasks[1].location!);
+        if (TODOTasks[1].location() !== null) update(TODOTasks[1].location()!);
     })
     if (scorePercent >= 100 && level < 5){
         document.querySelector("#score-btn")?.addEventListener("click", () => {

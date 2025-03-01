@@ -38,8 +38,8 @@ class Password {
     }
     getHtml(id, checkable = false) {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
-            <img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="编辑">
-            <img class="icon" id="pwd${id}-delete" src="./resources/delete.png" title="删除">
+            <img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="编辑">
+            <img class="icon" id="pwd${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
         </div>`;
         if (checkable)
             return `<div class="info" style="flex-direction: row;" id="pwd${id}" draggable="true">
@@ -140,8 +140,8 @@ class Folder {
     }
     getHtml(id, checkable = false) {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
-            <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" title="重命名">
-            <img class="icon" id="folder${id}-delete" src="./resources/delete.png" title="删除">
+            <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="重命名">
+            <img class="icon" id="folder${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
         </div>`;
         if (checkable)
             return `<div class="info" style="flex-direction: row;" id="folder${id}" draggable="true">
@@ -285,6 +285,7 @@ function getData(ismemory = isremember) {
     let pwdListUpdated = [];
     let folderListUpdated = [];
     let recentItemUpdated = [];
+    let tasksUpdated = [];
     for (let index = 0; index < pwdList.length; index++) {
         pwdListUpdated.push(encrypt(pwdList[index], enc));
     }
@@ -294,11 +295,14 @@ function getData(ismemory = isremember) {
     for (let index = 0; index < recentItem.length; index++) {
         recentItemUpdated.push(encrypt(recentItem[index], enc));
     }
+    for (let index = 0; index < TODOTasks.length; index++) {
+        tasksUpdated.push(TODOTasks[index].enc(enc));
+    }
     let encScore = cryp.encrypt(score.toString(), enc);
     let enclevel = cryp.encrypt(level.toString(), enc);
     // 数据保存
     return JSON.stringify({
-        version: "1.1",
+        version: "1.2",
         pwd: pwdListUpdated,
         folder: folderListUpdated,
         recent: recentItemUpdated,
@@ -307,7 +311,7 @@ function getData(ismemory = isremember) {
         salt: salt,
         memory: ismemory ? mainPwd : null,
         isPwdNull: mainPwd === "",
-        TODOTasks: TODOTasks,
+        TODOTasks: tasksUpdated,
         score: encScore,
         level: enclevel
     });
