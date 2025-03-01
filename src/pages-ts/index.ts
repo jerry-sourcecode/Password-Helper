@@ -84,6 +84,7 @@ let clipboard: Set<clipboardItem> = new Set();
 let mainSetting: MainSetting = new MainSetting();
 let score: number = 0;
 let level: number = 1;
+let TODOTasks: Array<TaskMap> = [];
 
 // 一些工具函数
 function getReadableTime(time: Date | string): string{

@@ -101,6 +101,7 @@ let clipboard = new Set();
 let mainSetting = new MainSetting();
 let score = 0;
 let level = 1;
+let TODOTasks = [];
 // 一些工具函数
 function getReadableTime(time) {
     if (typeof time === "string")

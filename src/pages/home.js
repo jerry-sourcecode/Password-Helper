@@ -110,9 +110,11 @@ const tasks = [
         <p style="text-indent: 2em">请注意：两者都会使得当前目录下出现你所复制的文件，但粘贴会在当前文件夹下创建一个新的文件，而移动会将文件移动到当前文件夹下。</p>`, Folder.root(), 200),
     new Task("妈妈再也不用担心我密码泄露啦！", "设置访问密钥。你可以在设置界面设置访问密钥。如果你设置了访问密钥，每一次访问你都需要填写，你也可以选中“记住密码”来让程序自动填写。", Folder.setting(), 100),
 ];
-let TODOTasks = [];
-function goHome() {
+function goHome(token) {
     var _a, _b, _c;
+    if (token !== TurnToPage.token) {
+        throw new Error("Token Error");
+    }
     let taskHTML = ``;
     for (let i = 0; i < Math.min(TODOTasks.length, 2); i++) {
         const finPer = Math.round(TODOTasks[i].doTimes / TODOTasks[i].times() * 1000) / 10;

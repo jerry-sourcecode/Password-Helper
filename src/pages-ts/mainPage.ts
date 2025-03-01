@@ -1,11 +1,5 @@
-function update(dir: Folder, checkable: boolean = false) : void{
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => {bootstrap.Tooltip.getInstance(tooltip)?.dispose();});
-    dir = new Folder(dir);
-    document.querySelector("span#nav-setting")!.classList.remove("active");
-    document.querySelector("span#nav-bin")!.classList.remove("active");
-    document.querySelector("span#nav-home")!.classList.remove("active");
-    document.querySelector("span#nav-mainPage")!.classList.remove("active");
-    function setting() : void {
+class TurnToPage{
+    private static showSetting() : void {
         // 显示设置页面
         main!.innerHTML = `
         <div class="title">设置</div>
@@ -63,7 +57,8 @@ function update(dir: Folder, checkable: boolean = false) : void{
             })
         });
     }
-    function showRecent(checkable: boolean = false) : void{
+
+    private static showBin(checkable: boolean = false) : void{
         let pos : {top: number, left: number};
         if (currentFolder.isSame(Folder.bin())){
             pos = getScroll();
@@ -95,7 +90,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
         }
         main!.innerHTML = inner;
         document.querySelector("#checkable")?.addEventListener("click", () => {
-            showRecent(!checkable);
+            update(Folder.bin(), !checkable);
         });
         if (checkable){
             document.querySelector("#check-all")?.addEventListener("click", () => {
@@ -175,17 +170,46 @@ function update(dir: Folder, checkable: boolean = false) : void{
         });
         main?.scrollTo(pos);
     }
+
+    static token = Symbol("byFunctionUpdate");
+
+    static setting(token: symbol): void{
+        if (token === TurnToPage.token){
+            this.showSetting();
+        }
+        else {
+            throw new Error("token is not correct");
+        }
+    }
+
+    static bin(token: symbol, checkable: boolean = false): void{
+        if (token === TurnToPage.token){
+            this.showBin(checkable);
+        }
+        else {
+            throw new Error("token is not correct");
+        }
+    }
+}
+
+function update(dir: Folder, checkable: boolean = false) : void{
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => {bootstrap.Tooltip.getInstance(tooltip)?.dispose();});
+    dir = new Folder(dir);
+    document.querySelector("span#nav-setting")!.classList.remove("active");
+    document.querySelector("span#nav-bin")!.classList.remove("active");
+    document.querySelector("span#nav-home")!.classList.remove("active");
+    document.querySelector("span#nav-mainPage")!.classList.remove("active");
     if (dir.isSame(Folder.bin())){
         document.querySelector("span#nav-bin")!.classList.add("active");
-        showRecent(checkable);
+        TurnToPage.bin(TurnToPage.token, checkable);
         return;
     } else if (dir.isSame(Folder.home())){
         document.querySelector("span#nav-home")!.classList.add("active");
-        goHome();
+        goHome(TurnToPage.token);
         return;
     } else if (dir.isSame(Folder.setting())){
         document.querySelector("span#nav-setting")!.classList.add("active");
-        setting();
+        TurnToPage.setting(TurnToPage.token);
         return;
     } else {
         document.querySelector("span#nav-mainPage")!.classList.add("active");

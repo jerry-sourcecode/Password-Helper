@@ -121,9 +121,10 @@ const tasks: Array<Task> = [
     new Task("妈妈再也不用担心我密码泄露啦！", "设置访问密钥。你可以在设置界面设置访问密钥。如果你设置了访问密钥，每一次访问你都需要填写，你也可以选中“记住密码”来让程序自动填写。", Folder.setting(), 100),
 ]
 
-let TODOTasks: Array<TaskMap> = [];
-
-function goHome(): void {
+function goHome(token: Symbol): void {
+    if (token !== TurnToPage.token) {
+        throw new Error("Token Error");
+    }
     let taskHTML = ``;
     for (let i = 0; i < Math.min(TODOTasks.length, 2); i++){
         const finPer = Math.round(TODOTasks[i].doTimes / TODOTasks[i].times() * 1000)/10;

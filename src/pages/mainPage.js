@@ -1,13 +1,6 @@
 "use strict";
-function update(dir, checkable = false) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });
-    dir = new Folder(dir);
-    document.querySelector("span#nav-setting").classList.remove("active");
-    document.querySelector("span#nav-bin").classList.remove("active");
-    document.querySelector("span#nav-home").classList.remove("active");
-    document.querySelector("span#nav-mainPage").classList.remove("active");
-    function setting() {
+class TurnToPage {
+    static showSetting() {
         var _a, _b, _c, _d, _e;
         // 显示设置页面
         main.innerHTML = `
@@ -68,7 +61,7 @@ function update(dir, checkable = false) {
             });
         });
     }
-    function showRecent(checkable = false) {
+    static showBin(checkable = false) {
         var _a, _b, _c, _d, _e, _f;
         let pos;
         if (currentFolder.isSame(Folder.bin())) {
@@ -101,7 +94,7 @@ function update(dir, checkable = false) {
         }
         main.innerHTML = inner;
         (_a = document.querySelector("#checkable")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
-            showRecent(!checkable);
+            update(Folder.bin(), !checkable);
         });
         if (checkable) {
             (_b = document.querySelector("#check-all")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
@@ -185,19 +178,45 @@ function update(dir, checkable = false) {
         });
         main === null || main === void 0 ? void 0 : main.scrollTo(pos);
     }
+    static setting(token) {
+        if (token === TurnToPage.token) {
+            this.showSetting();
+        }
+        else {
+            throw new Error("token is not correct");
+        }
+    }
+    static bin(token, checkable = false) {
+        if (token === TurnToPage.token) {
+            this.showBin(checkable);
+        }
+        else {
+            throw new Error("token is not correct");
+        }
+    }
+}
+TurnToPage.token = Symbol("byFunctionUpdate");
+function update(dir, checkable = false) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });
+    dir = new Folder(dir);
+    document.querySelector("span#nav-setting").classList.remove("active");
+    document.querySelector("span#nav-bin").classList.remove("active");
+    document.querySelector("span#nav-home").classList.remove("active");
+    document.querySelector("span#nav-mainPage").classList.remove("active");
     if (dir.isSame(Folder.bin())) {
         document.querySelector("span#nav-bin").classList.add("active");
-        showRecent(checkable);
+        TurnToPage.bin(TurnToPage.token, checkable);
         return;
     }
     else if (dir.isSame(Folder.home())) {
         document.querySelector("span#nav-home").classList.add("active");
-        goHome();
+        goHome(TurnToPage.token);
         return;
     }
     else if (dir.isSame(Folder.setting())) {
         document.querySelector("span#nav-setting").classList.add("active");
-        setting();
+        TurnToPage.setting(TurnToPage.token);
         return;
     }
     else {
