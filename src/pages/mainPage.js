@@ -1,7 +1,7 @@
 "use strict";
 class TurnToPage {
     static showSetting() {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         // 显示设置页面
         main.innerHTML = `
         <div class="title">设置</div>
@@ -17,41 +17,45 @@ class TurnToPage {
             </div>
             <p>导出设置</p>
             <div class="settingFormItem" style="text-indent: 2em">
-                <p>用户迁移凭证是一个加密的文件，你可以将它导出到本地，然后在另一台设备上导入。你可以使用用户迁移凭证来快速且安全的转移你的数据。</p>
-                <p>请注意，用户迁移凭证是强制加密的，你需要输入你的访问密钥才能导入，即使你选中了“记住密码”。</p>
-                <div id="exportUMC"><p class="action">点此导出用户迁移凭证</p></div>
-                <div id="importUMC"><p class="action">点此导入用户迁移凭证</p></div>
+                <p>导出的数据是一个加密的文件，你可以将它导出到本地，然后在另一台设备上导入。你可以使用数据来快速且安全的转移你的数据。</p>
+                <p>请注意，导出的数据是强制加密的，你需要输入你的访问密钥才能导入，即使你选中了“记住密码”。</p>
+                <div id="exportUMC"><p class="action">点此导出数据</p></div>
+                <div id="importUMC"><p class="action">点此导入数据</p></div>
             </div>
             <div id="reset"><p class="action">点此重置</p></div>
         </div>
-        <div class="action" id="apply"><p>应用</p></div>
         `;
         const saveKey = document.querySelector("#rememberPwd");
         (_a = document.querySelector("#mainPwd")) === null || _a === void 0 ? void 0 : _a.addEventListener("input", (e) => {
             saveKey.disabled = e.target.value == "";
+            if (saveKey.disabled)
+                saveKey.checked = false;
         });
-        (_b = document.querySelector("div#exportUMC")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
+        (_b = document.querySelector("#mainPwd")) === null || _b === void 0 ? void 0 : _b.addEventListener("change", () => {
+            mainPwd = document.querySelector("#mainPwd").value;
+            saveData();
+        });
+        saveKey.addEventListener("change", () => {
+            isremember = saveKey.checked;
+            saveData();
+        });
+        (_c = document.querySelector("#autoCopy")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", () => {
+            mainSetting.autoCopy = document.querySelector("#autoCopy").checked;
+            saveData();
+        });
+        (_d = document.querySelector("div#exportUMC")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
             let ans = window.msg.showSaveDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
             if (ans === undefined)
                 return;
             saveUMC(ans);
         });
-        (_c = document.querySelector("div#importUMC")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
+        (_e = document.querySelector("div#importUMC")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
             let ans = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
             if (ans === undefined)
                 return;
             readUMC(ans);
         });
-        (_d = document.querySelector("#apply")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
-            mainPwd = document.querySelector("#mainPwd").value;
-            isremember = document.querySelector("#rememberPwd").checked;
-            mainSetting.autoCopy = document.querySelector("#autoCopy").checked;
-            if (mainPwd != "")
-                Task.tryDone("妈妈再也不用担心我密码泄露啦！");
-            saveData();
-            mkDialog("成功！", "设置已顺利应用到程序。");
-        });
-        (_e = document.querySelector("#reset")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
+        (_f = document.querySelector("#reset")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
             mkDialog("警告", "此操作会清空所有数据并立即重启，你确定要继续吗？", ["确定", "取消"])
                 .then((res) => {
                 if (res == 0) {
