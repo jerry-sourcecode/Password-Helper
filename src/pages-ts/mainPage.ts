@@ -25,7 +25,7 @@ class TurnToPage{
         <div class="action" id="apply"><p>应用</p></div>
         `;
         const saveKey = document.querySelector("#rememberPwd") as HTMLInputElement;
-        document.querySelector("#mainPwd")?.addEventListener("change", (e) => {
+        document.querySelector("#mainPwd")?.addEventListener("input", (e) => {
             saveKey.disabled = (<HTMLInputElement>e.target).value == "";
 
         });
@@ -456,6 +456,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
     for(let i = 0; i < nowFolders.length; i++){
         const feditBtn = document.querySelector(`#folder${i}-edit`);
         feditBtn!.addEventListener("click", (e) => {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => {bootstrap.Tooltip.getInstance(tooltip)?.dispose();});
             e?.stopPropagation();
             const div = document.querySelector(`#folder${i}`);
             div!.innerHTML = `<input type="text" value="${nowFolders[i].item.name}" id="folder${i}-input">`;

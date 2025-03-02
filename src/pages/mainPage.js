@@ -27,7 +27,7 @@ class TurnToPage {
         <div class="action" id="apply"><p>应用</p></div>
         `;
         const saveKey = document.querySelector("#rememberPwd");
-        (_a = document.querySelector("#mainPwd")) === null || _a === void 0 ? void 0 : _a.addEventListener("change", (e) => {
+        (_a = document.querySelector("#mainPwd")) === null || _a === void 0 ? void 0 : _a.addEventListener("input", (e) => {
             saveKey.disabled = e.target.value == "";
         });
         (_b = document.querySelector("div#exportUMC")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
@@ -474,6 +474,7 @@ function update(dir, checkable = false) {
     for (let i = 0; i < nowFolders.length; i++) {
         const feditBtn = document.querySelector(`#folder${i}-edit`);
         feditBtn.addEventListener("click", (e) => {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });
             e === null || e === void 0 ? void 0 : e.stopPropagation();
             const div = document.querySelector(`#folder${i}`);
             div.innerHTML = `<input type="text" value="${nowFolders[i].item.name}" id="folder${i}-input">`;

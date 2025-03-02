@@ -174,6 +174,7 @@ function moveItem(type, index, dir_to, isCopy = false) {
 // 渲染编辑密码界面，并更改密码，isAppend表示是否是添加密码，为true时，取消将会删除该密码，会返回main界面
 function changePwd(by, index, dir, isAppend = false) {
     var _a, _b;
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });
     let inner = `
     <div class="title">编辑密码</div>
     <div class="form">
@@ -568,9 +569,6 @@ function fmain() {
             obj.TODOTasks.forEach((element) => {
                 TODOTasks.push(TaskMap.dec(element, key));
             });
-            for (let i = 0; i < obj.TODOTasks.length; i++) {
-                TODOTasks.push(new TaskMap(obj.TODOTasks[i]));
-            }
             score = Number(cryp.decrypt(obj.score, key));
             level = Number(cryp.decrypt(obj.level, key));
             document.querySelector("#nav-home").click();
