@@ -267,6 +267,7 @@ class Folder {
 
 class MainSetting{
     autoCopy: boolean = false;
+    easyAppend: boolean = false;
 }
 
 function saveData(): void{ // 保存数据

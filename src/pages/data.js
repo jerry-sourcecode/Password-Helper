@@ -272,6 +272,7 @@ class Folder {
 class MainSetting {
     constructor() {
         this.autoCopy = false;
+        this.easyAppend = false;
     }
 }
 function saveData() {

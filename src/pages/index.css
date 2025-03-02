@@ -64,6 +64,7 @@ div.main div.content{
     height: 89vh;
     overflow-y: scroll;
     position: relative;
+    justify-content: flex-start;
 }
 
 div.main *{
@@ -102,7 +103,10 @@ div.action{
     height: 50px;
     width: 250px;
     cursor: pointer;
-    margin: 15px;
+    margin: 10px;
+}
+div.action.invaildAction{
+    background-color: #8c8c8c;
 }
 div.action *{
     font-size: 16px;

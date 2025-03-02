@@ -1,7 +1,7 @@
 "use strict";
 class TurnToPage {
     static showSetting() {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e, _f, _g;
         // 显示设置页面
         main.innerHTML = `
         <div class="title">设置</div>
@@ -13,7 +13,8 @@ class TurnToPage {
             </div>
             <p>其他个性化设置</p>
             <div class="settingFormItem">
-                <input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label>
+                <div><input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label></div>
+                <div><input type="checkbox" id="easyAppend" ${mainSetting.easyAppend ? "checked" : ""}/><label for="easyAppend">添加密码时，使用快速而简洁的表单形式来代替创建引导形式。</label></div>
             </div>
             <p>导出设置</p>
             <div class="settingFormItem" style="text-indent: 2em">
@@ -43,19 +44,23 @@ class TurnToPage {
             mainSetting.autoCopy = document.querySelector("#autoCopy").checked;
             saveData();
         });
-        (_d = document.querySelector("div#exportUMC")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
+        (_d = document.querySelector("#easyAppend")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", () => {
+            mainSetting.easyAppend = document.querySelector("#easyAppend").checked;
+            saveData();
+        });
+        (_e = document.querySelector("div#exportUMC")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
             let ans = window.msg.showSaveDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
             if (ans === undefined)
                 return;
             saveUMC(ans);
         });
-        (_e = document.querySelector("div#importUMC")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
+        (_f = document.querySelector("div#importUMC")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
             let ans = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
             if (ans === undefined)
                 return;
             readUMC(ans);
         });
-        (_f = document.querySelector("#reset")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
+        (_g = document.querySelector("#reset")) === null || _g === void 0 ? void 0 : _g.addEventListener("click", () => {
             mkDialog("警告", "此操作会清空所有数据并立即重启，你确定要继续吗？", ["确定", "取消"])
                 .then((res) => {
                 if (res == 0) {

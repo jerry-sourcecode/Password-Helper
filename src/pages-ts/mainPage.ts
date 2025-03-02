@@ -11,7 +11,8 @@ class TurnToPage{
             </div>
             <p>其他个性化设置</p>
             <div class="settingFormItem">
-                <input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label>
+                <div><input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label></div>
+                <div><input type="checkbox" id="easyAppend" ${mainSetting.easyAppend ? "checked" : ""}/><label for="easyAppend">添加密码时，使用快速而简洁的表单形式来代替创建引导形式。</label></div>
             </div>
             <p>导出设置</p>
             <div class="settingFormItem" style="text-indent: 2em">
@@ -40,6 +41,10 @@ class TurnToPage{
         })
         document.querySelector("#autoCopy")?.addEventListener("change", () => {
             mainSetting.autoCopy = (document.querySelector("#autoCopy") as HTMLInputElement).checked;
+            saveData();
+        })
+        document.querySelector("#easyAppend")?.addEventListener("change", () => {
+            mainSetting.easyAppend = (document.querySelector("#easyAppend") as HTMLInputElement).checked;
             saveData();
         })
 

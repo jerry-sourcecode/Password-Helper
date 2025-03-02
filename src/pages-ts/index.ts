@@ -148,11 +148,21 @@ function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = f
         else folderList[index].parent = dir_to.stringify();
     }
 }
+function doneMkPwd(isAppend: boolean = false, index: number = -1): void{
+    if (isAppend){
+        Task.tryDone("初出茅庐");
+        Task.tryDone("好事成双");
+    } else {
+        Task.tryDone("密码的产后护理");
+    }
+    if (checkSafety(index) == "")
+        Task.tryDone("安全密码养成记");
+}
 // 渲染编辑密码界面，并更改密码，isAppend表示是否是添加密码，为true时，取消将会删除该密码，会返回main界面
 function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : boolean = false) : void{
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => {bootstrap.Tooltip.getInstance(tooltip)?.dispose();});
     let inner : string = `
-    <div class="title">编辑密码</div>
+    <div class="title">${isAppend?`添加密码`:`编辑密码`}</div>
     <div class="form">
     <div class="formItem"><label for="from">来源<span style="color:red;">*</span>：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
     <div class="formItem"><label for="uname">用户名<span style="color:red;">*</span>：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
@@ -199,14 +209,7 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
         }
         const dir = by[index].dir;
         by[index] = new Password(name, uname, pwd, note, email, phone, dir);
-        if (isAppend){
-            Task.tryDone("初出茅庐");
-            Task.tryDone("好事成双");
-        } else {
-            Task.tryDone("密码的产后护理");
-        }
-        if (checkSafety(index) == "")
-            Task.tryDone("安全密码养成记");
+        doneMkPwd(isAppend, index);
         init(dir);
     });
     document.querySelector("#cancel")?.addEventListener("click", () => {
@@ -290,11 +293,135 @@ function recoverPwd(index: number) : void{
     recentItem.splice(index, 1);
     saveData();
 }
-function addPwd(dir: Folder) : void{
+function addPwd(dir: Folder, step: number = 0, result: Password = new Password("", "", "", "", "", "", dir)) : void{
+    if (mainSetting.easyAppend){
+        pwdList.push(new Password("", "", "", "", "", "", dir));
+        changePwd(pwdList, pwdList.length - 1, dir, true);
+        return;
+    }
     // 添加密码
-    let tgt : number = pwdList.length;
-    pwdList.push(new Password("", "", "", "", "", "", dir));
-    changePwd(pwdList, tgt, dir, true);
+    if (step == 0) {
+        main!.innerHTML = `
+        <div class="title">添加密码</div>
+        <div class="form">
+        <div class="formItem"><label for="input">来源<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${result.from}" /><span class="check"></span></div>
+        </div>
+        <div class="formItem"><p>你可以填写此密码的来源，如网站网址、应用程序的名称等。请注意，此项必填。</p></div>
+        </div>
+        <div class="action" id="nxt"><p>下一步</p></div>
+        <div class="action" id="cancel"><p>取消</p></div>`
+    }
+    else if (step == 1) {
+        main!.innerHTML = `
+        <div class="title">添加密码</div>
+        <div class="form">
+        <div class="formItem"><label for="input">用户名<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${result.uname}"/><span class="check"></span></div>
+        </div>
+        <div class="formItem"><p>你可以填写此密码对应的用户名。请注意，此项必填。</p></div>
+        </div>
+        <div class="action" id="pre"><p>上一步</p></div>
+        <div class="action" id="nxt"><p>下一步</p></div>
+        <div class="action" id="cancel"><p>取消</p></div>`
+    }
+    else if (step == 2) {
+        main!.innerHTML = `
+        <div class="title">添加密码</div>
+        <div class="form">
+        <div class="formItem"><label for="input">密码<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${result.pwd}"/><span class="check"></span></div>
+        <div class="formItem"><p class="icon" style="margin-left: 0;" id="randpwd">随机生成一个高强度的密码</p></div>
+        </div>
+        <div class="formItem"><p>你可以填写密码。请注意，此项必填。</p></div>
+        </div>
+        <div class="action" id="pre"><p>上一步</p></div>
+        <div class="action" id="nxt"><p>下一步</p></div>
+        <div class="action" id="cancel"><p>取消</p></div>`
+        document.querySelector("#randpwd")!.addEventListener("click", () => {
+            result.pwd = randstr(16);
+            (document.getElementById("input") as HTMLInputElement)!.value = result.pwd;
+            (document.querySelector("input") as HTMLInputElement)!.dispatchEvent(new Event("input"));
+        })
+    } else if (step == 3) {
+        main!.innerHTML = `
+        <div class="title">添加密码</div>
+        <div class="form">
+        <div class="formItem"><label for="input_email">邮箱：</label><input type="text" id="input_email" value="${result.email}"></div>
+        <div class="formItem"><label for="input_phone">手机号：</label><input type="text" id="input_phone" value="${result.phone}"></div>
+        <div class="formItem"><p>你可以填写辅助信息。请注意，以上内容为选填。</p></div>
+        </div>
+        <div class="action" id="pre"><p>上一步</p></div>
+        <div class="action" id="nxt"><p>下一步</p></div>
+        <div class="action" id="cancel"><p>取消</p></div>
+        `
+    }
+    else if (step == 4) {
+        main!.innerHTML = `
+        <div class="title">添加密码</div>
+        <div class="form">
+        <div class="formItem"><label for="input">备注：</label><br><textarea id="input" placeholder="可以在这里输入一些想说的话。">${result.note}</textarea></div>
+        <div class="formItem"><p>你可以填写一些备注。请注意，以上内容为选填。</p></div>
+        </div>
+        <div class="action" id="pre"><p>上一步</p></div>
+        <div class="action" id="nxt"><p>完成</p></div>
+        <div class="action" id="cancel"><p>取消</p></div>
+        `
+    }
+    if (step != 3 && step != 4){
+        document.getElementById("input")!.addEventListener("input", (e) => {
+            if (step == 0) {
+                result.from = (document.getElementById("input") as HTMLInputElement)!.value;
+            }
+            else if (step == 1) {
+                result.uname = (document.getElementById("input") as HTMLInputElement)!.value;
+            }
+            else if (step == 2) {
+                result.pwd = (document.getElementById("input") as HTMLInputElement)!.value;
+            }
+            let tgt: HTMLInputElement = e.target as HTMLInputElement;
+            if (tgt.value == ""){
+                tgt.classList.add("invaild");
+                tgt.classList.remove("vaild");
+            } else {
+                tgt.classList.add("vaild");
+                tgt.classList.remove("invaild");
+            }
+        });
+        (document.querySelector("input") as HTMLInputElement)!.dispatchEvent(new Event("input"));
+    }
+    if (step == 4) document.querySelector("#input")?.addEventListener("input", () => {
+        result.note = (document.getElementById("input") as HTMLTextAreaElement)!.value;
+    })
+    if (step == 3){
+        document.getElementById("input_email")!.addEventListener("input", () => {
+            result.email = (document.getElementById("input_email") as HTMLInputElement)!.value;
+        })
+        document.getElementById("input_phone")!.addEventListener("input", () => {
+            result.phone = (document.getElementById("input_phone") as HTMLInputElement)!.value;
+        })
+    }
+    document.getElementById("nxt")!.addEventListener("click", () => {
+        if (step == 0) {
+            if ((document.getElementById("input") as HTMLInputElement)!.value == "") return mkDialog("提交错误！", "来源不能为空！");
+        }
+        else if (step == 1) {
+            if ((document.getElementById("input") as HTMLInputElement)!.value == "") return mkDialog("提交错误！", "用户名不能为空！");
+        }
+        else if (step == 2) {
+            if ((document.getElementById("input") as HTMLInputElement)!.value == "") return mkDialog("提交错误！", "密码不能为空！");
+        }
+        if (step == 4) {
+            pwdList.push(new Password(result.from, result.uname, result.pwd, result.note, result.email, result.phone, dir));
+            doneMkPwd(true, pwdList.length - 1);
+            update(dir);
+            return;
+        }
+        addPwd(dir, step + 1, result);
+    });
+    if (step != 0) document.getElementById("pre")!.addEventListener("click", () => {
+        addPwd(dir, step - 1, result);
+    });
+    document.getElementById("cancel")!.addEventListener("click", () => {
+        update(dir);
+    })
 }
 function checkSafety(index: number) : string{
     let list : Array<number> = [], safety: string = "";
