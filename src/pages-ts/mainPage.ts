@@ -67,16 +67,10 @@ class TurnToPage{
                 }
             })
         });
+        main?.scrollTo(pagePos.setting)
     }
 
     private static showBin(checkable: boolean = false) : void{
-        let pos : {top: number, left: number};
-        if (currentFolder.isSame(Folder.bin())){
-            pos = getScroll();
-        } else {
-            pos = {top: 0, left: 0};
-        }
-        currentFolder = Folder.bin();
         // 显示最近删除的密码
         let inner : string = `<div class="title">最近删除</div>
         <div id="MainToolBar">
@@ -90,13 +84,13 @@ class TurnToPage{
             `<p class="tool" id="checkable">选择</p>`
         }
         </div>`;
-        recentItem.sort((a: Item, b: Item) => {
+        binItem.sort((a: Item, b: Item) => {
             return a.rmDate! > b.rmDate! ? -1 : 1;
         })
-        for (let i = 0; i < recentItem.length; i++){
-            inner += recentItem[i].getHtmlRecent(i, checkable);
+        for (let i = 0; i < binItem.length; i++){
+            inner += binItem[i].getHtmlRecent(i, checkable);
         }
-        if (recentItem.length == 0){
+        if (binItem.length == 0){
             inner += `<p>暂无删除密码</p>`;
         }
         main!.innerHTML = inner;
@@ -105,18 +99,18 @@ class TurnToPage{
         });
         if (checkable){
             document.querySelector("#check-all")?.addEventListener("click", () => {
-                recentItem.forEach((item: Item, index: number) => {
+                binItem.forEach((item: Item, index: number) => {
                     (document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked = true;
                 })
             });
             document.querySelector("#check-invert")?.addEventListener("click", () => {
-                recentItem.forEach((item: Item, index: number) => {
+                binItem.forEach((item: Item, index: number) => {
                     (document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked = !(document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked;
                 })
             });
             document.querySelector("#delete")?.addEventListener("click", () => {
                 let cnt: number = 0;
-                recentItem.forEach((item: Item, index: number) => {
+                binItem.forEach((item: Item, index: number) => {
                     if ((document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked) cnt++;
                 })
                 if (cnt == 0) return;
@@ -125,24 +119,24 @@ class TurnToPage{
                     if (res == 0){
                         Task.tryDone("选择操作，轻松掌控！");
                         let de: Array<number> = [];
-                        recentItem.forEach((item: Item, index: number) => {
+                        binItem.forEach((item: Item, index: number) => {
                             if ((document.querySelector(`#recent${index}-checkbox`) as HTMLInputElement)!.checked) 
                                 de.push(index);
                         })
-                        deleterecentItem(de);
+                        deletebinItem(de);
                         init(Folder.bin());
                     }
                 });
             });
             document.querySelector("#recover")?.addEventListener("click", () => {
-                for(let i = recentItem.length - 1; i >= 0; i--){
+                for(let i = binItem.length - 1; i >= 0; i--){
                     if ((document.querySelector(`#recent${i}-checkbox`) as HTMLInputElement)!.checked) recoverPwd(i);
                 }
                 Task.tryDone("选择操作，轻松掌控！");
                 init(Folder.bin());
             });
         }
-        for(let i = 0; i < recentItem.length; i++){
+        for(let i = 0; i < binItem.length; i++){
             const recoverBtn = document.querySelector(`#recent${i}-recover`);
             recoverBtn!.addEventListener("click", (e) => {
                 e?.stopPropagation();
@@ -155,14 +149,14 @@ class TurnToPage{
                 mkDialog("警告", "此操作不可撤销，你确定要永久删除吗？", ["确定", "取消"])
                 .then((res) => {
                     if (res == 0){
-                        deleterecentItem(i);
+                        deletebinItem(i);
                         init(Folder.bin());
                     }
                 })
             });
             const info = document.querySelector(`#recent${i}`);
             info!.addEventListener("click", () => {
-                if (recentItem[i] instanceof Password) showPwd(<Array<Password>>recentItem, i, Folder.bin());
+                if (binItem[i] instanceof Password) showPwd(<Array<Password>>binItem, i, Folder.bin());
             });
             if (checkable){
                 const check = document.querySelector(`#recent${i}-checkboxDiv`);
@@ -179,7 +173,177 @@ class TurnToPage{
         document.querySelector("#back")?.addEventListener("click", () => {
             update(Folder.root());
         });
-        main?.scrollTo(pos);
+        main?.scrollTo(pagePos.bin);
+    }
+
+    private static showSearch(): void{
+        main!.innerHTML = `<div class="title">搜索</div>
+        <div class="form">
+            <!-- 搜索表单 -->
+            <div role="search" style="width: 100%; margin-bottom: 10px;">
+                <div class="input-group d-flex">
+                    <input 
+                        type="search" 
+                        class="form-control form-control-lg" 
+                        placeholder="搜索内容..." 
+                        aria-label="搜索"
+                        style="font-size: 15px;"
+                        id="searchInput"
+                    >
+                    <button 
+                        class="btn btn-outline-secondary" 
+                        id="searchBtn"
+                    >
+                        搜索
+                    </button>
+                </div>
+                <div><input type="checkbox" id="isReg"/><label for="isReg">使用正则表达式</label></div>
+            </div>
+            <div id="searchResult" style="width: 100%;"></div>
+        </div>
+            `;
+        document.querySelector("#searchInput")!.addEventListener("keydown", (e) => {
+            if ((e as KeyboardEvent).key == "Enter" && !(e as KeyboardEvent).isComposing){
+                (e.target as HTMLInputElement)!.blur();
+                (document.querySelector("#searchBtn") as HTMLButtonElement).click();
+            }
+        })
+        document.querySelector("#searchInput")!.addEventListener("input", () => {
+            searchMemory.txt = (document.querySelector("#searchInput") as HTMLInputElement)!.value;
+        })
+        document.querySelector("#isReg")?.addEventListener("change", () => {
+            searchMemory.isReg = (document.querySelector("#isReg") as HTMLInputElement)!.checked;
+        })
+        document.querySelector("#searchBtn")?.addEventListener("click", () => {
+            searchMemory.isSearched = true;
+            searchMemory.lastSearchTxt = searchMemory.txt;
+            function canFound(test: string, by: string, reg: boolean = false): boolean{
+                if (reg){
+                    return new RegExp(by).test(test);
+                } else {
+                    return test.indexOf(by) != -1;
+                }
+            }
+            function showPwdCard(list: Array<Password>, index: number): void{
+                function mkIt(): void{
+                    result!.insertAdjacentHTML("beforeend", list[index].getCard(cnt));
+                    document.querySelector(`#card${cnt}-path`)?.addEventListener("click", () => {
+                        update(list[index].dir);
+                    })
+                    document.querySelector(`#card${cnt}-detail`)?.addEventListener("click", () => {
+                        showPwd(list,  index, Folder.search());
+                    })
+                    cnt++;
+                }
+                if (canFound(list[index].from, input.value, isReg.checked)) mkIt();
+                else if (canFound(list[index].uname, input.value, isReg.checked)) mkIt();
+                else if (canFound(list[index].phone, input.value, isReg.checked)) mkIt();
+                else if (canFound(list[index].pwd, input.value, isReg.checked)) mkIt();
+                else if (canFound(list[index].email, input.value, isReg.checked)) mkIt();
+                else if (canFound(list[index].note, input.value, isReg.checked)) mkIt();
+            }
+            function showFolderCard(item: Folder): void{
+                function mkIt(): void{
+                    result!.insertAdjacentHTML("beforeend", item.getCard(cnt));
+                    document.querySelector(`#card${cnt}-path`)?.addEventListener("click", () => {
+                        update(Folder.fromString(item.parent));
+                    })
+                    cnt++;
+                }
+                if (canFound(item.stringify(), input.value, isReg.checked)) mkIt();
+            }
+            function hasItemCard(item: Item): boolean{
+                if (item instanceof Password)
+                {
+                    if (canFound(item.from, input.value, isReg.checked)) return true;
+                    else if (canFound(item.uname, input.value, isReg.checked)) return true;
+                    else if (canFound(item.phone, input.value, isReg.checked)) return true;
+                    else if (canFound(item.pwd, input.value, isReg.checked)) return true;
+                    else if (canFound(item.email, input.value, isReg.checked)) return true;
+                    else if (canFound(item.note, input.value, isReg.checked)) return true;
+                    return false;
+                } else {
+                    return canFound(item.stringify(), input.value, isReg.checked);
+                }
+            }
+            const input = document.querySelector("#searchInput") as HTMLInputElement;
+            const result = document.querySelector("#searchResult");
+            const isReg = document.querySelector("#isReg") as HTMLInputElement;
+            let cnt: number = 0, flag : boolean = false;
+            result!.innerHTML = "";
+            if (input.value == ""){
+                result!.innerHTML = `<div class="alert alert-danger" role="alert">
+                    请输入搜索内容！
+                </div>`;
+                return;
+            }
+            Task.tryDone("密码侦探");
+            result?.insertAdjacentHTML("beforeend", `<div><h5><strong>在所有文件中搜索“${input.value}”，发现以下结果：</strong></h5></div>`)
+
+            // 检查是否有
+            flag = false;
+            for (let i = 0; i < pwdList.length; i++){
+                if (hasItemCard(pwdList[i])){
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag){
+                result!.insertAdjacentHTML("beforeend", "<div><h5><strong>密码</strong></h5></div>");
+                for(let i = 0; i < pwdList.length; i++){
+                    showPwdCard(pwdList, i);
+                }
+            }
+
+            flag = false;
+            for (let i = 0; i < folderList.length; i++){
+                if (hasItemCard(folderList[i])){
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag){
+                result!.insertAdjacentHTML("beforeend", "<div><h5><strong>文件夹</strong></h5></div>");
+                for(let i = 0; i < folderList.length; i++){
+                    showFolderCard(folderList[i]);
+                }
+            }
+
+            flag = false;
+            for (let i = 0; i < binItem.length; i++){
+                if (hasItemCard(binItem[i])){
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag){
+                result!.insertAdjacentHTML("beforeend", "<div><h5><strong>最近删除</strong></h5></div>");
+                for(let i = 0; i < binItem.length; i++){
+                    if (binItem[i].type == Type.Password){
+                        showPwdCard(binItem as Array<Password>, i);
+                    } else {
+                        showFolderCard(binItem[i] as Folder);
+                    }
+                }
+            }
+
+            if (cnt == 0){
+                result!.innerHTML = `<div class="alert alert-danger" role="alert">
+                    没有找到相关内容！
+                </div>`;
+            }
+        })
+        if (searchMemory.lastSearchTxt != "" && searchMemory.isSearched){
+            (document.querySelector("#searchInput") as HTMLInputElement)!.value = searchMemory.lastSearchTxt;
+            (document.querySelector("#searchBtn") as HTMLButtonElement).click();
+            (document.querySelector("#searchInput") as HTMLInputElement)!.value = "";
+        }
+        if (searchMemory.txt != "" || searchMemory.isReg){
+            (document.querySelector("#searchInput") as HTMLInputElement)!.value = searchMemory.txt;
+            (document.querySelector("#isReg") as HTMLInputElement)!.checked = searchMemory.isReg;
+        }
+        main?.scrollTo(pagePos.search)
+        return;
     }
 
     static token = Symbol("byFunctionUpdate");
@@ -201,15 +365,29 @@ class TurnToPage{
             throw new Error("token is not correct");
         }
     }
+
+    static search(token: symbol): void{
+        if (token === TurnToPage.token){
+            this.showSearch();
+        }
+        else {
+            throw new Error("token is not correct");
+        }
+    }
 }
 
 function update(dir: Folder, checkable: boolean = false) : void{
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => {bootstrap.Tooltip.getInstance(tooltip)?.dispose();});
+
+    updatePos();
+
     dir = new Folder(dir);
+    currentFolder = dir;
     document.querySelector("span#nav-setting")!.classList.remove("active");
     document.querySelector("span#nav-bin")!.classList.remove("active");
     document.querySelector("span#nav-home")!.classList.remove("active");
     document.querySelector("span#nav-mainPage")!.classList.remove("active");
+    document.querySelector("span#nav-search")!.classList.remove("active");
     if (dir.isSame(Folder.bin())){
         document.querySelector("span#nav-bin")!.classList.add("active");
         TurnToPage.bin(TurnToPage.token, checkable);
@@ -222,18 +400,16 @@ function update(dir: Folder, checkable: boolean = false) : void{
         document.querySelector("span#nav-setting")!.classList.add("active");
         TurnToPage.setting(TurnToPage.token);
         return;
-    } else {
+    } else if (dir.isSame(Folder.search())){
+        document.querySelector("span#nav-search")!.classList.add("active");
+        TurnToPage.search(TurnToPage.token);
+        return;
+    }
+    else {
         document.querySelector("span#nav-mainPage")!.classList.add("active");
     }
-    let topScroll
-    if (dir.isSame(currentFolder)){
-        topScroll = getScroll();
-    } else {
-        topScroll = {top: 0, left: 0};
-    }
-    currentFolder = dir;
     let faname = Folder.fromString(dir.parent).name;
-    let loca = dir.toReadable(); // location
+    let loca = dir.toReadableHTML(); // location
     let inner : string = `<div class="title">密码列表</div>
     ${dir.isSame(Folder.root())?"":`<div class="subtitle"><p>当前位置：</p>${loca.html}</div>`}
     <div id="MainToolBar">
@@ -566,5 +742,5 @@ function update(dir: Folder, checkable: boolean = false) : void{
             });
         }
     }
-    main?.scrollTo(topScroll)
+    main?.scrollTo(pagePos.main)
 }

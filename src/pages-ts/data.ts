@@ -60,6 +60,26 @@ class Password{ // 密码类
             ${tool}
         </div>`;
     }
+    getCard(id: number, isRecent: boolean = false): string{
+        return `
+        <div class="card" style="width: 100%;" id="card${id}">
+            <div class="card-body">
+                <p class="card-text">
+                    <p>路径：${Password.format(this.dir.toReadableText(), showPathMaxLength, "front")}</p>
+                    <button type="button" class="btn ${isRecent?"btn-secondary":"btn-primary"}" id="card${id}-path">跳转到对应路径</button>
+                    <p>来源：${Password.format(this.from)}</p>
+                    <p>用户名：${Password.format(this.uname)}</p>
+                    <p>密码：******</p>
+                    ${this.email == ""?"":`<p>邮箱：${Password.format(this.email)}</p>`}
+                    ${this.phone == ""?"":`<p>电话：${Password.format(this.phone)}</p>`}
+                    ${this.note == ""?"":`<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}
+                    <p>${isRecent?"删除时间":"修改时间"}：${getReadableTime(isRecent?this.rmDate!:this.moDate)}</p>
+                    <button type="button" class="btn btn-primary" id="card${id}-detail">查看详情</button>
+                </p>
+            </div>
+        </div>
+        `
+    }
     getHtmlRecent(id: number, checkable: boolean = false): string{ // 获取密码在recent页面的html
         let tool = `<div class="tool" style="width: ${checkable?"39vw":"43vw"};">
                 <p class="icon" id="recent${id}-recover" style="margin-right: 8px;">恢复</p>
@@ -161,6 +181,20 @@ class Folder {
             ${tool}
         </div>`;
     }
+    getCard(id: number, isRecent: boolean = false): string{
+        return `
+        <div class="card" style="width: 100%;" id="card${id}">
+            <div class="card-body">
+                <p class="card-text">
+                    <p>路径：${Password.format(Folder.fromString(this.parent).toReadableText(), showPathMaxLength, "front")}</p>
+                    <button type="button" class="btn ${isRecent?"btn-secondary":"btn-primary"}" id="card${id}-path">跳转到对应路径</button>
+                    <p>文件名：${Password.format(this.name)}</p>
+                    <p>${isRecent?"删除时间":"修改时间"}：${getReadableTime(isRecent?this.rmDate!:this.moDate)}</p>
+                </p>
+            </div>
+        </div>
+        `
+    }
     getHtmlRecent(id: number, checkable: boolean = false): string{ // 获取密码在recent页面的html
         let tool = `<div class="tool" style="width: ${checkable?"39vw":"43vw"};">
                 <p class="icon" id="recent${id}-recover" style="margin-right: 8px;">恢复</p>
@@ -194,6 +228,15 @@ class Folder {
     static setting(): Folder{
         return new Folder("S", "");
     }
+    static search(): Folder{
+        return new Folder("F", "");
+    }
+    static change(): Folder{
+        return new Folder("C", "");
+    }
+    static append(): Folder{
+        return new Folder("A", "");
+    }
     static fromString(str: string, time: string = Date.now().toString()): Folder{
         if (str[str.length - 1] != "/") str += "/";
         const arr = str.split("/");
@@ -220,9 +263,9 @@ class Folder {
     // 判断文件夹是否在当前文件夹或后代文件夹下
     isin(folder: Folder): boolean{
         const f = folder.stringify()
-        return f == this.parent.slice(0, f.length);
+        return f == this.stringify().slice(0, f.length);
     }
-    toReadable(): {html: string, num: number}{
+    toReadableHTML(): {html: string, num: number}{
         let ans : string = this.stringify(), lans : Array<{text: string, index: number}> = [{text: "主文件夹", index: 1}], tmp: string = "";
         for(let i = 2; i < ans.length; i++){
             if (ans[i] == "/") {
@@ -263,6 +306,14 @@ class Folder {
         </nav>
         `, num: lans.length};
     }
+    toReadableText(): string{
+        let ans : string = this.stringify(), lans : string = "主文件夹";
+        for(let i = 1; i < ans.length - 1; i++){
+            if (ans[i] == "/") lans += " > ";
+            else lans += ans[i];
+        }
+        return lans;
+    }
 }
 
 class MainSetting{
@@ -281,7 +332,7 @@ function getData(ismemory: boolean = isremember): string{
     let enc = cryp.pbkdf2(mainPwd, salt)
     let pwdListUpdated : Array<Password> = []
     let folderListUpdated : Array<Folder> = [];
-    let recentItemUpdated : Array<Item> = [];
+    let binItemUpdated : Array<Item> = [];
     let tasksUpdated : Array<TaskMapCrypto> = [];
     for (let index = 0; index < pwdList.length; index++) {
         pwdListUpdated.push(encrypt(pwdList[index], enc) as Password);
@@ -289,8 +340,8 @@ function getData(ismemory: boolean = isremember): string{
     for (let index = 0; index < folderList.length; index++) {
         folderListUpdated.push(encrypt(folderList[index], enc) as Folder);
     }
-    for (let index = 0; index < recentItem.length; index++) {
-        recentItemUpdated.push(encrypt(recentItem[index], enc) as Item);
+    for (let index = 0; index < binItem.length; index++) {
+        binItemUpdated.push(encrypt(binItem[index], enc) as Item);
     }
     for (let index = 0; index < TODOTasks.length; index++) {
         tasksUpdated.push(TODOTasks[index].enc(enc));
@@ -302,7 +353,7 @@ function getData(ismemory: boolean = isremember): string{
         version: "1.2",
         pwd: pwdListUpdated,
         folder: folderListUpdated,
-        recent: recentItemUpdated,
+        recent: binItemUpdated,
         mainPwd: cryp.pbkdf2(enc, salt),
         mainSetting: mainSetting,
         salt: salt,

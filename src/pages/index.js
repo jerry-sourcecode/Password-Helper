@@ -91,7 +91,7 @@ function decrypt(data, key, index = 0) {
 let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
 const main = document.querySelector("#contentDiv"); // main界面
 let pwdList = []; // 密码列表
-let recentItem = []; // 最近删除的密码列表
+let binItem = []; // 最近删除的密码列表
 let folderList = []; // 文件夹列表
 let mainPwd = ""; // 主密码
 let isremember = false; // 是否记住密码
@@ -102,6 +102,14 @@ let mainSetting = new MainSetting();
 let score = 0;
 let level = 1;
 let TODOTasks = [];
+let searchMemory = { txt: "", isReg: false, isSearched: false, lastSearchTxt: "" };
+let pagePos = {
+    home: { top: 0, left: 0 },
+    main: { top: 0, left: 0 },
+    setting: { top: 0, left: 0 },
+    bin: { top: 0, left: 0 },
+    search: { top: 0, left: 0 },
+};
 // 一些工具函数
 function getReadableTime(time) {
     if (typeof time === "string")
@@ -132,6 +140,23 @@ function mkdir(dir) {
     }
     folderList.push(dir);
     saveData();
+}
+function updatePos() {
+    if (currentFolder.isSame(Folder.bin())) {
+        pagePos.bin = getScroll();
+    }
+    else if (currentFolder.isSame(Folder.home())) {
+        pagePos.home = getScroll();
+    }
+    else if (currentFolder.isSame(Folder.setting())) {
+        pagePos.setting = getScroll();
+    }
+    else if (currentFolder.isSame(Folder.search())) {
+        pagePos.search = getScroll();
+    }
+    else if (currentFolder.isin(Folder.root())) {
+        pagePos.main = getScroll();
+    }
 }
 function init(dir) {
     saveData();
@@ -185,6 +210,10 @@ function doneMkPwd(isAppend = false, index = -1) {
 // 渲染编辑密码界面，并更改密码，isAppend表示是否是添加密码，为true时，取消将会删除该密码，会返回main界面
 function changePwd(by, index, dir, isAppend = false) {
     var _a, _b;
+    if (!isAppend) {
+        updatePos();
+        currentFolder = Folder.change();
+    }
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });
     let inner = `
     <div class="title">${isAppend ? `添加密码` : `编辑密码`}</div>
@@ -252,7 +281,7 @@ function deleteItem(type, index, dir_from, _save = true) {
         clipboard.delete({ type: Type.Password, index: index });
         pwdList[index].dir = Folder.fromString(Folder.bin().stringify() + pwdList[index].dir.stringify().slice(2));
         pwdList[index].rmDate = Date.now().toString();
-        recentItem.unshift(new Password(pwdList[index]));
+        binItem.unshift(new Password(pwdList[index]));
         pwdList.splice(index, 1);
     }
     else {
@@ -269,61 +298,63 @@ function deleteItem(type, index, dir_from, _save = true) {
         });
         folderList[index] = Folder.fromString(Folder.bin().stringify() + folderList[index].stringify().slice(2), folderList[index].moDate);
         folderList[index].rmDate = Date.now().toString();
-        recentItem.unshift(new Folder(folderList[index]));
+        binItem.unshift(new Folder(folderList[index]));
         folderList.splice(index, 1);
     }
     if (_save) {
         init(dir_from);
     }
 }
-function deleterecentItem(index) {
+function deletebinItem(index) {
     // 删除最近删除的密码
     if (Array.isArray(index)) {
         for (let i of index) {
-            if (recentItem[i].type == Type.Password) {
+            if (binItem[i].type == Type.Password) {
                 Task.tryDone("密码清除？不留痕迹！");
                 break;
             }
         }
-        recentItem = recentItem.filter((item, i) => {
+        binItem = binItem.filter((item, i) => {
             return !index.includes(i);
         });
     }
     else {
-        if (recentItem[index].type == Type.Password)
+        if (binItem[index].type == Type.Password)
             Task.tryDone("密码清除？不留痕迹！");
-        recentItem.splice(index, 1);
+        binItem.splice(index, 1);
     }
     saveData();
 }
 function recoverPwd(index) {
     // 恢复最近删除的密码
-    recentItem[index].rmDate = null;
-    if (recentItem[index] instanceof Password) {
+    binItem[index].rmDate = null;
+    if (binItem[index] instanceof Password) {
         Task.tryDone("密码复活术");
-        recentItem[index].dir = Folder.fromString(Folder.root().stringify() + recentItem[index].dir.stringify().slice(2));
-        mkdir(recentItem[index].dir);
-        pwdList.push(recentItem[index]);
+        binItem[index].dir = Folder.fromString(Folder.root().stringify() + binItem[index].dir.stringify().slice(2));
+        mkdir(binItem[index].dir);
+        pwdList.push(binItem[index]);
     }
     else {
-        let x = recentItem[index].moDate;
-        recentItem[index] = Folder.fromString(Folder.root().stringify() + recentItem[index].stringify().slice(2));
-        recentItem[index].moDate = x;
-        mkdir(Folder.fromString(recentItem[index].parent));
+        let x = binItem[index].moDate;
+        binItem[index] = Folder.fromString(Folder.root().stringify() + binItem[index].stringify().slice(2));
+        binItem[index].moDate = x;
+        mkdir(Folder.fromString(binItem[index].parent));
         let has = false;
         folderList.forEach((item) => {
-            if (item.isSame(recentItem[index])) {
+            if (item.isSame(binItem[index])) {
                 has = true;
             }
         });
         if (!has)
-            mkdir(recentItem[index]);
+            mkdir(binItem[index]);
     }
-    recentItem.splice(index, 1);
+    binItem.splice(index, 1);
     saveData();
 }
 function addPwd(dir, step = 0, result = new Password("", "", "", "", "", "", dir)) {
     var _a;
+    updatePos();
+    currentFolder = Folder.append();
     if (mainSetting.easyAppend) {
         pwdList.push(new Password("", "", "", "", "", "", dir));
         changePwd(pwdList, pwdList.length - 1, dir, true);
@@ -614,21 +645,20 @@ function showPwd(by, index, from) {
     });
 }
 function fmain() {
-    document.querySelector("span#nav-mainPage").addEventListener("click", (e) => {
-        e.target.classList.add("active");
+    document.querySelector("span#nav-mainPage").addEventListener("click", () => {
         update(Folder.root());
     });
-    document.querySelector("span#nav-setting").addEventListener("click", (e) => {
-        e.target.classList.add("active");
+    document.querySelector("span#nav-setting").addEventListener("click", () => {
         update(Folder.setting());
     });
-    document.querySelector("span#nav-bin").addEventListener("click", (e) => {
-        e.target.classList.add("active");
+    document.querySelector("span#nav-bin").addEventListener("click", () => {
         update(Folder.bin());
     });
-    document.querySelector("span#nav-home").addEventListener("click", (e) => {
-        e.target.classList.add("active");
+    document.querySelector("span#nav-home").addEventListener("click", () => {
         update(Folder.home());
+    });
+    document.querySelector("span#nav-search").addEventListener("click", () => {
+        update(Folder.search());
     });
     window.fs.read("./data").then((data) => {
         var _a;
@@ -697,9 +727,9 @@ function fmain() {
             });
             obj.recent.forEach((element) => {
                 if (element.type == Type.Password)
-                    recentItem.push(decrypt(new Password(element), key));
+                    binItem.push(decrypt(new Password(element), key));
                 else
-                    recentItem.push(decrypt(new Folder(element), key));
+                    binItem.push(decrypt(new Folder(element), key));
             });
             obj.TODOTasks.forEach((element) => {
                 TODOTasks.push(TaskMap.dec(element, key));

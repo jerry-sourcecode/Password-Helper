@@ -65,6 +65,7 @@ div.main div.content{
     overflow-y: scroll;
     position: relative;
     justify-content: flex-start;
+    overflow: scroll;
 }
 
 div.main *{
@@ -301,4 +302,8 @@ div.toast p{
 div.toast strong,div.toast small{
     user-select: none;
     cursor: default;
+}
+
+div.card,div.toast{
+    margin-bottom: 10px;
 }

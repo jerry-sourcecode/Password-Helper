@@ -74,7 +74,7 @@ function decrypt(data:Item | Task, key: string, index: number = 0): Item | Task{
 let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
 const main = document.querySelector("#contentDiv"); // main界面
 let pwdList : Array<Password> = []; // 密码列表
-let recentItem : Array<Item> = []; // 最近删除的密码列表
+let binItem : Array<Item> = []; // 最近删除的密码列表
 let folderList : Array<Folder> = []; // 文件夹列表
 let mainPwd : string = ""; // 主密码
 let isremember : boolean = false; // 是否记住密码
@@ -85,6 +85,21 @@ let mainSetting: MainSetting = new MainSetting();
 let score: number = 0;
 let level: number = 1;
 let TODOTasks: Array<TaskMap> = [];
+let searchMemory: {txt: string, isReg: boolean, isSearched: boolean, lastSearchTxt: string} = {txt: "", isReg: false, isSearched: false, lastSearchTxt: ""};
+type PagePosition = {top: number, left: number};
+let pagePos: {
+    home: PagePosition,
+    main: PagePosition,
+    setting: PagePosition,
+    bin: PagePosition,
+    search: PagePosition,
+} = {
+    home: {top: 0, left: 0},
+    main: {top: 0, left: 0},
+    setting: {top: 0, left: 0},
+    bin: {top: 0, left: 0},
+    search: {top: 0, left: 0},
+};
 
 // 一些工具函数
 function getReadableTime(time: Date | string): string{
@@ -113,6 +128,19 @@ function mkdir(dir: Folder): void{ // 创建文件夹
     }
     folderList.push(dir);
     saveData();
+}
+function updatePos(): void{
+    if (currentFolder.isSame(Folder.bin())){
+        pagePos.bin = getScroll();
+    } else if (currentFolder.isSame(Folder.home())){
+        pagePos.home = getScroll();
+    } else if (currentFolder.isSame(Folder.setting())){
+        pagePos.setting = getScroll();
+    } else if (currentFolder.isSame(Folder.search())){
+        pagePos.search = getScroll();
+    } else if (currentFolder.isin(Folder.root())){
+        pagePos.main = getScroll();
+    }
 }
 
 function init(dir: Folder): void{
@@ -160,6 +188,10 @@ function doneMkPwd(isAppend: boolean = false, index: number = -1): void{
 }
 // 渲染编辑密码界面，并更改密码，isAppend表示是否是添加密码，为true时，取消将会删除该密码，会返回main界面
 function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : boolean = false) : void{
+    if(!isAppend){
+        updatePos();
+        currentFolder = Folder.change();
+    }
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => {bootstrap.Tooltip.getInstance(tooltip)?.dispose();});
     let inner : string = `
     <div class="title">${isAppend?`添加密码`:`编辑密码`}</div>
@@ -226,7 +258,7 @@ function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean 
         clipboard.delete({type: Type.Password, index: index});
         pwdList[index].dir = Folder.fromString(Folder.bin().stringify() + pwdList[index].dir.stringify().slice(2));
         pwdList[index].rmDate = Date.now().toString();
-        recentItem.unshift(new Password(pwdList[index]));
+        binItem.unshift(new Password(pwdList[index]));
         pwdList.splice(index, 1);
     } else {
         clipboard.delete({type: Type.Folder, index: index});
@@ -242,58 +274,60 @@ function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean 
         })
         folderList[index] = Folder.fromString(Folder.bin().stringify() + folderList[index].stringify().slice(2), folderList[index].moDate);
         folderList[index].rmDate = Date.now().toString();
-        recentItem.unshift(new Folder(folderList[index]));
+        binItem.unshift(new Folder(folderList[index]));
         folderList.splice(index, 1);
     }
     if (_save){
         init(dir_from)
     }
 }
-function deleterecentItem(index: number | Array<number>) : void{
+function deletebinItem(index: number | Array<number>) : void{
     // 删除最近删除的密码
     if (Array.isArray(index)){
         for(let i of index){
-            if (recentItem[i].type == Type.Password) {
+            if (binItem[i].type == Type.Password) {
                 Task.tryDone("密码清除？不留痕迹！");
                 break;
             }
         }
-        recentItem = recentItem.filter((item, i) => {
+        binItem = binItem.filter((item, i) => {
             return !index.includes(i);
         });
     }
     else {
-        if (recentItem[index].type == Type.Password) Task.tryDone("密码清除？不留痕迹！");
-        recentItem.splice(index, 1);
+        if (binItem[index].type == Type.Password) Task.tryDone("密码清除？不留痕迹！");
+        binItem.splice(index, 1);
     }
     saveData();
 }
 function recoverPwd(index: number) : void{
     // 恢复最近删除的密码
-    recentItem[index].rmDate = null;
-    if (recentItem[index] instanceof Password) {
+    binItem[index].rmDate = null;
+    if (binItem[index] instanceof Password) {
         Task.tryDone("密码复活术");
-        recentItem[index].dir = Folder.fromString(Folder.root().stringify() + recentItem[index].dir.stringify().slice(2));
-        mkdir((<Password>recentItem[index]).dir);
-        pwdList.push(recentItem[index]);
+        binItem[index].dir = Folder.fromString(Folder.root().stringify() + binItem[index].dir.stringify().slice(2));
+        mkdir((<Password>binItem[index]).dir);
+        pwdList.push(binItem[index]);
     }
     else {
-        let x: string = recentItem[index].moDate;
-        recentItem[index] = Folder.fromString(Folder.root().stringify() + recentItem[index].stringify().slice(2)); 
-        recentItem[index].moDate = x;
-        mkdir(Folder.fromString(recentItem[index].parent));
+        let x: string = binItem[index].moDate;
+        binItem[index] = Folder.fromString(Folder.root().stringify() + binItem[index].stringify().slice(2)); 
+        binItem[index].moDate = x;
+        mkdir(Folder.fromString(binItem[index].parent));
         let has: boolean = false;
         folderList.forEach((item) => {
-            if (item.isSame(<Folder>recentItem[index])) {
+            if (item.isSame(<Folder>binItem[index])) {
                 has = true;
             }
         });
-        if (!has) mkdir(recentItem[index]);
+        if (!has) mkdir(binItem[index]);
     }
-    recentItem.splice(index, 1);
+    binItem.splice(index, 1);
     saveData();
 }
 function addPwd(dir: Folder, step: number = 0, result: Password = new Password("", "", "", "", "", "", dir)) : void{
+    updatePos();
+    currentFolder = Folder.append();
     if (mainSetting.easyAppend){
         pwdList.push(new Password("", "", "", "", "", "", dir));
         changePwd(pwdList, pwdList.length - 1, dir, true);
@@ -561,22 +595,21 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
 
 
 function fmain(){
-    document.querySelector("span#nav-mainPage")!.addEventListener("click", (e) => {
-        (e.target as HTMLSpanElement).classList.add("active");
+    document.querySelector("span#nav-mainPage")!.addEventListener("click", () => {
         update(Folder.root());
     });
-    document.querySelector("span#nav-setting")!.addEventListener("click", (e) => {
-        (e.target as HTMLSpanElement).classList.add("active");
+    document.querySelector("span#nav-setting")!.addEventListener("click", () => {
         update(Folder.setting());
     });
-    document.querySelector("span#nav-bin")!.addEventListener("click", (e) => {
-        (e.target as HTMLSpanElement).classList.add("active");
+    document.querySelector("span#nav-bin")!.addEventListener("click", () => {
         update(Folder.bin());
     });
-    document.querySelector("span#nav-home")!.addEventListener("click", (e) => {
-        (e.target as HTMLSpanElement).classList.add("active");
+    document.querySelector("span#nav-home")!.addEventListener("click", () => {
         update(Folder.home());
     });
+    document.querySelector("span#nav-search")!.addEventListener("click", () => {
+        update(Folder.search());
+    })
     
     window.fs.read("./data").then((data) => {
         if (data == "") throw new Error("data is null");
@@ -640,8 +673,8 @@ function fmain(){
                 folderList.push(<Folder>decrypt(new Folder(element), key));
             })
             obj.recent.forEach((element: any) => {
-                if (element.type == Type.Password) recentItem.push(<Item>decrypt(new Password(element), key));
-                else recentItem.push(<Item>decrypt(new Folder(element), key));
+                if (element.type == Type.Password) binItem.push(<Item>decrypt(new Password(element), key));
+                else binItem.push(<Item>decrypt(new Folder(element), key));
             });
             obj.TODOTasks.forEach((element: any) => {
                 TODOTasks.push(TaskMap.dec(element, key));
