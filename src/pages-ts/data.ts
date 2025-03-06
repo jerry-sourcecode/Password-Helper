@@ -13,7 +13,7 @@ class Password{ // 密码类
     uname: string // 用户名
     pwd: string; // 密码
     email: string; // 邮箱
-    phone: string; // 电话
+    phone: string; // 手机号
     note: string; // 备注
     dir: Folder; // 文件夹
     type: Type = Type.Password; // 类型
@@ -66,14 +66,14 @@ class Password{ // 密码类
             <div class="card-body">
                 <p class="card-text">
                     <p>路径：${Password.format(this.dir.toReadableText(), showPathMaxLength, "front")}</p>
-                    <button type="button" class="btn ${isRecent?"btn-secondary":"btn-primary"}" id="card${id}-path">跳转到对应路径</button>
                     <p>来源：${Password.format(this.from)}</p>
                     <p>用户名：${Password.format(this.uname)}</p>
                     <p>密码：******</p>
                     ${this.email == ""?"":`<p>邮箱：${Password.format(this.email)}</p>`}
-                    ${this.phone == ""?"":`<p>电话：${Password.format(this.phone)}</p>`}
+                    ${this.phone == ""?"":`<p>手机号：${Password.format(this.phone)}</p>`}
                     ${this.note == ""?"":`<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}
                     <p>${isRecent?"删除时间":"修改时间"}：${getReadableTime(isRecent?this.rmDate!:this.moDate)}</p>
+                    <button type="button" class="btn ${isRecent?"btn-secondary":"btn-primary"}" id="card${id}-path">跳转到对应路径</button>
                     <button type="button" class="btn btn-primary" id="card${id}-detail">查看详情</button>
                 </p>
             </div>
@@ -124,7 +124,7 @@ class Password{ // 密码类
             <p>用户名：${Password.format(this.uname)}</p>
             <p>密码：******</p>
             ${this.email == ""?"":`<p>邮箱：${Password.format(this.email)}</p>`}
-            ${this.phone == ""?"":`<p>电话：${Password.format(this.phone)}</p>`}
+            ${this.phone == ""?"":`<p>手机号：${Password.format(this.phone)}</p>`}
             ${this.note == ""?"":`<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}
             <p>${isRecent?"删除时间":"修改时间"}：${getReadableTime(isRecent?this.rmDate!:this.moDate)}</p>`
     };
@@ -187,9 +187,9 @@ class Folder {
             <div class="card-body">
                 <p class="card-text">
                     <p>路径：${Password.format(Folder.fromString(this.parent).toReadableText(), showPathMaxLength, "front")}</p>
-                    <button type="button" class="btn ${isRecent?"btn-secondary":"btn-primary"}" id="card${id}-path">跳转到对应路径</button>
                     <p>文件名：${Password.format(this.name)}</p>
                     <p>${isRecent?"删除时间":"修改时间"}：${getReadableTime(isRecent?this.rmDate!:this.moDate)}</p>
+                    <button type="button" class="btn ${isRecent?"btn-secondary":"btn-primary"}" id="card${id}-path">进入该文件夹</button>
                 </p>
             </div>
         </div>

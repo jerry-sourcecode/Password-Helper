@@ -85,7 +85,35 @@ let mainSetting: MainSetting = new MainSetting();
 let score: number = 0;
 let level: number = 1;
 let TODOTasks: Array<TaskMap> = [];
-let searchMemory: {txt: string, isReg: boolean, isSearched: boolean, lastSearchTxt: string} = {txt: "", isReg: false, isSearched: false, lastSearchTxt: ""};
+let searchMemory: {
+    txt: string, 
+    isSearched: boolean, 
+    lastSearchTxt: string,
+    setting: {
+        isReg: boolean,
+        searchFrom: boolean,
+        searchUname: boolean,
+        searchPwd: boolean,
+        searchPhone: boolean,
+        searchEmail: boolean,
+        searchNote: boolean,
+        searchFolder: boolean,
+    };
+} = {
+    txt: "", 
+    isSearched: false, 
+    lastSearchTxt: "",
+    setting: {
+        isReg: false,
+        searchFrom: true,
+        searchUname: true,
+        searchPwd: true,
+        searchPhone: true,
+        searchEmail: true,
+        searchNote: true,
+        searchFolder: true,
+    }
+};
 type PagePosition = {top: number, left: number};
 let pagePos: {
     home: PagePosition,
@@ -143,9 +171,9 @@ function updatePos(): void{
     }
 }
 
-function init(dir: Folder): void{
+function init(dir: Folder, checkable: boolean = false): void{
     saveData();
-    update(dir);
+    update(dir, checkable);
 }
 function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = false) : void {
     if (type == Type.Password) {
@@ -445,7 +473,7 @@ function addPwd(dir: Folder, step: number = 0, result: Password = new Password("
         if (step == 4) {
             pwdList.push(new Password(result.from, result.uname, result.pwd, result.note, result.email, result.phone, dir));
             doneMkPwd(true, pwdList.length - 1);
-            update(dir);
+            init(dir);
             return;
         }
         addPwd(dir, step + 1, result);
@@ -496,12 +524,13 @@ function checkSafety(index: number) : string{
 function showPwd(by: Array<Password>, index: number, from : Folder) : void{
     let inner : string = `
     <div class="form">
-    <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制"></div>
-    <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${by[index].uname}" readonly /><img class="icon" src="./resources/copy.png" id="unameCopy" title="复制"></div>
-    <div class="formItem_Copy"><label for="pwd">密码：</label><input type="password" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
+    <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${by[index].uname}" readonly /><img class="icon" src="./resources/copy.png" id="unameCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
+    <div class="formItem_Copy"><label for="pwd">密码：</label><input type="password" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
+    <div class="formItem"><p class="action" id="showHidePwd">显示密码</p></div>
     <div class="formItem" id="safety"></div>
-    <div class="formItem_Copy"><label for="email">邮箱：</label><input type="text" id="email" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="emailCopy" title="复制"></div>
-    <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制"></div>
+    <div class="formItem_Copy"><label for="email">邮箱：</label><input type="text" id="email" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="emailCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
+    <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
     <div class="formItem_Copy"><p>修改时间：${getReadableTime(by[index].moDate)}</p></div>
     ${from.isSame(Folder.bin())? `<div class="formItem_Copy"><p>删除时间：${getReadableTime(by[index].rmDate!)}</p></div>` : ""}
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" readonly>${by[index].note}</textarea></div>
@@ -509,15 +538,23 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
     <div class="action" id="back"><p>返回</p></div>
     `
     main!.innerHTML = inner;
+    [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(t => new bootstrap.Tooltip(t));
     const safety : HTMLDivElement = document.querySelector("#safety")!;
     Task.tryDone("例行检查");
     if (from != Folder.bin()) {
         safety.innerHTML = checkSafety(index);
         if (safety.innerHTML == "") safety.style.display = "none";
     }
-    document.querySelector("input#pwd")?.addEventListener("click", (e) => {
-        if ((e.target as HTMLInputElement).type == "password") (e.target as HTMLInputElement).type = "text";
-        else (document.querySelector("input#pwd") as HTMLInputElement).type = "password";
+    document.querySelector("#showHidePwd")?.addEventListener("click", (e) => {
+        const div = document.querySelector("input#pwd") as HTMLInputElement;
+        if (div.type == "password") {
+            div.type = "text";
+            (<HTMLDivElement>e.target).innerHTML = "隐藏密码";
+        }
+        else {
+            div.type = "password";
+            (<HTMLDivElement>e.target).innerHTML = "显示密码";
+        };
     });
     document.querySelector("#fromCopy")?.addEventListener("click", () => {
         if (document.querySelector("#from")?.getAttribute("copyed") == "true"){

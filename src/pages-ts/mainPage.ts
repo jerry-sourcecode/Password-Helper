@@ -32,6 +32,7 @@ class TurnToPage{
 
 
         document.querySelector("#mainPwd")?.addEventListener("change", () => {
+            Task.tryDone("妈妈再也不用担心我密码泄露啦！")
             mainPwd = (document.querySelector("#mainPwd") as HTMLInputElement).value;
             saveData();
         })
@@ -197,11 +198,38 @@ class TurnToPage{
                         搜索
                     </button>
                 </div>
-                <div><input type="checkbox" id="isReg"/><label for="isReg">使用正则表达式</label></div>
+                <p class="action" data-bs-toggle="collapse" href="#searchSetting" aria-expanded="false" role="button" aria-controls="searchSetting">
+                    点此展开或折叠高级设置
+                </p>
+                <div class="collapse" id="searchSetting">
+                    <div class="card card-body">
+                        <div><input type="checkbox" id="isReg"/><label for="isReg">使用正则表达式</label></div>
+                        <p>搜索密码的以下部分：</p>
+                        <div style="margin-left: 20px">
+                            <div><input type="checkbox" id="searchFrom"/><label for="searchFrom">来源</label></div>
+                            <div><input type="checkbox" id="searchUname"/><label for="searchUname">用户名</label></div>
+                            <div><input type="checkbox" id="searchPwd"/><label for="searchPwd">密码</label></div>
+                            <div><input type="checkbox" id="searchEmail"/><label for="searchEmail">邮箱</label></div>
+                            <div><input type="checkbox" id="searchPhone"/><label for="searchPhone">手机号</label></div>
+                            <div><input type="checkbox" id="searchNote"/><label for="searchNote">备注</label></div>
+                        </div>
+                        <div><input type="checkbox" id="searchFolder"/><label for="searchFolder">搜索文件夹</label></div>
+                    </div>
+                </div>
             </div>
             <div id="searchResult" style="width: 100%;"></div>
         </div>
             `;
+        const searchSetting = {
+            isReg: document.querySelector("#isReg") as HTMLInputElement,
+            searchFrom: document.querySelector("#searchFrom") as HTMLInputElement,
+            searchUname: document.querySelector("#searchUname") as HTMLInputElement,
+            searchPwd: document.querySelector("#searchPwd") as HTMLInputElement,
+            searchPhone: document.querySelector("#searchPhone") as HTMLInputElement,
+            searchEmail: document.querySelector("#searchEmail") as HTMLInputElement,
+            searchNote: document.querySelector("#searchNote") as HTMLInputElement,
+            searchFolder: document.querySelector("#searchFolder") as HTMLInputElement,
+        };
         document.querySelector("#searchInput")!.addEventListener("keydown", (e) => {
             if ((e as KeyboardEvent).key == "Enter" && !(e as KeyboardEvent).isComposing){
                 (e.target as HTMLInputElement)!.blur();
@@ -211,14 +239,21 @@ class TurnToPage{
         document.querySelector("#searchInput")!.addEventListener("input", () => {
             searchMemory.txt = (document.querySelector("#searchInput") as HTMLInputElement)!.value;
         })
-        document.querySelector("#isReg")?.addEventListener("change", () => {
-            searchMemory.isReg = (document.querySelector("#isReg") as HTMLInputElement)!.checked;
-        })
+
+        document.querySelector("#isReg")?.addEventListener("change", () => {searchMemory.setting.isReg = searchSetting.isReg.checked;})
+        document.querySelector("#searchFrom")?.addEventListener("change", () => {searchMemory.setting.searchFrom = searchSetting.searchFrom.checked;})
+        document.querySelector("#searchUname")?.addEventListener("change", () => {searchMemory.setting.searchUname = searchSetting.searchUname.checked;})
+        document.querySelector("#searchPwd")?.addEventListener("change", () => {searchMemory.setting.searchPwd = searchSetting.searchPwd.checked;})
+        document.querySelector("#searchPhone")?.addEventListener("change", () => {searchMemory.setting.searchPhone = searchSetting.searchPhone.checked;})
+        document.querySelector("#searchEmail")?.addEventListener("change", () => {searchMemory.setting.searchEmail = searchSetting.searchEmail.checked;})
+        document.querySelector("#searchNote")?.addEventListener("change", () => {searchMemory.setting.searchNote = searchSetting.searchNote.checked;})
+        document.querySelector("#searchFolder")?.addEventListener("change", () => {searchMemory.setting.searchFolder = searchSetting.searchFolder.checked;})
+
         document.querySelector("#searchBtn")?.addEventListener("click", () => {
             searchMemory.isSearched = true;
             searchMemory.lastSearchTxt = searchMemory.txt;
-            function canFound(test: string, by: string, reg: boolean = false): boolean{
-                if (reg){
+            function canFound(test: string, by: string): boolean{
+                if (searchSetting.isReg.checked){
                     return new RegExp(by).test(test);
                 } else {
                     return test.indexOf(by) != -1;
@@ -235,40 +270,34 @@ class TurnToPage{
                     })
                     cnt++;
                 }
-                if (canFound(list[index].from, input.value, isReg.checked)) mkIt();
-                else if (canFound(list[index].uname, input.value, isReg.checked)) mkIt();
-                else if (canFound(list[index].phone, input.value, isReg.checked)) mkIt();
-                else if (canFound(list[index].pwd, input.value, isReg.checked)) mkIt();
-                else if (canFound(list[index].email, input.value, isReg.checked)) mkIt();
-                else if (canFound(list[index].note, input.value, isReg.checked)) mkIt();
+                if (hasItemCard(list[index])) mkIt();
             }
             function showFolderCard(item: Folder): void{
                 function mkIt(): void{
                     result!.insertAdjacentHTML("beforeend", item.getCard(cnt));
                     document.querySelector(`#card${cnt}-path`)?.addEventListener("click", () => {
-                        update(Folder.fromString(item.parent));
+                        update(item);
                     })
                     cnt++;
                 }
-                if (canFound(item.stringify(), input.value, isReg.checked)) mkIt();
+                if (hasItemCard(item)) mkIt();
             }
             function hasItemCard(item: Item): boolean{
                 if (item instanceof Password)
                 {
-                    if (canFound(item.from, input.value, isReg.checked)) return true;
-                    else if (canFound(item.uname, input.value, isReg.checked)) return true;
-                    else if (canFound(item.phone, input.value, isReg.checked)) return true;
-                    else if (canFound(item.pwd, input.value, isReg.checked)) return true;
-                    else if (canFound(item.email, input.value, isReg.checked)) return true;
-                    else if (canFound(item.note, input.value, isReg.checked)) return true;
+                    if (canFound(item.from, input.value) && searchSetting.searchFrom.checked) return true;
+                    else if (canFound(item.uname, input.value) && searchSetting.searchUname.checked) return true;
+                    else if (canFound(item.phone, input.value) && searchSetting.searchPhone.checked) return true;
+                    else if (canFound(item.pwd, input.value) && searchSetting.searchPwd.checked) return true;
+                    else if (canFound(item.email, input.value) && searchSetting.searchEmail.checked) return true;
+                    else if (canFound(item.note, input.value) && searchSetting.searchNote.checked) return true;
                     return false;
                 } else {
-                    return canFound(item.stringify(), input.value, isReg.checked);
+                    return canFound(item.name, input.value) && searchSetting.searchFolder.checked;
                 }
             }
             const input = document.querySelector("#searchInput") as HTMLInputElement;
             const result = document.querySelector("#searchResult");
-            const isReg = document.querySelector("#isReg") as HTMLInputElement;
             let cnt: number = 0, flag : boolean = false;
             result!.innerHTML = "";
             if (input.value == ""){
@@ -333,15 +362,20 @@ class TurnToPage{
                 </div>`;
             }
         })
+
+        searchSetting.isReg.checked = searchMemory.setting.isReg;
+        searchSetting.searchFrom.checked = searchMemory.setting.searchFrom;
+        searchSetting.searchUname.checked = searchMemory.setting.searchUname;
+        searchSetting.searchPwd.checked = searchMemory.setting.searchPwd;
+        searchSetting.searchEmail.checked = searchMemory.setting.searchEmail;
+        searchSetting.searchPhone.checked = searchMemory.setting.searchPhone;
+        searchSetting.searchNote.checked = searchMemory.setting.searchNote;
+        searchSetting.searchFolder.checked = searchMemory.setting.searchFolder;
         if (searchMemory.lastSearchTxt != "" && searchMemory.isSearched){
             (document.querySelector("#searchInput") as HTMLInputElement)!.value = searchMemory.lastSearchTxt;
             (document.querySelector("#searchBtn") as HTMLButtonElement).click();
-            (document.querySelector("#searchInput") as HTMLInputElement)!.value = "";
         }
-        if (searchMemory.txt != "" || searchMemory.isReg){
-            (document.querySelector("#searchInput") as HTMLInputElement)!.value = searchMemory.txt;
-            (document.querySelector("#isReg") as HTMLInputElement)!.checked = searchMemory.isReg;
-        }
+        (document.querySelector("#searchInput") as HTMLInputElement)!.value = searchMemory.txt;
         main?.scrollTo(pagePos.search)
         return;
     }
@@ -489,8 +523,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 moveItem(Type.Folder, num, Folder.fromString(dir.parent));
             }
             Task.tryDone("文件向上冲");
-            saveData();
-            update(dir, checkable)
+            init(dir, checkable);
         });
         parent!.addEventListener("dragover", (e) => {
             if (folderIsEditing) return;
@@ -727,8 +760,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
             }
             move(index);
             Task.tryDone("幻影显形");
-            saveData();
-            update(dir, checkable)
+            init(dir, checkable);
         });
         if (checkable){
             const check = document.querySelector(`#folder${i}-checkboxDiv`) as HTMLDivElement;

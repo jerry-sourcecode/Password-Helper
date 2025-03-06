@@ -176,7 +176,7 @@ const nameplates: Array<Nameplate> = [
     ),
     new Nameplate(
         "时溯沙漏",
-        "倒流的沙粒淹死了守钟人的影子，过去与未来在溺亡者的血管里重逢",
+        "倒悬的漩涡吞下第一千次日升，指尖漏走的沙粒正从你瞳孔深处发芽",
         "预判未来三十天的数据污染事件",
         "悬浮着反物质沙粒的双层钛合金容器，沙粒坠落轨迹对应着人类史上所有密码演变史。暗焰组织曾盗取其原型试图破解时间加密算法，却导致沙漏出现镜像倒流——上半部分显示冰川完全消融的2278年，下半部分定格在楔形文字诞生的公元前3200年。完全激活后可展开四维密码字典，预判未来三百年的数据污染节点。",
         "<p>埃及金字塔地下，暗焰正在用沙漏原型篡改时间戳制造虚假历史。你躲在法老棺椁后，看着他们启动沙漏逆转了石壁上的象形文字。等雇佣兵离开后，你冲向祭坛却触发机关——整个墓室开始像魔方一样翻转。</p><p>在第六次天地倒转时，你发现沙漏的影子始终指向正北。用激光笔沿影子切开地面，露出真正的铭牌：上层黑沙显示「2278年冰川消亡」，下层白沙呈现「新纪元种子库」。你掏出前两块铭牌排成一排，黑沙突然开始倒流回白沙层，墓室响起五千年前的楔形文字警报声。</p>",
@@ -288,7 +288,7 @@ function goHome(token: Symbol): void {
         `
     }
 
-    let scorePercent = Math.round(score / maxScore * 1000)/10;
+    let scorePercent = Math.min(Math.round(score / maxScore * 1000)/10, 100);
     let nextNameplate: Nameplate = (nameplates[0]);
     for(let i of nameplates){
         if (i.needLevel == level + 1){
@@ -374,8 +374,7 @@ function goHome(token: Symbol): void {
             score += TODOTasks[0].reward();
             mkDialog("领取成功", `你已经成功领取了<strong>${TODOTasks[0].reward()}</strong>tCO₂e的碳排放配额。`);
             TODOTasks.splice(0, 1);
-            saveData()
-            update(Folder.home());
+            init(Folder.home());
             return;
         }
         if (TODOTasks[0].location() !== null) update(TODOTasks[0].location()!);
@@ -385,8 +384,7 @@ function goHome(token: Symbol): void {
             score += TODOTasks[1].reward();
             mkDialog("领取成功", `你已经成功领取了<strong>${TODOTasks[1].reward()}</strong>tCO₂e的碳排放配额。`);
             TODOTasks.splice(1, 1);
-            saveData();
-            update(Folder.home());
+            init(Folder.home());
             return;
         }
         if (TODOTasks[1].location() !== null) update(TODOTasks[1].location()!);
@@ -396,8 +394,7 @@ function goHome(token: Symbol): void {
             level++;
             mkDialog("升级成功", `你已经成功升级到Level ${level}，获得了新的铭牌。`);
             isHasNewNameplate = true;
-            saveData();
-            update(Folder.home());
+            init(Folder.home());
         })
     }
     main?.scrollTo(pagePos.home)

@@ -33,6 +33,7 @@ class TurnToPage {
                 saveKey.checked = false;
         });
         (_b = document.querySelector("#mainPwd")) === null || _b === void 0 ? void 0 : _b.addEventListener("change", () => {
+            Task.tryDone("妈妈再也不用担心我密码泄露啦！");
             mainPwd = document.querySelector("#mainPwd").value;
             saveData();
         });
@@ -181,7 +182,7 @@ class TurnToPage {
         main === null || main === void 0 ? void 0 : main.scrollTo(pagePos.bin);
     }
     static showSearch() {
-        var _a, _b;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         main.innerHTML = `<div class="title">搜索</div>
         <div class="form">
             <!-- 搜索表单 -->
@@ -202,11 +203,38 @@ class TurnToPage {
                         搜索
                     </button>
                 </div>
-                <div><input type="checkbox" id="isReg"/><label for="isReg">使用正则表达式</label></div>
+                <p class="action" data-bs-toggle="collapse" href="#searchSetting" aria-expanded="false" role="button" aria-controls="searchSetting">
+                    点此展开或折叠高级设置
+                </p>
+                <div class="collapse" id="searchSetting">
+                    <div class="card card-body">
+                        <div><input type="checkbox" id="isReg"/><label for="isReg">使用正则表达式</label></div>
+                        <p>搜索密码的以下部分：</p>
+                        <div style="margin-left: 20px">
+                            <div><input type="checkbox" id="searchFrom"/><label for="searchFrom">来源</label></div>
+                            <div><input type="checkbox" id="searchUname"/><label for="searchUname">用户名</label></div>
+                            <div><input type="checkbox" id="searchPwd"/><label for="searchPwd">密码</label></div>
+                            <div><input type="checkbox" id="searchEmail"/><label for="searchEmail">邮箱</label></div>
+                            <div><input type="checkbox" id="searchPhone"/><label for="searchPhone">手机号</label></div>
+                            <div><input type="checkbox" id="searchNote"/><label for="searchNote">备注</label></div>
+                        </div>
+                        <div><input type="checkbox" id="searchFolder"/><label for="searchFolder">搜索文件夹</label></div>
+                    </div>
+                </div>
             </div>
             <div id="searchResult" style="width: 100%;"></div>
         </div>
             `;
+        const searchSetting = {
+            isReg: document.querySelector("#isReg"),
+            searchFrom: document.querySelector("#searchFrom"),
+            searchUname: document.querySelector("#searchUname"),
+            searchPwd: document.querySelector("#searchPwd"),
+            searchPhone: document.querySelector("#searchPhone"),
+            searchEmail: document.querySelector("#searchEmail"),
+            searchNote: document.querySelector("#searchNote"),
+            searchFolder: document.querySelector("#searchFolder"),
+        };
         document.querySelector("#searchInput").addEventListener("keydown", (e) => {
             if (e.key == "Enter" && !e.isComposing) {
                 e.target.blur();
@@ -216,14 +244,19 @@ class TurnToPage {
         document.querySelector("#searchInput").addEventListener("input", () => {
             searchMemory.txt = document.querySelector("#searchInput").value;
         });
-        (_a = document.querySelector("#isReg")) === null || _a === void 0 ? void 0 : _a.addEventListener("change", () => {
-            searchMemory.isReg = document.querySelector("#isReg").checked;
-        });
-        (_b = document.querySelector("#searchBtn")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
+        (_a = document.querySelector("#isReg")) === null || _a === void 0 ? void 0 : _a.addEventListener("change", () => { searchMemory.setting.isReg = searchSetting.isReg.checked; });
+        (_b = document.querySelector("#searchFrom")) === null || _b === void 0 ? void 0 : _b.addEventListener("change", () => { searchMemory.setting.searchFrom = searchSetting.searchFrom.checked; });
+        (_c = document.querySelector("#searchUname")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", () => { searchMemory.setting.searchUname = searchSetting.searchUname.checked; });
+        (_d = document.querySelector("#searchPwd")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", () => { searchMemory.setting.searchPwd = searchSetting.searchPwd.checked; });
+        (_e = document.querySelector("#searchPhone")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => { searchMemory.setting.searchPhone = searchSetting.searchPhone.checked; });
+        (_f = document.querySelector("#searchEmail")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => { searchMemory.setting.searchEmail = searchSetting.searchEmail.checked; });
+        (_g = document.querySelector("#searchNote")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", () => { searchMemory.setting.searchNote = searchSetting.searchNote.checked; });
+        (_h = document.querySelector("#searchFolder")) === null || _h === void 0 ? void 0 : _h.addEventListener("change", () => { searchMemory.setting.searchFolder = searchSetting.searchFolder.checked; });
+        (_j = document.querySelector("#searchBtn")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
             searchMemory.isSearched = true;
             searchMemory.lastSearchTxt = searchMemory.txt;
-            function canFound(test, by, reg = false) {
-                if (reg) {
+            function canFound(test, by) {
+                if (searchSetting.isReg.checked) {
                     return new RegExp(by).test(test);
                 }
                 else {
@@ -242,17 +275,7 @@ class TurnToPage {
                     });
                     cnt++;
                 }
-                if (canFound(list[index].from, input.value, isReg.checked))
-                    mkIt();
-                else if (canFound(list[index].uname, input.value, isReg.checked))
-                    mkIt();
-                else if (canFound(list[index].phone, input.value, isReg.checked))
-                    mkIt();
-                else if (canFound(list[index].pwd, input.value, isReg.checked))
-                    mkIt();
-                else if (canFound(list[index].email, input.value, isReg.checked))
-                    mkIt();
-                else if (canFound(list[index].note, input.value, isReg.checked))
+                if (hasItemCard(list[index]))
                     mkIt();
             }
             function showFolderCard(item) {
@@ -260,36 +283,35 @@ class TurnToPage {
                     var _a;
                     result.insertAdjacentHTML("beforeend", item.getCard(cnt));
                     (_a = document.querySelector(`#card${cnt}-path`)) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
-                        update(Folder.fromString(item.parent));
+                        update(item);
                     });
                     cnt++;
                 }
-                if (canFound(item.stringify(), input.value, isReg.checked))
+                if (hasItemCard(item))
                     mkIt();
             }
             function hasItemCard(item) {
                 if (item instanceof Password) {
-                    if (canFound(item.from, input.value, isReg.checked))
+                    if (canFound(item.from, input.value) && searchSetting.searchFrom.checked)
                         return true;
-                    else if (canFound(item.uname, input.value, isReg.checked))
+                    else if (canFound(item.uname, input.value) && searchSetting.searchUname.checked)
                         return true;
-                    else if (canFound(item.phone, input.value, isReg.checked))
+                    else if (canFound(item.phone, input.value) && searchSetting.searchPhone.checked)
                         return true;
-                    else if (canFound(item.pwd, input.value, isReg.checked))
+                    else if (canFound(item.pwd, input.value) && searchSetting.searchPwd.checked)
                         return true;
-                    else if (canFound(item.email, input.value, isReg.checked))
+                    else if (canFound(item.email, input.value) && searchSetting.searchEmail.checked)
                         return true;
-                    else if (canFound(item.note, input.value, isReg.checked))
+                    else if (canFound(item.note, input.value) && searchSetting.searchNote.checked)
                         return true;
                     return false;
                 }
                 else {
-                    return canFound(item.stringify(), input.value, isReg.checked);
+                    return canFound(item.name, input.value) && searchSetting.searchFolder.checked;
                 }
             }
             const input = document.querySelector("#searchInput");
             const result = document.querySelector("#searchResult");
-            const isReg = document.querySelector("#isReg");
             let cnt = 0, flag = false;
             result.innerHTML = "";
             if (input.value == "") {
@@ -351,15 +373,19 @@ class TurnToPage {
                 </div>`;
             }
         });
+        searchSetting.isReg.checked = searchMemory.setting.isReg;
+        searchSetting.searchFrom.checked = searchMemory.setting.searchFrom;
+        searchSetting.searchUname.checked = searchMemory.setting.searchUname;
+        searchSetting.searchPwd.checked = searchMemory.setting.searchPwd;
+        searchSetting.searchEmail.checked = searchMemory.setting.searchEmail;
+        searchSetting.searchPhone.checked = searchMemory.setting.searchPhone;
+        searchSetting.searchNote.checked = searchMemory.setting.searchNote;
+        searchSetting.searchFolder.checked = searchMemory.setting.searchFolder;
         if (searchMemory.lastSearchTxt != "" && searchMemory.isSearched) {
             document.querySelector("#searchInput").value = searchMemory.lastSearchTxt;
             document.querySelector("#searchBtn").click();
-            document.querySelector("#searchInput").value = "";
         }
-        if (searchMemory.txt != "" || searchMemory.isReg) {
-            document.querySelector("#searchInput").value = searchMemory.txt;
-            document.querySelector("#isReg").checked = searchMemory.isReg;
-        }
+        document.querySelector("#searchInput").value = searchMemory.txt;
         main === null || main === void 0 ? void 0 : main.scrollTo(pagePos.search);
         return;
     }
@@ -504,8 +530,7 @@ function update(dir, checkable = false) {
                 moveItem(Type.Folder, num, Folder.fromString(dir.parent));
             }
             Task.tryDone("文件向上冲");
-            saveData();
-            update(dir, checkable);
+            init(dir, checkable);
         });
         parent.addEventListener("dragover", (e) => {
             if (folderIsEditing)
@@ -761,8 +786,7 @@ function update(dir, checkable = false) {
             }
             move(index);
             Task.tryDone("幻影显形");
-            saveData();
-            update(dir, checkable);
+            init(dir, checkable);
         });
         if (checkable) {
             const check = document.querySelector(`#folder${i}-checkboxDiv`);
