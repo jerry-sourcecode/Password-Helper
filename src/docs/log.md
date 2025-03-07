@@ -5,7 +5,6 @@
 npm i electron --save-dev
 npm i nodemon --save--dev
 npm i typescript --save--dev
-npm i crypto-js
 npm i bootstrap
 ```
 如果想要启动程序，运行以下命令
@@ -64,9 +63,89 @@ pbkdf2: (pwd: string, salt: string) => string;
 1. electron
 2. typescript
 3. crypto-js
-4. 所有图标搜集自https://icon.sucai999.com
+4. bootstrap
+5. 所有图标搜集自https://icon.sucai999.com
 - 图标复制来自https://github.com/dariushhpg1/IconaMoon
 - 图标删除来自Google
 - 图标编辑来自https://github.com/artcoholic/akar-icons
 - 图标新增文件夹来自https://github.com/stephenhutchings/typicons.font
 - 其余为原创图标或作者许可证未要求表明来源。
+
+# 文件结构
+```shell
+src
+├─ docs
+│      log.md
+│
+├─ electron
+│      main.js
+│      preload.js
+│
+├─ pages
+│  │  crypto-js.min.js
+│  │  data.js
+│  │  dialog.js
+│  │  home.js
+│  │  index.css
+│  │  index.html
+│  │  index.js
+│  │  mainPage.js
+│  │  password.js
+│  │  tools.js
+│  │
+│  └─ resources
+│          copy.png
+│          copy_done.png
+│          delete.png
+│          edit.png
+│          newFolder.png
+│          up.png
+│
+├─ pages-ts
+│      data.ts
+│      dialog.ts
+│      home.ts
+│      index.ts
+│      mainPage.ts
+│      password.ts
+│      tools.ts
+│
+└─ types
+    │  crypto-js.d.ts
+    │  index.d.ts
+    └─ bootstrap
+```
+**文件夹**
+- `docs`：存放文档
+- `electron`：存放electron相关文件
+- `pages`：存放html、css、js文件
+- `pages-ts`：存放ts文件
+- `types`：存放类型声明文件
+
+**文件**
+- `log.md`：存放日志
+- `main.js`：electron主进程文件
+- `preload.js`：electron预加载文件
+- `crypto-js.min.js`：crypto-js库
+- `index.css`：全局样式文件
+- `index.html`：主页面html文件
+- `data.ts => data.js`：一些关于数据处理的函数文件
+- `dialog.ts => dialog.js`：关于处理对话框的文件
+- `home.ts => home.js`：“我的”页面文件
+- `index.ts => index.js`：主文件，程序的切入口
+- `mainPage.ts => mainPage.js`：主界面文件
+- `password.ts => password.js`：常见的、易被猜到的密码文件
+- `tools.ts => tools.js`：工具文件
+
+**类型声明文件**
+- `crypto-js.d.ts`：crypto-js库类型声明文件
+- `index.d.ts`：全局类型声明文件
+
+**图标**
+- `copy.png`：复制图标
+- `copy_done.png`：复制完成图标
+- `delete.png`：删除图标
+- `edit.png`：编辑图标
+- `newFolder.png`：新建文件夹图标
+- `up.png`：向上图标
+
