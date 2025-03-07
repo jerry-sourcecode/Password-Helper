@@ -23,6 +23,7 @@ textarea{
     margin-bottom: 5px;
     resize: none;
     cursor: text;
+    overflow-y: scroll;
 }
 input[type="text"], input[type="password"]{
     width: 25vw;
