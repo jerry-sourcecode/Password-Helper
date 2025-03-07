@@ -449,6 +449,7 @@ function update(dir, checkable = false) {
     else {
         document.querySelector("span#nav-mainPage").classList.add("active");
     }
+    pagePos.mainDir = dir;
     let faname = Folder.fromString(dir.parent).name;
     let loca = dir.toReadableHTML(); // location
     let inner = `<div class="title">密码列表</div>

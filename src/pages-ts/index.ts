@@ -118,12 +118,14 @@ type PagePosition = {top: number, left: number};
 let pagePos: {
     home: PagePosition,
     main: PagePosition,
+    mainDir: Folder,
     setting: PagePosition,
     bin: PagePosition,
     search: PagePosition,
 } = {
     home: {top: 0, left: 0},
     main: {top: 0, left: 0},
+    mainDir: Folder.root(),
     setting: {top: 0, left: 0},
     bin: {top: 0, left: 0},
     search: {top: 0, left: 0},
@@ -633,7 +635,7 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
 
 function fmain(){
     document.querySelector("span#nav-mainPage")!.addEventListener("click", () => {
-        update(Folder.root());
+        update(pagePos.mainDir);
     });
     document.querySelector("span#nav-setting")!.addEventListener("click", () => {
         update(Folder.setting());

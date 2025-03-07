@@ -120,6 +120,7 @@ let searchMemory = {
 let pagePos = {
     home: { top: 0, left: 0 },
     main: { top: 0, left: 0 },
+    mainDir: Folder.root(),
     setting: { top: 0, left: 0 },
     bin: { top: 0, left: 0 },
     search: { top: 0, left: 0 },
@@ -668,7 +669,7 @@ function showPwd(by, index, from) {
 }
 function fmain() {
     document.querySelector("span#nav-mainPage").addEventListener("click", () => {
-        update(Folder.root());
+        update(pagePos.mainDir);
     });
     document.querySelector("span#nav-setting").addEventListener("click", () => {
         update(Folder.setting());
