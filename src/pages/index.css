@@ -4,6 +4,7 @@
     font-family: Microsoft YaHei, Heiti SC, tahoma, arial, Hiragino Sans GB, "\5B8B\4F53", sans-serif;
     margin: 0;
     padding: 0;
+    overflow: hidden;
 }
 p, span, label{
     margin-bottom: 0;
@@ -52,7 +53,7 @@ div.main{
     align-items: center;
     flex-direction: column;
     width: 50vw;
-    height: 96vh;
+    height: 98vh;
 }
 div.main div.content{
     display: flex;
