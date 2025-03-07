@@ -108,6 +108,7 @@ let searchMemory = {
     lastSearchTxt: "",
     setting: {
         isReg: false,
+        isCaseSensitive: true,
         searchFrom: true,
         searchUname: true,
         searchPwd: true,

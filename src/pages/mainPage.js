@@ -182,7 +182,7 @@ class TurnToPage {
         main === null || main === void 0 ? void 0 : main.scrollTo(pagePos.bin);
     }
     static showSearch() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         main.innerHTML = `<div class="title">搜索</div>
         <div class="form">
             <!-- 搜索表单 -->
@@ -209,6 +209,7 @@ class TurnToPage {
                 <div class="collapse" id="searchSetting">
                     <div class="card card-body">
                         <div><input type="checkbox" id="isReg"/><label for="isReg">使用正则表达式</label></div>
+                        <div><input type="checkbox" id="isCaseSensitive"/><label for="isCaseSensitive">大小写敏感</label></div>
                         <p>搜索密码的以下部分：</p>
                         <div style="margin-left: 20px">
                             <div><input type="checkbox" id="searchFrom"/><label for="searchFrom">来源</label></div>
@@ -227,6 +228,7 @@ class TurnToPage {
             `;
         const searchSetting = {
             isReg: document.querySelector("#isReg"),
+            isCaseSensitive: document.querySelector("#isCaseSensitive"),
             searchFrom: document.querySelector("#searchFrom"),
             searchUname: document.querySelector("#searchUname"),
             searchPwd: document.querySelector("#searchPwd"),
@@ -245,17 +247,22 @@ class TurnToPage {
             searchMemory.txt = document.querySelector("#searchInput").value;
         });
         (_a = document.querySelector("#isReg")) === null || _a === void 0 ? void 0 : _a.addEventListener("change", () => { searchMemory.setting.isReg = searchSetting.isReg.checked; });
-        (_b = document.querySelector("#searchFrom")) === null || _b === void 0 ? void 0 : _b.addEventListener("change", () => { searchMemory.setting.searchFrom = searchSetting.searchFrom.checked; });
-        (_c = document.querySelector("#searchUname")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", () => { searchMemory.setting.searchUname = searchSetting.searchUname.checked; });
-        (_d = document.querySelector("#searchPwd")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", () => { searchMemory.setting.searchPwd = searchSetting.searchPwd.checked; });
-        (_e = document.querySelector("#searchPhone")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => { searchMemory.setting.searchPhone = searchSetting.searchPhone.checked; });
-        (_f = document.querySelector("#searchEmail")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => { searchMemory.setting.searchEmail = searchSetting.searchEmail.checked; });
-        (_g = document.querySelector("#searchNote")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", () => { searchMemory.setting.searchNote = searchSetting.searchNote.checked; });
-        (_h = document.querySelector("#searchFolder")) === null || _h === void 0 ? void 0 : _h.addEventListener("change", () => { searchMemory.setting.searchFolder = searchSetting.searchFolder.checked; });
-        (_j = document.querySelector("#searchBtn")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
+        (_b = document.querySelector("#isCaseSensitive")) === null || _b === void 0 ? void 0 : _b.addEventListener("change", () => { searchMemory.setting.isCaseSensitive = searchSetting.isCaseSensitive.checked; });
+        (_c = document.querySelector("#searchFrom")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", () => { searchMemory.setting.searchFrom = searchSetting.searchFrom.checked; });
+        (_d = document.querySelector("#searchUname")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", () => { searchMemory.setting.searchUname = searchSetting.searchUname.checked; });
+        (_e = document.querySelector("#searchPwd")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => { searchMemory.setting.searchPwd = searchSetting.searchPwd.checked; });
+        (_f = document.querySelector("#searchPhone")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => { searchMemory.setting.searchPhone = searchSetting.searchPhone.checked; });
+        (_g = document.querySelector("#searchEmail")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", () => { searchMemory.setting.searchEmail = searchSetting.searchEmail.checked; });
+        (_h = document.querySelector("#searchNote")) === null || _h === void 0 ? void 0 : _h.addEventListener("change", () => { searchMemory.setting.searchNote = searchSetting.searchNote.checked; });
+        (_j = document.querySelector("#searchFolder")) === null || _j === void 0 ? void 0 : _j.addEventListener("change", () => { searchMemory.setting.searchFolder = searchSetting.searchFolder.checked; });
+        (_k = document.querySelector("#searchBtn")) === null || _k === void 0 ? void 0 : _k.addEventListener("click", () => {
             searchMemory.isSearched = true;
             searchMemory.lastSearchTxt = searchMemory.txt;
             function canFound(test, by) {
+                if (!searchSetting.isCaseSensitive.checked) {
+                    test = test.toLowerCase();
+                    by = by.toLowerCase();
+                }
                 if (searchSetting.isReg.checked) {
                     return new RegExp(by).test(test);
                 }
@@ -374,6 +381,7 @@ class TurnToPage {
             }
         });
         searchSetting.isReg.checked = searchMemory.setting.isReg;
+        searchSetting.isCaseSensitive.checked = searchMemory.setting.isCaseSensitive;
         searchSetting.searchFrom.checked = searchMemory.setting.searchFrom;
         searchSetting.searchUname.checked = searchMemory.setting.searchUname;
         searchSetting.searchPwd.checked = searchMemory.setting.searchPwd;

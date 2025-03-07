@@ -204,6 +204,7 @@ class TurnToPage{
                 <div class="collapse" id="searchSetting">
                     <div class="card card-body">
                         <div><input type="checkbox" id="isReg"/><label for="isReg">使用正则表达式</label></div>
+                        <div><input type="checkbox" id="isCaseSensitive"/><label for="isCaseSensitive">大小写敏感</label></div>
                         <p>搜索密码的以下部分：</p>
                         <div style="margin-left: 20px">
                             <div><input type="checkbox" id="searchFrom"/><label for="searchFrom">来源</label></div>
@@ -222,6 +223,7 @@ class TurnToPage{
             `;
         const searchSetting = {
             isReg: document.querySelector("#isReg") as HTMLInputElement,
+            isCaseSensitive: document.querySelector("#isCaseSensitive") as HTMLInputElement,
             searchFrom: document.querySelector("#searchFrom") as HTMLInputElement,
             searchUname: document.querySelector("#searchUname") as HTMLInputElement,
             searchPwd: document.querySelector("#searchPwd") as HTMLInputElement,
@@ -241,6 +243,7 @@ class TurnToPage{
         })
 
         document.querySelector("#isReg")?.addEventListener("change", () => {searchMemory.setting.isReg = searchSetting.isReg.checked;})
+        document.querySelector("#isCaseSensitive")?.addEventListener("change", () => {searchMemory.setting.isCaseSensitive = searchSetting.isCaseSensitive.checked;})
         document.querySelector("#searchFrom")?.addEventListener("change", () => {searchMemory.setting.searchFrom = searchSetting.searchFrom.checked;})
         document.querySelector("#searchUname")?.addEventListener("change", () => {searchMemory.setting.searchUname = searchSetting.searchUname.checked;})
         document.querySelector("#searchPwd")?.addEventListener("change", () => {searchMemory.setting.searchPwd = searchSetting.searchPwd.checked;})
@@ -253,6 +256,10 @@ class TurnToPage{
             searchMemory.isSearched = true;
             searchMemory.lastSearchTxt = searchMemory.txt;
             function canFound(test: string, by: string): boolean{
+                if (!searchSetting.isCaseSensitive.checked){
+                    test = test.toLowerCase();
+                    by = by.toLowerCase();
+                }
                 if (searchSetting.isReg.checked){
                     return new RegExp(by).test(test);
                 } else {
@@ -364,6 +371,7 @@ class TurnToPage{
         })
 
         searchSetting.isReg.checked = searchMemory.setting.isReg;
+        searchSetting.isCaseSensitive.checked = searchMemory.setting.isCaseSensitive;
         searchSetting.searchFrom.checked = searchMemory.setting.searchFrom;
         searchSetting.searchUname.checked = searchMemory.setting.searchUname;
         searchSetting.searchPwd.checked = searchMemory.setting.searchPwd;

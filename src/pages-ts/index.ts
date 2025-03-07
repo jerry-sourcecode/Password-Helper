@@ -91,6 +91,7 @@ let searchMemory: {
     lastSearchTxt: string,
     setting: {
         isReg: boolean,
+        isCaseSensitive: boolean,
         searchFrom: boolean,
         searchUname: boolean,
         searchPwd: boolean,
@@ -105,6 +106,7 @@ let searchMemory: {
     lastSearchTxt: "",
     setting: {
         isReg: false,
+        isCaseSensitive: true,
         searchFrom: true,
         searchUname: true,
         searchPwd: true,
