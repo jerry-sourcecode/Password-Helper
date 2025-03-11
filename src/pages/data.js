@@ -225,16 +225,19 @@ class Folder {
         return new Folder("H", "");
     }
     static setting() {
-        return new Folder("S", "");
+        return new Folder("SET", "");
     }
     static search() {
-        return new Folder("F", "");
+        return new Folder("SCH", "");
     }
     static change() {
         return new Folder("C", "");
     }
     static append() {
         return new Folder("A", "");
+    }
+    static show() {
+        return new Folder("SHW", "");
     }
     static fromString(str, time = Date.now().toString()) {
         if (str[str.length - 1] != "/")

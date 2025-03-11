@@ -226,16 +226,19 @@ class Folder {
         return new Folder("H", "");
     }
     static setting(): Folder{
-        return new Folder("S", "");
+        return new Folder("SET", "");
     }
     static search(): Folder{
-        return new Folder("F", "");
+        return new Folder("SCH", "");
     }
     static change(): Folder{
         return new Folder("C", "");
     }
     static append(): Folder{
         return new Folder("A", "");
+    }
+    static show(): Folder{
+        return new Folder("SHW", "");
     }
     static fromString(str: string, time: string = Date.now().toString()): Folder{
         if (str[str.length - 1] != "/") str += "/";

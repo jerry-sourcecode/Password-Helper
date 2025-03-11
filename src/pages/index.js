@@ -548,6 +548,8 @@ function checkSafety(index) {
 // 显示密码， from表示从哪个页面跳转过来的，如果是从最近删除跳转过来的，返回时会返回到最近删除页面，否则返回到主页面，需要填写Page枚举
 function showPwd(by, index, from) {
     var _a, _b, _c, _d, _e, _f, _g;
+    updatePos();
+    currentFolder = Folder.show();
     let inner = `
     <div class="form">
     <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
