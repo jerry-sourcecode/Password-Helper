@@ -70,7 +70,7 @@ function setIpc(win){
 }
 
 function createWindow(){
-    const isDebug = true;
+    const isDebug = false;
     const win = new BrowserWindow({
         width: 800,
         height: 600,
