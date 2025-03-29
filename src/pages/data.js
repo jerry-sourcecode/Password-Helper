@@ -325,10 +325,19 @@ class Folder {
         return lans;
     }
 }
+var SortBy;
+(function (SortBy) {
+    SortBy[SortBy["time_early"] = 0] = "time_early";
+    SortBy[SortBy["time_late"] = 1] = "time_late";
+    SortBy[SortBy["name"] = 2] = "name";
+    SortBy[SortBy["name_reverse"] = 3] = "name_reverse";
+})(SortBy || (SortBy = {}));
 class MainSetting {
     constructor() {
         this.autoCopy = false;
         this.easyAppend = false;
+        this.pwdSortBy = SortBy.name;
+        this.folderSortBy = SortBy.name;
     }
 }
 function saveData() {

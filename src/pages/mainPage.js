@@ -1,7 +1,7 @@
 "use strict";
 class TurnToPage {
     static showSetting() {
-        var _a, _b, _c, _d, _e, _f, _g;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         // 显示设置页面
         main.innerHTML = `
         <div class="title">设置</div>
@@ -15,6 +15,22 @@ class TurnToPage {
             <div class="settingFormItem">
                 <div><input type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label></div>
                 <div><input type="checkbox" id="easyAppend" ${mainSetting.easyAppend ? "checked" : ""}/><label for="easyAppend">添加密码时，使用快速而简洁的表单形式来代替创建引导形式。</label></div>
+                <div><label for="pwdSortBy">密码显示顺序设置：</label>
+                    <select id="pwdSortBy">
+                        <option value="name" ${mainSetting.pwdSortBy === SortBy.name ? "selected" : ""}>按照来源顺序</option>
+                        <option value="name_reserve" ${mainSetting.pwdSortBy === SortBy.name_reverse ? "selected" : ""}>按照来源倒序</option>
+                        <option value="time_late" ${mainSetting.pwdSortBy === SortBy.time_late ? "selected" : ""}>按照修改时间顺序</option>
+                        <option value="time_early" ${mainSetting.pwdSortBy === SortBy.time_early ? "selected" : ""}>按照修改时间倒序</option>
+                    </select>
+                </div>
+                <div><label for="folderSortBy">文件夹显示顺序设置：</label>
+                    <select id="folderSortBy">
+                        <option value="name" ${mainSetting.folderSortBy === SortBy.name ? "selected" : ""}>按照文件夹名顺序</option>
+                        <option value="name_reserve" ${mainSetting.folderSortBy === SortBy.name_reverse ? "selected" : ""}>按照文件夹名倒序</option>
+                        <option value="time_late" ${mainSetting.folderSortBy === SortBy.time_late ? "selected" : ""}>按照重命名时间顺序</option>
+                        <option value="time_early" ${mainSetting.folderSortBy === SortBy.time_early ? "selected" : ""}>按照重命名时间倒序</option>
+                    </select>
+                </div>
             </div>
             <p>导出设置</p>
             <div class="settingFormItem" style="text-indent: 2em">
@@ -49,19 +65,51 @@ class TurnToPage {
             mainSetting.easyAppend = document.querySelector("#easyAppend").checked;
             saveData();
         });
-        (_e = document.querySelector("div#exportUMC")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
+        (_e = document.querySelector("#pwdSortBy")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => {
+            switch (document.querySelector("#pwdSortBy").value) {
+                case "name":
+                    mainSetting.pwdSortBy = SortBy.name;
+                    break;
+                case "name_reserve":
+                    mainSetting.pwdSortBy = SortBy.name_reverse;
+                    break;
+                case "time_early":
+                    mainSetting.pwdSortBy = SortBy.time_early;
+                    break;
+                case "time_late":
+                    mainSetting.pwdSortBy = SortBy.time_late;
+            }
+            saveData();
+        });
+        (_f = document.querySelector("#folderSortBy")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => {
+            switch (document.querySelector("#folderSortBy").value) {
+                case "name":
+                    mainSetting.folderSortBy = SortBy.name;
+                    break;
+                case "name_reserve":
+                    mainSetting.folderSortBy = SortBy.name_reverse;
+                    break;
+                case "time_early":
+                    mainSetting.folderSortBy = SortBy.time_early;
+                    break;
+                case "time_late":
+                    mainSetting.folderSortBy = SortBy.time_late;
+            }
+            saveData();
+        });
+        (_g = document.querySelector("div#exportUMC")) === null || _g === void 0 ? void 0 : _g.addEventListener("click", () => {
             let ans = window.msg.showSaveDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
             if (ans === undefined)
                 return;
             saveUMC(ans);
         });
-        (_f = document.querySelector("div#importUMC")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
+        (_h = document.querySelector("div#importUMC")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", () => {
             let ans = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
             if (ans === undefined)
                 return;
             readUMC(ans);
         });
-        (_g = document.querySelector("#reset")) === null || _g === void 0 ? void 0 : _g.addEventListener("click", () => {
+        (_j = document.querySelector("#reset")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
             mkDialog("警告", "此操作会清空所有数据并立即重启，你确定要继续吗？", ["确定", "取消"])
                 .then((res) => {
                 if (res == 0) {
@@ -494,10 +542,28 @@ function update(dir, checkable = false) {
         }
     }
     nowFolders.sort((a, b) => {
-        return a.item.name.localeCompare(b.item.name);
+        switch (mainSetting.folderSortBy) {
+            case SortBy.name:
+                return a.item.name.localeCompare(b.item.name);
+            case SortBy.name_reverse:
+                return b.item.name.localeCompare(a.item.name);
+            case SortBy.time_early:
+                return Number(a.item.moDate) - Number(b.item.moDate);
+            case SortBy.time_late:
+                return Number(b.item.moDate) - Number(a.item.moDate);
+        }
     });
     nowPwds.sort((a, b) => {
-        return a.item.from.localeCompare(b.item.from);
+        switch (mainSetting.folderSortBy) {
+            case SortBy.name:
+                return a.item.from.localeCompare(b.item.from);
+            case SortBy.name_reverse:
+                return b.item.from.localeCompare(a.item.from);
+            case SortBy.time_early:
+                return Number(a.item.moDate) - Number(b.item.moDate);
+            case SortBy.time_late:
+                return Number(b.item.moDate) - Number(a.item.moDate);
+        }
     });
     nowFolders.forEach((value, idx) => {
         inner += value.item.getHtml(idx, checkable);
@@ -742,6 +808,7 @@ function update(dir, checkable = false) {
                 }
                 Task.tryDone("文件夹改名记");
                 folderList[nowFolders[i].idx] = new Folder(newFolder);
+                folderList[nowFolders[i].idx].moDate = Date.now().toString();
                 init(dir);
             });
         });

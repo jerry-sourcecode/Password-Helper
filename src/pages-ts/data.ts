@@ -319,9 +319,18 @@ class Folder {
     }
 }
 
+enum SortBy{
+    time_early,
+    time_late,
+    name,
+    name_reverse
+}
+
 class MainSetting{
     autoCopy: boolean = false;
     easyAppend: boolean = false;
+    pwdSortBy: SortBy = SortBy.name;
+    folderSortBy: SortBy = SortBy.name;
 }
 
 function saveData(): void{ // 保存数据
