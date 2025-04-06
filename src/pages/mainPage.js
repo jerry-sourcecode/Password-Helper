@@ -1,5 +1,12 @@
 "use strict";
+/**
+ * 如果你不在{@link mainPage.ts}这个文件中，请使用{@linkcode update}函数
+ * @private
+ */
 class TurnToPage {
+    /**
+     * 展示“设置”页面
+     */
     static showSetting() {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         // 显示设置页面
@@ -120,6 +127,10 @@ class TurnToPage {
         });
         main === null || main === void 0 ? void 0 : main.scrollTo(pagePos.setting);
     }
+    /**
+     * 展示“最近删除”页面
+     * @param checkable 是否开启“选择模式”
+     */
     static showBin(checkable = false) {
         var _a, _b, _c, _d, _e, _f;
         // 显示最近删除的密码
@@ -229,6 +240,9 @@ class TurnToPage {
         });
         main === null || main === void 0 ? void 0 : main.scrollTo(pagePos.bin);
     }
+    /**
+     * 展示“搜索”页面
+     */
     static showSearch() {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         main.innerHTML = `<div class="title">搜索</div>
@@ -445,6 +459,10 @@ class TurnToPage {
         main === null || main === void 0 ? void 0 : main.scrollTo(pagePos.search);
         return;
     }
+    /**
+     * 切换到“设置”页面。
+     * @param token 访问token，请填写{@linkcode TurnToPage.Token}
+     */
     static setting(token) {
         if (token === TurnToPage.token) {
             this.showSetting();
@@ -453,6 +471,10 @@ class TurnToPage {
             throw new Error("token is not correct");
         }
     }
+    /**
+     * 切换到“最近删除”页面。
+     * @param token 访问token，请填写{@linkcode TurnToPage.Token}
+     */
     static bin(token, checkable = false) {
         if (token === TurnToPage.token) {
             this.showBin(checkable);
@@ -461,6 +483,10 @@ class TurnToPage {
             throw new Error("token is not correct");
         }
     }
+    /**
+     * 切换到“搜索”页面。
+     * @param token 访问token，请填写{@linkcode TurnToPage.Token}
+     */
     static search(token) {
         if (token === TurnToPage.token) {
             this.showSearch();
@@ -470,7 +496,13 @@ class TurnToPage {
         }
     }
 }
+/**一个token，可以填写在这个类的其余公开函数的token参数 */
 TurnToPage.token = Symbol("byFunctionUpdate");
+/**
+ * 更改页面，支持切换到“最近删除”、“设置”、“搜索”页面。
+ * @param dir 要切换到的文件夹
+ * @param checkable 切换后是否开启“选择”模式
+ */
 function update(dir, checkable = false) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });

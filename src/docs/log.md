@@ -45,7 +45,7 @@ warning: (title: string, msg: string, choice?: string[]) => Promise<number>;
     - `choice`：每一项是一个字符串，表示一个按钮上面的文字。
 - 返回值：表示用户按下按钮在`choice`中对应的索引，取消则返回-1。
 - 作用：显示一个阻塞程序的模态对话框，其中，`info`函数会显示一个消息样态的对话框，而`warning`会显示一个警告样态的对话框。
-## cryp
+## Cryp
 ```ts
 encrypt: (data: string, pwd: string) => string;
 decrypt: (data: string, pwd: string) => string;

@@ -1,4 +1,8 @@
 "use strict";
+/**
+ * @file password.ts
+ * @description 常用密码表，用于进行安全性提示
+ */
 const simplePwd = [
     "12345",
     "123456",

@@ -1,5 +1,13 @@
 let toastIdCounter = 0;
 
+/**
+ * 在顶部显示一个对话框
+ * @param title 标题
+ * @param message 信息
+ * @param option 选项，一个字符串列表，每一个字符串表示一个选项
+ * @param isStatic 是否是静态的（静态指无法通过点击其他区域来关闭对话框）
+ * @returns 如果用户点击了按钮，返回用户的选项在option中的索引，否则promise将始终不会被兑现
+ */
 function mkDialog(title: string, message: string, option: Array<string> = ["确定"], isStatic: boolean = false): Promise<Number>{
     const modalDiv = document.querySelector("#modal") as HTMLDivElement;
     let optionHTML = "";
@@ -34,6 +42,15 @@ function mkDialog(title: string, message: string, option: Array<string> = ["确�
         }
     });
 }
+
+/**
+ * 在右下角显示一个Toast
+ * @param title 标题
+ * @param subtitle 副标题
+ * @param message 信息
+ * @param optionName 选项，一个字符串列表，每一个字符串表示一个选项
+ * @returns  如果用户点击了按钮，返回用户的选项在option中的索引，否则promise将始终不会被兑现
+ */
 function mkToast(title: string, subtitle: string, message: string, optionName: Array<string> = []){
     const id = toastIdCounter++;
     let optionHTML = "";

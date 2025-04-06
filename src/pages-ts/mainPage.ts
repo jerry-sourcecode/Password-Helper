@@ -1,4 +1,11 @@
+/**
+ * 如果你不在{@link mainPage.ts}这个文件中，请使用{@linkcode update}函数
+ * @private
+ */
 class TurnToPage{
+    /**
+     * 展示“设置”页面
+     */
     private static showSetting() : void {
         // 显示设置页面
         main!.innerHTML = `
@@ -125,6 +132,10 @@ class TurnToPage{
         main?.scrollTo(pagePos.setting)
     }
 
+    /**
+     * 展示“最近删除”页面
+     * @param checkable 是否开启“选择模式”
+     */
     private static showBin(checkable: boolean = false) : void{
         // 显示最近删除的密码
         let inner : string = `<div class="title">最近删除</div>
@@ -231,6 +242,9 @@ class TurnToPage{
         main?.scrollTo(pagePos.bin);
     }
 
+    /**
+     * 展示“搜索”页面
+     */
     private static showSearch(): void{
         main!.innerHTML = `<div class="title">搜索</div>
         <div class="form">
@@ -442,8 +456,13 @@ class TurnToPage{
         return;
     }
 
+    /**一个token，可以填写在这个类的其余公开函数的token参数 */
     static token = Symbol("byFunctionUpdate");
 
+    /**
+     * 切换到“设置”页面。
+     * @param token 访问token，请填写{@linkcode TurnToPage.Token}
+     */
     static setting(token: symbol): void{
         if (token === TurnToPage.token){
             this.showSetting();
@@ -453,6 +472,10 @@ class TurnToPage{
         }
     }
 
+    /**
+     * 切换到“最近删除”页面。
+     * @param token 访问token，请填写{@linkcode TurnToPage.Token}
+     */
     static bin(token: symbol, checkable: boolean = false): void{
         if (token === TurnToPage.token){
             this.showBin(checkable);
@@ -462,6 +485,10 @@ class TurnToPage{
         }
     }
 
+    /**
+     * 切换到“搜索”页面。
+     * @param token 访问token，请填写{@linkcode TurnToPage.Token}
+     */
     static search(token: symbol): void{
         if (token === TurnToPage.token){
             this.showSearch();
@@ -471,7 +498,11 @@ class TurnToPage{
         }
     }
 }
-
+/**
+ * 更改页面，支持切换到“最近删除”、“设置”、“搜索”页面。
+ * @param dir 要切换到的文件夹
+ * @param checkable 切换后是否开启“选择”模式
+ */
 function update(dir: Folder, checkable: boolean = false) : void{
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => {bootstrap.Tooltip.getInstance(tooltip)?.dispose();});
 

@@ -347,7 +347,7 @@ function saveData() {
 }
 function getData(ismemory = isremember) {
     let salt = randstr(16);
-    let enc = cryp.pbkdf2(mainPwd, salt);
+    let enc = Cryp.pbkdf2(mainPwd, salt);
     let pwdListUpdated = [];
     let folderListUpdated = [];
     let binItemUpdated = [];
@@ -364,15 +364,15 @@ function getData(ismemory = isremember) {
     for (let index = 0; index < TODOTasks.length; index++) {
         tasksUpdated.push(TODOTasks[index].enc(enc));
     }
-    let encScore = cryp.encrypt(score.toString(), enc);
-    let enclevel = cryp.encrypt(level.toString(), enc);
+    let encScore = Cryp.encrypt(score.toString(), enc);
+    let enclevel = Cryp.encrypt(level.toString(), enc);
     // 数据保存
     return JSON.stringify({
         version: "1.2",
         pwd: pwdListUpdated,
         folder: folderListUpdated,
         recent: binItemUpdated,
-        mainPwd: cryp.pbkdf2(enc, salt),
+        mainPwd: Cryp.pbkdf2(enc, salt),
         mainSetting: mainSetting,
         salt: salt,
         memory: ismemory ? mainPwd : null,

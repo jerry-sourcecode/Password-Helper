@@ -76,12 +76,12 @@ class TaskMap {
     }
     enc(key) {
         return {
-            task: cryp.encrypt(this.task.toString(), key),
-            doTimes: cryp.encrypt(this.doTimes.toString(), key)
+            task: Cryp.encrypt(this.task.toString(), key),
+            doTimes: Cryp.encrypt(this.doTimes.toString(), key)
         };
     }
     static dec(obj, key) {
-        return new TaskMap(parseInt(cryp.decrypt(obj.task, key)), parseInt(cryp.decrypt(obj.doTimes, key)));
+        return new TaskMap(parseInt(Cryp.decrypt(obj.task, key)), parseInt(Cryp.decrypt(obj.doTimes, key)));
     }
     done() {
         return this.doTimes >= tasks[this.task].times;

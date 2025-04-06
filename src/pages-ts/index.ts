@@ -1,21 +1,42 @@
-class cryp{
+/**
+ * @class 加密函数静态库
+ */
+class Cryp{
+    /**
+     * AES加密函数
+     * @param data 加密的文字
+     * @param key 密钥
+     * @returns 加密结果
+     * @memberof Cryp
+     */
     static encrypt(data: string, key: string): string{
         let k = CryptoJS.AES.encrypt(data, key).toString(CryptoJS.format.OpenSSL);
         return k;
     }
-    static decrypt(data: string, key: string, retries = -1): string {
+    /**
+     * AES解密函数
+     * @param data 被加密的文字
+     * @param key 密钥
+     * @returns 解密结果
+     * @memberof Cryp
+     */
+    static decrypt(data: string, key: string): string {
         try {
             // 先使用Latin1编码获取原始字节数据
             const bytes = CryptoJS.AES.decrypt(data, key);
             const UTF8String = bytes.toString(CryptoJS.enc.Utf8);
             return UTF8String;
         } catch {
-            if (retries === 0) {
-                throw "No retry times!!!";
-            }
-            return cryp.decrypt(data, key, retries - 1);
+            return Cryp.decrypt(data, key);
         }
     }
+    /**
+     * pbkdf2加密函数
+     * @param data 数据
+     * @param salt 盐值
+     * @returns 加密后的数据
+     * @memberof Cryp
+     */
     static pbkdf2(data: string, salt: string): string{
         return CryptoJS.PBKDF2(data, salt, {
                     keySize: 256 / 32,
@@ -24,6 +45,7 @@ class cryp{
                 }).toString(CryptoJS.enc.Hex);
     }
 }
+
 function encrypt(data: Item | Task, key: string, index: number = 0): Item | Task{ // 加密
     let enc: Item | Task;
     if (data instanceof Password) enc = new Password(data);
@@ -36,9 +58,9 @@ function encrypt(data: Item | Task, key: string, index: number = 0): Item | Task
         if (data[v] === null){
             (enc as any)[v] = null
         } else if (typeof data[v] === "string"){
-            (enc as any)[v] = cryp.encrypt(data[v], key)
+            (enc as any)[v] = Cryp.encrypt(data[v], key)
         } else if (typeof data[v] === "number"){
-            (enc as any)[v] = cryp.encrypt((<number>data[v]).toString(), key)
+            (enc as any)[v] = Cryp.encrypt((<number>data[v]).toString(), key)
         } else if (typeof data[v] === "object" && (<Folder>data[v]).type == Type.Folder){
             (enc as any)[v] = new Folder(<Folder>encrypt(data[v], key, index));
         } else {
@@ -59,9 +81,9 @@ function decrypt(data:Item | Task, key: string, index: number = 0): Item | Task{
         if (data[v] === null){
             (dec as any)[v] = null
         } else if (typeof data[v] === "string"){
-            (dec as any)[v] = cryp.decrypt(data[v], key)
+            (dec as any)[v] = Cryp.decrypt(data[v], key)
         } else if (typeof data[v] === "number"){
-            (dec as any)[v] = cryp.decrypt((<number>data[v]).toString(), key)
+            (dec as any)[v] = Cryp.decrypt((<number>data[v]).toString(), key)
         } else if (typeof data[v] === "object" && (<Folder>data[v]).type == Type.Folder){
             (dec as any)[v] = new Folder(<Folder>decrypt(data[v], key, index));
         } else {
@@ -70,21 +92,36 @@ function decrypt(data:Item | Task, key: string, index: number = 0): Item | Task{
     }
     return dec;
 }
-    
-let addBtn = document.querySelector("#addPwd"); // 添加密码按钮
-const main = document.querySelector("#contentDiv"); // main界面
-let pwdList : Array<Password> = []; // 密码列表
-let binItem : Array<Item> = []; // 最近删除的密码列表
-let folderList : Array<Folder> = []; // 文件夹列表
-let mainPwd : string = ""; // 主密码
-let isremember : boolean = false; // 是否记住密码
-let folderIsEditing : boolean = false; // 是否正在编辑文件夹
+
+/** 添加密码按钮 */
+let addBtn = document.querySelector("#addPwd");
+/** main界面 */
+const main = document.querySelector("#contentDiv");
+/** 密码列表 */
+let pwdList : Array<Password> = [];
+/** 最近删除的密码列表 */
+let binItem : Array<Item> = [];
+/** 文件夹列表 */
+let folderList : Array<Folder> = [];
+/** 主密码 */
+let mainPwd : string = "";
+/** 是否记住密码 */
+let isremember : boolean = false;
+/** 是否正在编辑文件夹 */
+let folderIsEditing : boolean = false;
+/** 当前所处路径 */
 let currentFolder : Folder = Folder.root();
+/** 当前复制的密码/文件夹 */
 let clipboard: Set<clipboardItem> = new Set();
+/** 设置对象 */
 let mainSetting: MainSetting = new MainSetting();
+/** 获得的碳排放量 */
 let score: number = 0;
+/** 目前等级 */
 let level: number = 1;
+/** 待完成的任务 */
 let TODOTasks: Array<TaskMap> = [];
+/** 搜索设置的记忆 */
 let searchMemory: {
     txt: string, 
     isSearched: boolean, 
@@ -116,6 +153,7 @@ let searchMemory: {
         searchFolder: true,
     }
 };
+/** 页面滚动位置的记忆 */
 type PagePosition = {top: number, left: number};
 let pagePos: {
     home: PagePosition,
@@ -134,6 +172,11 @@ let pagePos: {
 };
 
 // 一些工具函数
+/**
+ * 得到可读的时间格式
+ * @param time 时间
+ * @returns 可读的时间格式
+ */
 function getReadableTime(time: Date | string): string{
     if (typeof time === "string") time = new Date(Number(time));
     let minite = time.getMinutes(), strminite: string = minite.toString();
@@ -142,6 +185,13 @@ function getReadableTime(time: Date | string): string{
     if (sec < 10) strsec = "0" + sec;
     return time.getFullYear() + "/" + (time.getMonth() + 1) + "/" + time.getDate() + " " + time.getHours() + ":" + strminite + ":" + strsec;
 }
+/**
+ * 检查文件夹是否存在
+ * @param path 文件夹路径
+ * @param name 文件夹名称
+ * @param exceptIndex 排除的索引
+ * @returns 是否存在
+ */
 function hasDir(path: string, name: string, exceptIndex: Array<number> = []): boolean{
     for(let i = 0; i < folderList.length; i++){
         if (folderList[i].name == name && folderList[i].parent == path && exceptIndex.indexOf(i) == -1){
@@ -150,6 +200,10 @@ function hasDir(path: string, name: string, exceptIndex: Array<number> = []): bo
     }
     return false;
 }
+/**
+ * 递归创建文件夹
+ * @param dir 文件夹路径
+ */
 function mkdir(dir: Folder): void{ // 创建文件夹
     let parent = Folder.fromString(dir.parent);
     if (folderList.findIndex(v => v.isSame(dir)) != -1 || dir.isSame(Folder.root())){
@@ -161,6 +215,9 @@ function mkdir(dir: Folder): void{ // 创建文件夹
     folderList.push(dir);
     saveData();
 }
+/**
+ * 获取当前页面的滚动位置
+ */
 function updatePos(): void{
     if (currentFolder.isSame(Folder.bin())){
         pagePos.bin = getScroll();
@@ -179,6 +236,13 @@ function init(dir: Folder, checkable: boolean = false): void{
     saveData();
     update(dir, checkable);
 }
+/**
+ * 移动一个密码/文件夹到另一个文件夹
+ * @param type 类型
+ * @param index 在对应列表的索引
+ * @param dir_to 目标文件夹
+ * @param isCopy 是否保留源文件
+ */
 function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = false) : void {
     if (type == Type.Password) {
         if (isCopy) pwdList[pwdList.push(new Password(pwdList[index])) - 1].dir = new Folder(dir_to);
@@ -208,6 +272,11 @@ function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = f
         else folderList[index].parent = dir_to.stringify();
     }
 }
+/**
+ * 尝试完成一些任务
+ * @param isAppend 是否是添加密码
+ * @param index 被修改的密码的索引
+ */
 function doneMkPwd(isAppend: boolean = false, index: number = -1): void{
     if (isAppend){
         Task.tryDone("初出茅庐");
@@ -218,7 +287,13 @@ function doneMkPwd(isAppend: boolean = false, index: number = -1): void{
     if (checkSafety(index) == "")
         Task.tryDone("安全密码养成记");
 }
-// 渲染编辑密码界面，并更改密码，isAppend表示是否是添加密码，为true时，取消将会删除该密码，会返回main界面
+/**
+ * 渲染编辑密码界面，并更改密码
+ * @param by 密码列表
+ * @param index 密码列表中目标项的索引
+ * @param dir 从什么文件夹来到的这个页面
+ * @param isAppend 表示是否是添加密码，为true时，取消将会删除该密码，并返回main界面
+ */
 function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : boolean = false) : void{
     if(!isAppend){
         updatePos();
@@ -283,7 +358,13 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
         update(dir);
     });
 }
-// 删除密码，type为类型，index为索引，dir_from为来源文件夹，在外部的调用中，_save不应被填写
+/**
+ * 删除一个密码/文件夹
+ * @param type 类型
+ * @param index 目标在对应列表的索引
+ * @param dir_from 来源文件夹
+ * @param _save 此选项请保持默认，不应被填写
+ */
 function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean = true) : void{
     if (type == Type.Password) {
         Task.tryDone("密码清理，双倍给力！");
@@ -313,8 +394,11 @@ function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean 
         init(dir_from)
     }
 }
+/**
+ * 彻底删除最近删除的密码
+ * @param index 密码在列表中的索引
+ */
 function deletebinItem(index: number | Array<number>) : void{
-    // 删除最近删除的密码
     if (Array.isArray(index)){
         for(let i of index){
             if (binItem[i].type == Type.Password) {
@@ -332,8 +416,11 @@ function deletebinItem(index: number | Array<number>) : void{
     }
     saveData();
 }
+/**
+ * 恢复最近删除的密码
+ * @param index 密码在列表中的索引
+ */
 function recoverPwd(index: number) : void{
-    // 恢复最近删除的密码
     binItem[index].rmDate = null;
     if (binItem[index] instanceof Password) {
         Task.tryDone("密码复活术");
@@ -357,7 +444,13 @@ function recoverPwd(index: number) : void{
     binItem.splice(index, 1);
     saveData();
 }
-function addPwd(dir: Folder, step: number = 0, result: Password = new Password("", "", "", "", "", "", dir)) : void{
+/**
+ * 添加一个密码
+ * @param dir 添加到的文件夹
+ * @param _step 当前步骤，在外部调用下不应被填写
+ * @param _result 当前密码对象，在外部调用下不应被填写
+ */
+function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password("", "", "", "", "", "", dir)) : void{
     updatePos();
     currentFolder = Folder.append();
     if (mainSetting.easyAppend){
@@ -366,22 +459,22 @@ function addPwd(dir: Folder, step: number = 0, result: Password = new Password("
         return;
     }
     // 添加密码
-    if (step == 0) {
+    if (_step == 0) {
         main!.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
-        <div class="formItem"><label for="input">来源<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${result.from}" /><span class="check"></span></div>
+        <div class="formItem"><label for="input">来源<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.from}" /><span class="check"></span></div>
         </div>
         <div class="formItem"><p>你可以填写此密码的来源，如网站网址、应用程序的名称等。请注意，此项必填。</p></div>
         </div>
         <div class="action" id="nxt"><p>下一步</p></div>
         <div class="action" id="cancel"><p>取消</p></div>`
     }
-    else if (step == 1) {
+    else if (_step == 1) {
         main!.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
-        <div class="formItem"><label for="input">用户名<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${result.uname}"/><span class="check"></span></div>
+        <div class="formItem"><label for="input">用户名<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.uname}"/><span class="check"></span></div>
         </div>
         <div class="formItem"><p>你可以填写此密码对应的用户名。请注意，此项必填。</p></div>
         </div>
@@ -389,11 +482,11 @@ function addPwd(dir: Folder, step: number = 0, result: Password = new Password("
         <div class="action" id="nxt"><p>下一步</p></div>
         <div class="action" id="cancel"><p>取消</p></div>`
     }
-    else if (step == 2) {
+    else if (_step == 2) {
         main!.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
-        <div class="formItem"><label for="input">密码<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${result.pwd}"/><span class="check"></span></div>
+        <div class="formItem"><label for="input">密码<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.pwd}"/><span class="check"></span></div>
         <div class="formItem"><p class="icon" style="margin-left: 0;" id="randpwd">随机生成一个高强度的密码</p></div>
         </div>
         <div class="formItem"><p>你可以填写密码。请注意，此项必填。</p></div>
@@ -402,16 +495,16 @@ function addPwd(dir: Folder, step: number = 0, result: Password = new Password("
         <div class="action" id="nxt"><p>下一步</p></div>
         <div class="action" id="cancel"><p>取消</p></div>`
         document.querySelector("#randpwd")!.addEventListener("click", () => {
-            result.pwd = randstr(16);
-            (document.getElementById("input") as HTMLInputElement)!.value = result.pwd;
+            _result.pwd = randstr(16);
+            (document.getElementById("input") as HTMLInputElement)!.value = _result.pwd;
             (document.querySelector("input") as HTMLInputElement)!.dispatchEvent(new Event("input"));
         })
-    } else if (step == 3) {
+    } else if (_step == 3) {
         main!.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
-        <div class="formItem"><label for="input_email">邮箱：</label><input type="text" id="input_email" value="${result.email}"></div>
-        <div class="formItem"><label for="input_phone">手机号：</label><input type="text" id="input_phone" value="${result.phone}"></div>
+        <div class="formItem"><label for="input_email">邮箱：</label><input type="text" id="input_email" value="${_result.email}"></div>
+        <div class="formItem"><label for="input_phone">手机号：</label><input type="text" id="input_phone" value="${_result.phone}"></div>
         <div class="formItem"><p>你可以填写辅助信息。请注意，以上内容为选填。</p></div>
         </div>
         <div class="action" id="pre"><p>上一步</p></div>
@@ -419,11 +512,11 @@ function addPwd(dir: Folder, step: number = 0, result: Password = new Password("
         <div class="action" id="cancel"><p>取消</p></div>
         `
     }
-    else if (step == 4) {
+    else if (_step == 4) {
         main!.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
-        <div class="formItem"><label for="input">备注：</label><br><textarea id="input" placeholder="可以在这里输入一些想说的话。">${result.note}</textarea></div>
+        <div class="formItem"><label for="input">备注：</label><br><textarea id="input" placeholder="可以在这里输入一些想说的话。">${_result.note}</textarea></div>
         <div class="formItem"><p>你可以填写一些备注。请注意，以上内容为选填。</p></div>
         </div>
         <div class="action" id="pre"><p>上一步</p></div>
@@ -431,16 +524,16 @@ function addPwd(dir: Folder, step: number = 0, result: Password = new Password("
         <div class="action" id="cancel"><p>取消</p></div>
         `
     }
-    if (step != 3 && step != 4){
+    if (_step != 3 && _step != 4){
         document.getElementById("input")!.addEventListener("input", (e) => {
-            if (step == 0) {
-                result.from = (document.getElementById("input") as HTMLInputElement)!.value;
+            if (_step == 0) {
+                _result.from = (document.getElementById("input") as HTMLInputElement)!.value;
             }
-            else if (step == 1) {
-                result.uname = (document.getElementById("input") as HTMLInputElement)!.value;
+            else if (_step == 1) {
+                _result.uname = (document.getElementById("input") as HTMLInputElement)!.value;
             }
-            else if (step == 2) {
-                result.pwd = (document.getElementById("input") as HTMLInputElement)!.value;
+            else if (_step == 2) {
+                _result.pwd = (document.getElementById("input") as HTMLInputElement)!.value;
             }
             let tgt: HTMLInputElement = e.target as HTMLInputElement;
             if (tgt.value == ""){
@@ -453,42 +546,47 @@ function addPwd(dir: Folder, step: number = 0, result: Password = new Password("
         });
         (document.querySelector("input") as HTMLInputElement)!.dispatchEvent(new Event("input"));
     }
-    if (step == 4) document.querySelector("#input")?.addEventListener("input", () => {
-        result.note = (document.getElementById("input") as HTMLTextAreaElement)!.value;
+    if (_step == 4) document.querySelector("#input")?.addEventListener("input", () => {
+        _result.note = (document.getElementById("input") as HTMLTextAreaElement)!.value;
     })
-    if (step == 3){
+    if (_step == 3){
         document.getElementById("input_email")!.addEventListener("input", () => {
-            result.email = (document.getElementById("input_email") as HTMLInputElement)!.value;
+            _result.email = (document.getElementById("input_email") as HTMLInputElement)!.value;
         })
         document.getElementById("input_phone")!.addEventListener("input", () => {
-            result.phone = (document.getElementById("input_phone") as HTMLInputElement)!.value;
+            _result.phone = (document.getElementById("input_phone") as HTMLInputElement)!.value;
         })
     }
     document.getElementById("nxt")!.addEventListener("click", () => {
-        if (step == 0) {
+        if (_step == 0) {
             if ((document.getElementById("input") as HTMLInputElement)!.value == "") return mkDialog("提交错误！", "来源不能为空！");
         }
-        else if (step == 1) {
+        else if (_step == 1) {
             if ((document.getElementById("input") as HTMLInputElement)!.value == "") return mkDialog("提交错误！", "用户名不能为空！");
         }
-        else if (step == 2) {
+        else if (_step == 2) {
             if ((document.getElementById("input") as HTMLInputElement)!.value == "") return mkDialog("提交错误！", "密码不能为空！");
         }
-        if (step == 4) {
-            pwdList.push(new Password(result.from, result.uname, result.pwd, result.note, result.email, result.phone, dir));
+        if (_step == 4) {
+            pwdList.push(new Password(_result.from, _result.uname, _result.pwd, _result.note, _result.email, _result.phone, dir));
             doneMkPwd(true, pwdList.length - 1);
             init(dir);
             return;
         }
-        addPwd(dir, step + 1, result);
+        addPwd(dir, _step + 1, _result);
     });
-    if (step != 0) document.getElementById("pre")!.addEventListener("click", () => {
-        addPwd(dir, step - 1, result);
+    if (_step != 0) document.getElementById("pre")!.addEventListener("click", () => {
+        addPwd(dir, _step - 1, _result);
     });
     document.getElementById("cancel")!.addEventListener("click", () => {
         update(dir);
     })
 }
+/**
+ * 检查密码的安全性
+ * @param index 密码的索引
+ * @returns HTML代码，安全性提示
+ */
 function checkSafety(index: number) : string{
     let list : Array<number> = [], safety: string = "";
     for(let i = 0; i < pwdList.length; i++){
@@ -524,7 +622,12 @@ function checkSafety(index: number) : string{
     }
     return safety;
 }
-// 显示密码， from表示从哪个页面跳转过来的，如果是从最近删除跳转过来的，返回时会返回到最近删除页面，否则返回到主页面，需要填写Page枚举
+/**
+ * 展示密码
+ * @param by 密码列表
+ * @param index 目标密码在by中的索引
+ * @param from 从哪个页面跳转过来的，如果是从最近删除跳转过来的，返回时会返回到最近删除页面，否则返回到主页面，需要填写Page枚举
+ */
 function showPwd(by: Array<Password>, index: number, from : Folder) : void{
     updatePos();
     currentFolder = Folder.show();
@@ -636,7 +739,9 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
     });
 }
 
-
+/**
+ * 主函数
+ */
 function fmain(){
     document.querySelector("span#nav-mainPage")!.addEventListener("click", () => {
         update(pagePos.mainDir);
@@ -662,12 +767,12 @@ function fmain(){
         mainSetting = obj.mainSetting;
         const salt = obj.salt;
         if (obj.isPwdNull){
-            enc(cryp.pbkdf2("", salt));
+            enc(Cryp.pbkdf2("", salt));
         } else {
             if (obj.memory !== null && obj.memory !== undefined){
                 let m = obj.memory;
-                let dpwd = cryp.pbkdf2(m, salt);
-                if (cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
+                let dpwd = Cryp.pbkdf2(m, salt);
+                if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
                     isremember = true;
                     mainPwd = m;
                     enc(dpwd);
@@ -688,8 +793,8 @@ function fmain(){
                 (<HTMLDivElement>document.querySelector("#navBar")).style.display = "none";
                 document.querySelector("#Yes")?.addEventListener("click", () => {
                     let m = (document.querySelector("#mainPwd") as HTMLInputElement).value;
-                    let dpwd = cryp.pbkdf2(m, salt);
-                    if (cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
+                    let dpwd = Cryp.pbkdf2(m, salt);
+                    if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
                         isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
                         mainPwd = m;
                         (<HTMLDivElement>document.querySelector("#navBar")).style.display = "flex";
@@ -722,8 +827,8 @@ function fmain(){
             obj.TODOTasks.forEach((element: any) => {
                 TODOTasks.push(TaskMap.dec(element, key));
             })
-            score = Number(cryp.decrypt(obj.score, key));
-            level = Number(cryp.decrypt(obj.level, key));
+            score = Number(Cryp.decrypt(obj.score, key));
+            level = Number(Cryp.decrypt(obj.level, key));
             (document.querySelector("#nav-home") as HTMLSpanElement).click();
         }
     }).catch((err) => {
