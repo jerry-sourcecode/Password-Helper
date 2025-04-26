@@ -36,6 +36,12 @@ class Password {
             this.moDate = fromOrdata.moDate;
         }
     }
+    /**
+     * 得到基础的HTML代码
+     * @param id 作为这个HTML的唯一身份标识符的一部分，而给的一个编号
+     * @param checkable 是否可以被选择
+     * @returns HTML代码
+     */
     getHtml(id, checkable = false) {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
             <img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="编辑">
@@ -55,6 +61,12 @@ class Password {
             ${tool}
         </div>`;
     }
+    /**
+     * 得到卡片形式的HTML代码
+     * @param id 作为这个HTML的唯一身份标识符的一部分，而给的一个编号
+     * @param checkable 是否可以被选择
+     * @returns HTML代码
+     */
     getCard(id, isRecent = false) {
         return `
         <div class="card" style="width: 100%;" id="card${id}">
@@ -75,6 +87,12 @@ class Password {
         </div>
         `;
     }
+    /**
+     * 得到回收站形式的HTML代码
+     * @param id 作为这个HTML的唯一身份标识符的一部分，而给的一个编号
+     * @param checkable 是否可以被选择
+     * @returns HTML代码
+     */
     getHtmlRecent(id, checkable = false) {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
                 <p class="icon" id="recent${id}-recover" style="margin-right: 8px;">恢复</p>
@@ -94,6 +112,13 @@ class Password {
             ${tool}
         </div>`;
     }
+    /**
+     * 格式化字符串，超过最大长度的部分用...代替
+     * @param str 源字符串
+     * @param max 最大长度
+     * @param OmitWhere 在前面还是后面省略，前面为"front"，后面为"back"
+     * @returns 处理后的字符串
+     */
     static format(str, max = showOtherMaxLength, OmitWhere = "back") {
         if (str.length == 0) {
             return "暂无";
@@ -117,6 +142,12 @@ class Password {
         }
         return str;
     }
+    /**
+     * 获取密码的基本html
+     * @param isRecent 是否是最近删除的密码
+     * @returns HTML代码
+     * @description 这个函数是为了避免重复代码而写的，主要是为了在getHtml和getHtmlRecent中使用
+     */
     getBaseHtml(isRecent = false) {
         return `<p>来源：${Password.format(this.from)}</p>
             <p>用户名：${Password.format(this.uname)}</p>
@@ -127,22 +158,30 @@ class Password {
             <p>${isRecent ? "删除时间" : "修改时间"}：${getReadableTime(isRecent ? this.rmDate : this.moDate)}</p>`;
     }
     ;
+    /**
+     * 检查当前密码是否在folder或folder的子孙目录的目录下
+     * @param folder 文件夹
+     * @returns 结果
+     */
     isin(folder) {
-        // 检查当前密码是否在folder或folder的子孙目录的目录下
         const f = folder.stringify();
         return f == this.dir.stringify().slice(0, f.length);
     }
 }
+/**
+ * 文件夹类
+ * @member name 文件夹名称
+ * @member parent 文件夹路径
+ * @member moDate 修改日期
+ * @member rmDate 删除日期
+ * @member type 文件夹类型
+ * @member lock 加密锁密码
+ * @member cachePwd 如果用户已经输入过了密码，则缓存密码
+*/
 class Folder {
-    /*
-    name: 文件夹名称
-    parent: 文件夹路径
-    parent的格式如下：
-    ":/a/"表示在主文件夹下的a文件夹内
-    ""表示在主文件夹下
-    特别的，主文件夹的name为":"，parent为""，在回收站中的文件name为"~"，parent为""
-    */
     constructor(nameOrClass, parent = ":", time = Date.now().toString()) {
+        this.lock = null; // 加密锁
+        this.cachePwd = null; // 缓存密码
         this.type = Type.Folder;
         this.type = Type.Folder;
         if (typeof nameOrClass === "string") {
@@ -156,12 +195,21 @@ class Folder {
             this.parent = nameOrClass.parent;
             this.moDate = nameOrClass.moDate;
             this.rmDate = nameOrClass.rmDate;
+            this.lock = nameOrClass.lock === undefined ? null : nameOrClass.lock; // 为了兼容旧版本
+            this.cachePwd = nameOrClass.cachePwd === undefined ? null : nameOrClass.cachePwd; // 为了兼容旧版本
         }
     }
+    /**
+     * 得到基础的HTML代码
+     * @param id 作为这个HTML的唯一身份标识符的一部分，而给的一个编号
+     * @param checkable 是否可以被选择
+     * @returns HTML代码
+     */
     getHtml(id, checkable = false) {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
             <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="重命名">
             <img class="icon" id="folder${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
+            ${this.lock !== null && this.cachePwd === null ? `<img src="../pages/resources/lock.png" title="此文件夹已被加密！" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top">` : ""}
         </div>`;
         if (checkable)
             return `<div class="info" style="flex-direction: row;" id="folder${id}" draggable="true">
@@ -179,6 +227,12 @@ class Folder {
             ${tool}
         </div>`;
     }
+    /**
+     * 得到卡片形式的HTML代码
+     * @param id 作为这个HTML的唯一身份标识符的一部分，而给的一个编号
+     * @param checkable 是否可以被选择
+     * @returns HTML代码
+     */
     getCard(id, isRecent = false) {
         return `
         <div class="card" style="width: 100%;" id="card${id}">
@@ -193,6 +247,12 @@ class Folder {
         </div>
         `;
     }
+    /**
+     * 得到回收站形式的HTML代码
+     * @param id 作为这个HTML的唯一身份标识符的一部分，而给的一个编号
+     * @param checkable 是否可以被选择
+     * @returns HTML代码
+     */
     getHtmlRecent(id, checkable = false) {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
                 <p class="icon" id="recent${id}-recover" style="margin-right: 8px;">恢复</p>
@@ -215,30 +275,68 @@ class Folder {
         </div>
         `;
     }
+    /**
+     * 获得根目录文件夹
+     * @returns 根目录
+     */
     static root() {
         return new Folder(":", "");
     }
+    /**
+     * 获得回收站文件夹
+     * @returns 回收站
+     */
     static bin() {
         return new Folder("~", "");
     }
+    /**
+     * 获得主文件夹
+     * @returns 主文件夹
+     */
     static home() {
         return new Folder("H", "");
     }
+    /**
+     * 获得设置文件夹
+     * @returns 设置文件夹
+     */
     static setting() {
         return new Folder("SET", "");
     }
+    /**
+     * 获得搜索文件夹
+     * @returns 搜索文件夹
+     */
     static search() {
         return new Folder("SCH", "");
     }
+    /**
+     * 获得更改文件文件夹
+     * @returns 标志着更改文件的文件夹
+     */
     static change() {
         return new Folder("C", "");
     }
+    /**
+     * 获得添加文件文件夹
+     * @returns 标志着添加文件的文件夹
+     */
     static append() {
         return new Folder("A", "");
     }
+    /**
+     * 获得显示文件文件夹
+     * @returns 标志着显示文件的文件夹
+     */
     static show() {
         return new Folder("SHW", "");
     }
+    /**
+     * 通过字符串获得文件夹对象
+     * @param str 文件夹路径
+     * @param time 时间戳
+     * @returns 文件夹对象
+     */
     static fromString(str, time = Date.now().toString()) {
         if (str[str.length - 1] != "/")
             str += "/";
@@ -246,30 +344,59 @@ class Folder {
         let k = arr.slice(0, arr.length - 2).join("/");
         return new Folder(arr[arr.length - 2], k == "" ? "" : k + "/", time);
     }
+    /**
+     * 获得文件夹的字符串表示
+     * @returns 文件夹路径
+     */
     stringify() {
         return this.parent + this.name + "/";
     }
+    /**
+     * 比较两个文件夹是否相同
+     * @param folder 要比较的文件夹
+     * @returns 比较结果
+     */
     isSame(folder) {
         return this.stringify() == folder.stringify();
     }
+    /**
+     * 更改路径
+     * @param parent 新的父文件夹
+     */
     setParent(parent) {
         this.parent = parent.stringify();
     }
+    /**
+     * 获得父文件夹对象
+     * @returns 父文件夹对象
+     */
     getParent() {
         return Folder.fromString(this.parent);
     }
-    // 判断item是否包含在当前文件夹中
+    /**
+     * 判断item是否包含在当前文件夹中
+     * @param item 要检查的文件或文件夹
+     * @returns 结果
+     */
     isInclude(item) {
         if (item instanceof Folder)
             return item.parent == this.stringify();
         else
             return item.dir.isSame(this);
     }
-    // 判断文件夹是否在当前文件夹或后代文件夹下
+    /**
+     * 判断文件夹是否在当前文件夹或后代文件夹下
+     * @param folder 要检查的文件夹
+     * @returns 结果
+     */
     isin(folder) {
         const f = folder.stringify();
         return f == this.stringify().slice(0, f.length);
     }
+    /**
+     * 可读的HTML代码
+     * @returns 结果
+     */
     toReadableHTML() {
         let ans = this.stringify(), lans = [{ text: "主文件夹", index: 1 }], tmp = "";
         for (let i = 2; i < ans.length; i++) {
@@ -314,6 +441,10 @@ class Folder {
         </nav>
         `, num: lans.length };
     }
+    /**
+     * 可读的文本
+     * @returns 结果
+     */
     toReadableText() {
         let ans = this.stringify(), lans = "主文件夹";
         for (let i = 1; i < ans.length - 1; i++) {
@@ -325,6 +456,14 @@ class Folder {
         return lans;
     }
 }
+/**
+ * 排序类型枚举
+ * @description 用于排序的枚举类型
+ * @member time_early 按照时间从早到晚排序
+ * @member time_late 按照时间从晚到早排序
+ * @member name 按照名称从小到大排序
+ * @member name_reverse 按照名称从大到小排序
+ */
 var SortBy;
 (function (SortBy) {
     SortBy[SortBy["time_early"] = 0] = "time_early";
@@ -340,11 +479,20 @@ class MainSetting {
         this.folderSortBy = SortBy.name;
     }
 }
+/**
+ * 数据保存
+ * @description 保存数据到本地磁盘
+ */
 function saveData() {
     // 数据保存
     let data = getData();
     window.fs.save("./data", data);
 }
+/**
+ * 获得加密后的数据
+ * @param ismemory 是否使用内存密码
+ * @returns 数据
+ */
 function getData(ismemory = isremember) {
     let salt = randstr(16);
     let enc = Cryp.pbkdf2(mainPwd, salt);
@@ -382,10 +530,18 @@ function getData(ismemory = isremember) {
         level: enclevel
     });
 }
+/**
+ * 保存UMC数据到指定路径
+ * @param path 文件路径
+ */
 function saveUMC(path) {
     window.fs.save(path, getData(false));
     mkDialog("导出成功！", `成功导出至${path}`);
 }
+/**
+ * 读取UMC数据
+ * @param path 文件路径
+ */
 function readUMC(path) {
     window.fs.read(path)
         .then((res) => {

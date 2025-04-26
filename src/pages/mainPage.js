@@ -504,8 +504,8 @@ TurnToPage.token = Symbol("byFunctionUpdate");
  * @param checkable 切换后是否开启“选择”模式
  */
 function update(dir, checkable = false) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    removeTips();
     updatePos();
     dir = new Folder(dir);
     currentFolder = dir;
@@ -555,7 +555,10 @@ function update(dir, checkable = false) {
         <p class="${clipboard.size == 0 ? "invaildTool" : "tool"}" id="move">移动</p>
         <p class="tool" id="checkable">选择</p>
         <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" data-bs-toggle="tooltip" data-bs-placement="top" id="newFolder">
-        ${dir.isSame(Folder.root()) ? "" : `<img src="../pages/resources/up.png" title="上移到${faname == ":" ? "主文件夹" : faname}" data-bs-toggle="tooltip" data-bs-placement="top" class="tool" id="up">`}`}
+        ${dir.isSame(Folder.root()) ? "" : `
+        <img src="../pages/resources/up.png" title="上移到${faname == ":" ? "主文件夹" : faname}" data-bs-toggle="tooltip" data-bs-placement="top" class="tool" id="up">
+        <img src="../pages/resources/lock.png" title="加密" class="tool" data-bs-toggle="tooltip" data-bs-placement="top" id="lock">
+        `}`}
     </div>
     `;
     let nowPwds = [];
@@ -715,8 +718,40 @@ function update(dir, checkable = false) {
             clipboard.clear();
             init(dir);
         });
+        (_j = document.querySelector("#lock")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
+            let nowIndex = -1;
+            for (let i = 0; i < folderList.length; i++) {
+                if (folderList[i].isSame(dir)) {
+                    nowIndex = i;
+                    break;
+                }
+            }
+            let choice = ["确定", "取消"];
+            if (folderList[nowIndex].lock !== null)
+                choice.push("取消二级锁");
+            mkDialog("设置二级锁", "输入新的二级锁密码：", choice, true, `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入新密码"></div>`)
+                .then((res) => {
+                if (res == 0) {
+                    const input = document.querySelector("#lockInput");
+                    if (input.value == "") {
+                        mkDialog("设置失败！", "密码不能为空。");
+                        return;
+                    }
+                    folderList[nowIndex].lock = input.value;
+                    folderList[nowIndex].cachePwd = null;
+                    saveData();
+                    mkToast("设置成功！", "", "<p>二级锁已设置成功。</p>");
+                }
+                else if (res == 2) {
+                    folderList[nowIndex].lock = null;
+                    folderList[nowIndex].cachePwd = null;
+                    saveData();
+                    mkToast("取消成功！", "", "<p>二级锁已取消。</p>");
+                }
+            });
+        });
     }
-    (_j = document.querySelector("#newFolder")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
+    (_k = document.querySelector("#newFolder")) === null || _k === void 0 ? void 0 : _k.addEventListener("click", () => {
         let k = new Set();
         for (let i = 0; i < folderList.length; i++) {
             if (dir.isInclude(folderList[i])) {
@@ -799,7 +834,7 @@ function update(dir, checkable = false) {
     for (let i = 0; i < nowFolders.length; i++) {
         const feditBtn = document.querySelector(`#folder${i}-edit`);
         feditBtn.addEventListener("click", (e) => {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });
+            removeTips();
             e === null || e === void 0 ? void 0 : e.stopPropagation();
             const div = document.querySelector(`#folder${i}`);
             div.innerHTML = `<input type="text" value="${nowFolders[i].item.name}" id="folder${i}-input">`;
@@ -856,8 +891,31 @@ function update(dir, checkable = false) {
         folder.addEventListener("click", () => {
             if (folderIsEditing)
                 return;
-            Task.tryDone("新世界");
-            update(nowFolders[i].item);
+            if (nowFolders[i].item.lock !== null && nowFolders[i].item.cachePwd === null) {
+                mkDialog("二级锁", "请输入二级锁密码：", ["确定", "取消"], true, `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入密码"></div>`)
+                    .then((res) => {
+                    if (res == 0) {
+                        const input = document.querySelector("#lockInput");
+                        if (input.value == "") {
+                            mkDialog("解锁失败", "密码不能为空！");
+                            return;
+                        }
+                        if (nowFolders[i].item.lock != input.value) {
+                            mkDialog("解锁失败", "密码错误！");
+                            return;
+                        }
+                        Task.tryDone("新世界");
+                        folderList[nowFolders[i].idx].cachePwd = input.value;
+                        update(nowFolders[i].item);
+                        mkToast("解锁成功！", "", "<p>文件夹已解锁。</p>");
+                    }
+                });
+                return;
+            }
+            else {
+                Task.tryDone("新世界");
+                update(nowFolders[i].item);
+            }
         });
         folder.addEventListener("dragstart", (e) => {
             var _a;

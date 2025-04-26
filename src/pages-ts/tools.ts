@@ -75,3 +75,11 @@ function deepCopy<T>(value: T): T {
     }
     return copied;
 }
+
+/**
+ * 删除所有的悬浮工具提示
+ */
+function removeTips(): void{
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => {bootstrap.Tooltip.getInstance(tooltip)?.dispose();});
+    return;
+}

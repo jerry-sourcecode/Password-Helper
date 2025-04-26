@@ -185,6 +185,9 @@ div.tool{
     align-items: center;
     width: 39vw;
 }
+div.tool .icon.attrib{
+    margin-right: auto;
+}
 p.icon{
     height: 25px;
     margin: 4px;

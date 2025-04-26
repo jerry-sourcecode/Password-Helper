@@ -51,8 +51,10 @@ function encrypt(data, key, index = 0) {
     let enc;
     if (data instanceof Password)
         enc = new Password(data);
-    else if (data instanceof Folder)
+    else if (data instanceof Folder) {
         enc = new Folder(data);
+        enc.cachePwd = null;
+    }
     else
         enc = new Task(data);
     let keyList = Object.keys(data);
@@ -303,7 +305,7 @@ function changePwd(by, index, dir, isAppend = false) {
         updatePos();
         currentFolder = Folder.change();
     }
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });
+    removeTips();
     let inner = `
     <div class="title">${isAppend ? `添加密码` : `编辑密码`}</div>
     <div class="form">

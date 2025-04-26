@@ -76,3 +76,10 @@ function deepCopy(value) {
     }
     return copied;
 }
+/**
+ * 删除所有的悬浮工具提示
+ */
+function removeTips() {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { var _a; (_a = bootstrap.Tooltip.getInstance(tooltip)) === null || _a === void 0 ? void 0 : _a.dispose(); });
+    return;
+}

@@ -6,9 +6,10 @@ let toastIdCounter = 0;
  * @param message 信息
  * @param option 选项，一个字符串列表，每一个字符串表示一个选项
  * @param isStatic 是否是静态的（静态指无法通过点击其他区域来关闭对话框）
+ * @param otherHTML 额外附加的HTML文本
  * @returns 如果用户点击了按钮，返回用户的选项在option中的索引，否则promise将始终不会被兑现
  */
-function mkDialog(title, message, option = ["确定"], isStatic = false) {
+function mkDialog(title, message, option = ["确定"], isStatic = false, otherHTML = "") {
     const modalDiv = document.querySelector("#modal");
     let optionHTML = "";
     for (let i = 0; i < option.length; i++) {
@@ -22,6 +23,7 @@ function mkDialog(title, message, option = ["确定"], isStatic = false) {
             </div>
             <div class="modal-body">
                 <p>${message}</p>
+                ${otherHTML}
             </div>
             <div class="modal-footer">
                 ${optionHTML}

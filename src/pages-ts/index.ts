@@ -49,7 +49,10 @@ class Cryp{
 function encrypt(data: Item | Task, key: string, index: number = 0): Item | Task{ // 加密
     let enc: Item | Task;
     if (data instanceof Password) enc = new Password(data);
-    else if (data instanceof Folder) enc = new Folder(data);
+    else if (data instanceof Folder) {
+        enc = new Folder(data);
+        enc.cachePwd = null;
+    }
     else enc = new Task(data);
     let keyList: Array<keyof (Item | Task)> = <Array<keyof (Item | Task)>>Object.keys(data);
     keyList.sort();
@@ -299,7 +302,7 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
         updatePos();
         currentFolder = Folder.change();
     }
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => {bootstrap.Tooltip.getInstance(tooltip)?.dispose();});
+    removeTips();
     let inner : string = `
     <div class="title">${isAppend?`添加密码`:`编辑密码`}</div>
     <div class="form">
