@@ -776,6 +776,8 @@ function fmain(){
         data = data.replace(/\s/g,'')
         let obj = JSON.parse(data);
 
+        if (obj.version != "1.3") alert("数据版本已过期！");
+
         mainSetting = obj.mainSetting;
         const salt = obj.salt;
         if (obj.isPwdNull){

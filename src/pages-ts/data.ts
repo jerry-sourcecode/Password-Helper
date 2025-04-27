@@ -596,7 +596,7 @@ function getData(ismemory: boolean = isremember): string{
     let enclevel = Cryp.encrypt(level.toString(), enc);
     // 数据保存
     return JSON.stringify({
-        version: "1.2",
+        version: "1.3",
         pwd: pwdListUpdated,
         folder: folderListUpdated,
         recent: binItemUpdated,
