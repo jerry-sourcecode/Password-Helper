@@ -5,15 +5,29 @@ let toastIdCounter = 0;
  * @param title 标题
  * @param message 信息
  * @param option 选项，一个字符串列表，每一个字符串表示一个选项
- * @param isStatic 是否是静态的（静态指无法通过点击其他区域来关闭对话框）
- * @param otherHTML 额外附加的HTML文本
+ * @param flag 选项参数
+ * @param flag.isStatic 是否是静态的（静态指无法通过点击其他区域来关闭对话框）
+ * @param flag.otherHTML 额外附加的HTML文本
+ * @param flag.otherAction 额外附加的行动，将在渲染完成后执行的回调函数
+ * @param flag.defaultOption 默认选项的索引，-1表示没有默认选项，在用户按下回车后会自动被选择
  * @returns 如果用户点击了按钮，返回用户的选项在option中的索引，否则promise将始终不会被兑现
  */
-function mkDialog(title: string, message: string, option: Array<string> = ["确定"], isStatic: boolean = false, otherHTML: string = ""): Promise<Number>{
+function mkDialog(
+    title: string, 
+    message: string, 
+    option: Array<string> = ["确定"], 
+    flag : {
+        isStatic?: boolean, 
+        defaultOption?: number,
+        otherHTML?: string, 
+        otherAction?: ()=>void
+    } = {}
+): Promise<Number>{
+    const { isStatic = false, otherHTML = "", otherAction = () => {}, defaultOption = -1} = flag;
     const modalDiv = document.querySelector("#modal") as HTMLDivElement;
     let optionHTML = "";
     for(let i = 0; i < option.length; i++){
-        optionHTML += `<button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="modalOption${i}">${option[i]}</button>`;
+        optionHTML += `<button type="button" class="btn btn-primary ${defaultOption === i?"active":""}" data-bs-dismiss="modal" id="modalOption${i}">${option[i]}</button>`;
     }
     modalDiv.innerHTML = `
     <div class="modal-dialog">
@@ -35,12 +49,26 @@ function mkDialog(title: string, message: string, option: Array<string> = ["确�
     if (isStatic) myModal = new bootstrap.Modal(modalDiv, {backdrop: "static"});
     else myModal = new bootstrap.Modal(modalDiv);
     myModal.show();
+    modalDiv.addEventListener("shown.bs.modal", () => {
+        otherAction();
+    });
+    modalDiv.addEventListener("keydown", (e) => {
+        if (e.key == "Enter" && !e.isComposing){
+            modalDiv.dispatchEvent(new Event("typeEnterKey"));
+        }
+    })
     return new Promise((resolve, reject) => {
         for(let i = 0; i < option.length; i++){
             document.querySelector(`#modalOption${i}`)?.addEventListener("click", () => {
                 myModal.hide();
                 resolve(i);
             });
+            modalDiv.addEventListener("typeEnterKey", () => {
+                if (defaultOption != -1 && defaultOption < option.length){
+                    myModal.hide();
+                    resolve(defaultOption);
+                }
+            })
         }
     });
 }
