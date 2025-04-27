@@ -1,3 +1,13 @@
+/**
+ * 任务基类
+ * @member title 任务标题
+ * @member description 任务描述
+ * @member location 完成任务的位置
+ * @member reward 任务奖励
+ * @member times 需要完成任务的次数
+ * @member id 任务ID，应保证独一无二
+ * @member type 数据类型，在此类中始终为Type.Task
+ */
 class Task{
     title: string;
     description: string;
@@ -24,28 +34,66 @@ class Task{
             this.times = title.times;
         }
     }
-    static tryDone(id: string): boolean{
+    /**
+     * 完成一次任务
+     * @param id 任务ID
+     */
+    static tryDone(id: string): void{
         let index: number = -1;
-        if (TODOTasks.length >= 1 &&TODOTasks[0].id() === id && !TODOTasks[0].done()) index = 0;
-        else if (TODOTasks.length >= 2 && TODOTasks[1].id() === id && !TODOTasks[1].done()) index = 1;
-        else return false;
-        TODOTasks[index].doTimes++;
+        NEEDTODO.forEach((v, idx) => {
+            if (v.id() == id) index = idx;
+        })
+        if (index == -1) return;
+        if (NEEDTODO[index].done()) return;
+        // 找到对应的任务，并+1进度，如果不在DONE任务中，则添加到DONE任务中
+        let flag: boolean = false;
+        DONETasks.forEach((v, idx) => {
+            if (v.id() == id) {
+                DONETasks[idx].doTimes += 1;
+                index = idx;
+                flag = true;
+                return;
+            }
+        })
+        if (!flag) {
+            tasks.forEach((v, idx) => {
+                if (v.id == id) {
+                    DONETasks.push(new TaskMap(idx, 1));
+                    index = DONETasks.length - 1;
+                    return;
+                }
+            })
+        }
         saveData();
-        if (TODOTasks[index].done()) {
-            mkToast("任务", "任务完成", `<p>你已经成功完成了任务：${TODOTasks[index].title()}</p>`, ["去看看"])
+        if (DONETasks[index].done()) {
+            mkToast("任务", "任务完成", `<p>你已经成功完成了任务：${DONETasks[index].title()}</p>`, ["去看看"])
             .then((res) => {
                 if (res == 0){
                     update(Folder.home());
                 }
             });
         }
-        return true
+        return;
     }
+    /**
+     * 是否完成任务
+     * @param doTimes 完成任务的次数
+     * @returns 结果
+     */
     done(doTimes: number): boolean{
         return doTimes >= this.times;
     }
 }
 
+/**
+ * 铭牌类
+ * @member name 铭牌名称
+ * @member source 铭牌来源
+ * @member use 铭牌用途
+ * @member backstory 铭牌背景故事
+ * @member log 铭牌日志
+ * @member needLevel 铭牌所需等级
+ */
 class Nameplate{
     name: string;
     source: string;
@@ -73,50 +121,94 @@ class Nameplate{
     }
 }
 
-type TaskMapCrypto = {task: string, doTimes: string};
+/**储存任务的加密形式 */
+type TaskMapCrypto = {task: string, doTimes: string, fulfilled: string};
+/**
+ * 任务记录类
+ * @member task 任务在全局数组{@linkcode tasks}中的索引
+ * @member doTimes 完成任务的次数
+ */
 class TaskMap{ // 任务记录
     private task: number;
     doTimes: number;
-    constructor(task: number | TaskMap, doTimes?: number){
+    fulfilled: boolean;
+    constructor(task: number | TaskMap, doTimes?: number, fulfilled?: boolean){
         if (typeof task == "number"){
             this.task = task;
             this.doTimes = doTimes || 0;
+            this.fulfilled = fulfilled || false;
         }
         else{
             this.task = task.task;
             this.doTimes = task.doTimes;
+            this.fulfilled = task.fulfilled;
         }
     }
+    /**
+     * 加密任务记录
+     * @param key 密钥
+     * @returns 加密结果
+     */
     enc(key: string): TaskMapCrypto{
         return{
             task: Cryp.encrypt(this.task.toString(), key),
-            doTimes: Cryp.encrypt(this.doTimes.toString(), key)
+            doTimes: Cryp.encrypt(this.doTimes.toString(), key),
+            fulfilled: Cryp.encrypt(this.fulfilled?"T":"F", key)
         };
     }
+    /**
+     * 解密任务记录
+     * @param obj 加密的任务记录
+     * @param key 密钥
+     * @returns 解密结果
+     */
     static dec(obj: TaskMapCrypto, key: string): TaskMap{
         return new TaskMap(
             parseInt(Cryp.decrypt(obj.task, key)),
-            parseInt(Cryp.decrypt(obj.doTimes, key))
+            parseInt(Cryp.decrypt(obj.doTimes, key)),
+            Cryp.decrypt(obj.fulfilled, key) == "T" ? true : false
         );
     }
+    /**
+     * 是否完成任务
+     * @returns 结果
+     */
     done(){
         return this.doTimes >= tasks[this.task].times
     }
+    /**
+     * @returns 任务标题
+     */
     title(): string{
         return tasks[this.task].title;
     }
+    /**
+     * @returns 任务描述
+     */
     description(): string{
         return tasks[this.task].description;
     }
+    /**
+     * @returns 完成任务需要的位置
+     */
     location(): Folder | null{
         return tasks[this.task].location;
     }
+    /**
+     * @returns 任务奖励
+     */
     reward(): number{
         return tasks[this.task].reward;
     }
+    /**
+     * @returns 任务ID
+     */
     id(): string{
         return tasks[this.task].id;
     }
+    /**
+     * @returns 任务完成的需要次数
+     */
     times(): number{
         return tasks[this.task].times;
     }
@@ -292,25 +384,48 @@ const levelMap: Array<number> = [
 let isHasNewNameplate: boolean = false;
 
 function goHome(token: Symbol): void {
+    // 获取最首要的两件（不足两件则可以选择1件或0件）待办事项（以在tasks全局数组中的索引为排序方法）
+    NEEDTODO = [];
+    for(let i = 0; i < DONETasks.length; i++){
+        if (DONETasks[i].done() === false || !DONETasks[i].fulfilled){
+            NEEDTODO.push(new TaskMap(DONETasks[i]));
+        }
+    }
+    if (NEEDTODO.length < 2){
+        for(let i = 0; i < tasks.length; i++){
+            let flag = false;
+            for(let j = 0; j < DONETasks.length; j++){
+                if (tasks[i].id === DONETasks[j].id()){
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag === false) {
+                NEEDTODO.push(new TaskMap(i, 0));
+                if (NEEDTODO.length >= 2) break;
+            }
+        }
+    }
+
     if (token !== TurnToPage.token) {
         throw new Error("Token Error");
     }
     let taskHTML = ``;
-    for (let i = 0; i < Math.min(TODOTasks.length, 2); i++){
-        const finPer = Math.round(TODOTasks[i].doTimes / TODOTasks[i].times() * 1000)/10;
+    for (let i = 0; i < Math.min(NEEDTODO.length, 2); i++){
+        const finPer = Math.round(NEEDTODO[i].doTimes / NEEDTODO[i].times() * 1000)/10;
         taskHTML += `
         <div class="card taskCard">
             <div class="card-body">
-                <h5 class="card-title">${TODOTasks[i].title()}</h5>
-                <p class="card-text" style="text-indent: 2em">${TODOTasks[i].description()}</p>
-                <p class="card-text" style="text-indent: 2em">你可以获得<strong>${TODOTasks[i].reward()}</strong>tCO₂e的碳排放配额。</p>
+                <h5 class="card-title">${NEEDTODO[i].title()}</h5>
+                <p class="card-text" style="text-indent: 2em">${NEEDTODO[i].description()}</p>
+                <p class="card-text" style="text-indent: 2em">你可以获得<strong>${NEEDTODO[i].reward()}</strong>tCO₂e的碳排放配额。</p>
                 <div class="progress">
                     <div class="progress-bar" role="progressbar" style="width: ${finPer}%;" aria-valuenow="${finPer}" aria-valuemin="0" aria-valuemax="100">${finPer}%</div>
                 </div>
-                ${TODOTasks[i].done()?
+                ${NEEDTODO[i].done()?
                 `<p class="btn btn-warning" id="task${i+1}-btn">领取奖励</p>`
                 :
-                `<p class="btn ${TODOTasks[i].location() === null?`btn-secondary`:`btn-primary`}" id="task${i+1}-btn">${TODOTasks[i].location() === null?`待完成`:`去完成`}</p>`
+                `<p class="btn ${NEEDTODO[i].location() === null?`btn-secondary`:`btn-primary`}" id="task${i+1}-btn">${NEEDTODO[i].location() === null?`待完成`:`去完成`}</p>`
                 }
             </div>
         </div>`
@@ -425,25 +540,35 @@ function goHome(token: Symbol): void {
         newWarning?.classList.add("invisible");
         isHasNewNameplate = false;
     })
-    if (TODOTasks.length > 0) document.querySelector("#task1-btn")?.addEventListener("click", () => {
-        if (TODOTasks[0].done()) {
-            score += TODOTasks[0].reward();
-            mkDialog("领取成功", `你已经成功领取了<strong>${TODOTasks[0].reward()}</strong>tCO₂e的碳排放配额。`);
-            TODOTasks.splice(0, 1);
+    if (NEEDTODO.length > 0) document.querySelector("#task1-btn")?.addEventListener("click", () => {
+        if (NEEDTODO[0].done()) {
+            score += NEEDTODO[0].reward();
+            mkDialog("领取成功", `你已经成功领取了<strong>${NEEDTODO[0].reward()}</strong>tCO₂e的碳排放配额。`);
+            for (let i = 0; i < DONETasks.length; i++){
+                if (DONETasks[i].id() === NEEDTODO[0].id()){
+                    DONETasks[i].fulfilled = true;
+                    break;
+                }
+            }
             init(Folder.home());
             return;
         }
-        if (TODOTasks[0].location() !== null) update(TODOTasks[0].location()!);
+        if (NEEDTODO[0].location() !== null) update(NEEDTODO[0].location()!);
     })
-    if (TODOTasks.length > 1) document.querySelector("#task2-btn")?.addEventListener("click", () => {
-        if (TODOTasks[1].done()) {
-            score += TODOTasks[1].reward();
-            mkDialog("领取成功", `你已经成功领取了<strong>${TODOTasks[1].reward()}</strong>tCO₂e的碳排放配额。`);
-            TODOTasks.splice(1, 1);
+    if (NEEDTODO.length > 1) document.querySelector("#task2-btn")?.addEventListener("click", () => {
+        if (NEEDTODO[1].done()) {
+            score += NEEDTODO[1].reward();
+            mkDialog("领取成功", `你已经成功领取了<strong>${NEEDTODO[1].reward()}</strong>tCO₂e的碳排放配额。`);
+            for (let i = 0; i < DONETasks.length; i++){
+                if (DONETasks[i].id() === NEEDTODO[1].id()){
+                    DONETasks[i].fulfilled = true;
+                    break;
+                }
+            }
             init(Folder.home());
             return;
         }
-        if (TODOTasks[1].location() !== null) update(TODOTasks[1].location()!);
+        if (NEEDTODO[1].location() !== null) update(NEEDTODO[1].location()!);
     })
     if (scorePercent >= 100 && level < levelMap.length-1){
         document.querySelector("#score-btn")?.addEventListener("click", () => {

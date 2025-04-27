@@ -125,7 +125,9 @@ let score: number = 0;
 /** 目前等级 */
 let level: number = 1;
 /** 待完成的任务 */
-let TODOTasks: Array<TaskMap> = [];
+let DONETasks: Array<TaskMap> = [];
+/** 需要完成的任务 */
+let NEEDTODO: Array<TaskMap> = [];
 /** 搜索设置的记忆 */
 let searchMemory: {
     txt: string, 
@@ -835,8 +837,8 @@ function fmain(){
                 if (element.type == Type.Password) binItem.push(<Item>decrypt(new Password(element), key));
                 else binItem.push(<Item>decrypt(new Folder(element), key));
             });
-            obj.TODOTasks.forEach((element: any) => {
-                TODOTasks.push(TaskMap.dec(element, key));
+            obj.DONETasks.forEach((element: any) => {
+                DONETasks.push(TaskMap.dec(element, key));
             })
             score = Number(Cryp.decrypt(obj.score, key));
             level = Number(Cryp.decrypt(obj.level, key));
@@ -845,9 +847,6 @@ function fmain(){
         }
     }).catch((err) => {
         console.log(err);
-        for(let i = 0; i < tasks.length; i++){
-            TODOTasks.push(new TaskMap(i, 0));
-        }
         (document.querySelector("#nav-home") as HTMLSpanElement).click();
     });
 }

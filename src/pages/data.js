@@ -582,8 +582,8 @@ function getData(ismemory = isremember) {
     for (let index = 0; index < binItem.length; index++) {
         binItemUpdated.push(encrypt(binItem[index], enc));
     }
-    for (let index = 0; index < TODOTasks.length; index++) {
-        tasksUpdated.push(TODOTasks[index].enc(enc));
+    for (let index = 0; index < DONETasks.length; index++) {
+        tasksUpdated.push(DONETasks[index].enc(enc));
     }
     let encScore = Cryp.encrypt(score.toString(), enc);
     let enclevel = Cryp.encrypt(level.toString(), enc);
@@ -598,7 +598,7 @@ function getData(ismemory = isremember) {
         salt: salt,
         memory: ismemory ? mainPwd : null,
         isPwdNull: mainPwd === "",
-        TODOTasks: tasksUpdated,
+        DONETasks: tasksUpdated,
         score: encScore,
         level: enclevel,
     });
