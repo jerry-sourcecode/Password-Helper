@@ -611,9 +611,6 @@ function update(dir: Folder, checkable: boolean = false) : void{
         inner += `<p>暂无密码</p>`;
     }
     inner += `
-    ${dir.isSame(Folder.root())?"":`<div class="info" style="display: none" id="parent">
-        <p>推拽到此可以上移到${faname==":"?"主文件夹":"“"+faname+"”"}</p>
-    </div>`}
     <div class="action" id="addPwd"><p>添加密码</p></div>
     `;
     main!.innerHTML = inner;
@@ -625,7 +622,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
         update(dir, !checkable);
     });
     if (!dir.isSame(Folder.root())){
-        const parent = document.querySelector("#parent") as HTMLDivElement;
+        const parent = document.querySelector("div#dragParentCard") as HTMLDivElement;
         parent!.addEventListener("drop", (e) => {
             if (folderIsEditing) return;
             e.preventDefault();
@@ -722,16 +719,26 @@ function update(dir: Folder, checkable: boolean = false) : void{
             }
             let choice: Array<string> = ["确定", "取消"];
             if (folderList[nowIndex].lock !== null) choice.push("取消二级锁");
-            mkDialog("设置二级锁", "输入新的二级锁密码：", choice, true, `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入新密码"></div>`)
+            mkDialog(
+                "设置二级锁", 
+                "输入新的二级锁密码：", 
+                choice, 
+                {
+                    isStatic: true, 
+                    otherHTML: `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入新密码"></div>`, 
+                    otherAction: () => {(document.querySelector("#lockInput") as HTMLInputElement).focus();},
+                    defaultOption: 0
+                }
+            )
             .then((res) => {
                     if (res == 0){
                         const input = document.querySelector("#lockInput") as HTMLInputElement;
                         if (input.value == ""){
-                            mkDialog("设置失败！", "密码不能为空。");
+                            mkDialog("设置失败！", "密码不能为空。", ["确定"], {defaultOption: 0});
                             return;
                         }
-                        folderList[nowIndex].lock = input.value;
-                        folderList[nowIndex].cachePwd = null;
+                        folderList[nowIndex].lock = Cryp.pbkdf2(Cryp.pbkdf2(input.value));
+                        folderList[nowIndex].cachePwd = input.value;
                         saveData();
                         mkToast("设置成功！", "","<p>二级锁已设置成功。</p>");
                     } else if (res == 2){
@@ -801,11 +808,11 @@ function update(dir: Folder, checkable: boolean = false) : void{
         });
         info!.addEventListener("dragstart", (e) => {
             if (folderIsEditing) return;
-            if (!dir.isSame(Folder.root())) (document.querySelector("#parent") as HTMLElement)!.style.display = "flex";
+            if (!dir.isSame(Folder.root())) (document.querySelector("div#dragParentCard") as HTMLElement)!.style.display = "flex";
             (e as DragEvent)?.dataTransfer?.setData("text/plain", "p" + nowPwds[i].idx.toString());
         });
         info!.addEventListener("dragend", () => {
-            (document.querySelector("#parent") as HTMLElement)!.style.display = "none";
+            (document.querySelector("div#dragParentCard") as HTMLElement)!.style.display = "none";
         });
         if (checkable){
             const check = document.querySelector(`#pwd${i}-checkboxDiv`) as HTMLDivElement;
@@ -878,20 +885,41 @@ function update(dir: Folder, checkable: boolean = false) : void{
         folder!.addEventListener("click", () => {
             if (folderIsEditing) return;
             if (nowFolders[i].item.lock !== null && nowFolders[i].item.cachePwd === null){
-                mkDialog("二级锁", "请输入二级锁密码：", ["确定", "取消"], true, `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入密码"></div>`)
+                mkDialog(
+                    "二级锁", 
+                    "请输入二级锁密码：", 
+                    ["确定", "取消"], 
+                    {
+                        isStatic: true, 
+                        otherHTML: `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入密码"></div>`, 
+                        otherAction: () => {(document.querySelector("#lockInput") as HTMLInputElement).focus();},
+                        defaultOption: 0
+                    }
+                )
                 .then((res) => {
                     if (res == 0){
                         const input = document.querySelector("#lockInput") as HTMLInputElement;
                         if (input.value == ""){
-                            mkDialog("解锁失败", "密码不能为空！");
+                            mkDialog("解锁失败", "密码不能为空！", ["确定"], {defaultOption: 0});
                             return;
                         }
-                        if (nowFolders[i].item.lock != input.value){
-                            mkDialog("解锁失败", "密码错误！");
+                        if (nowFolders[i].item.lock != Cryp.pbkdf2(Cryp.pbkdf2(input.value))){
+                            mkDialog("解锁失败", "密码错误！", ["确定"], {defaultOption: 0});
                             return;
                         }
                         Task.tryDone("新世界");
                         folderList[nowFolders[i].idx].cachePwd = input.value;
+                        // 对文件夹下的文件进行解锁
+                        for(let j = 0; j < pwdList.length; j++){
+                            if (pwdList[j].isin(nowFolders[i].item)){
+                                pwdList[j] = decrypt(pwdList[j], Cryp.pbkdf2(input.value), ["dir"]) as Password;
+                            }
+                        }
+                        for(let j = 0; j < folderList.length; j++){
+                            if (folderList[j].isin(nowFolders[i].item)){
+                                folderList[j] = decrypt(folderList[j], Cryp.pbkdf2(input.value), ["parent"]) as Folder;
+                            }
+                        }
                         update(nowFolders[i].item);
                         mkToast("解锁成功！", "","<p>文件夹已解锁。</p>");
                     }
@@ -905,7 +933,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
         });
         folder!.addEventListener("dragstart", (e) => {
             if (folderIsEditing) return;
-            if (!dir.isSame(Folder.root())) (document.querySelector("#parent") as HTMLElement)!.style.display = "flex";
+            if (!dir.isSame(Folder.root())) (document.querySelector("div#dragParentCard") as HTMLElement)!.style.display = "flex";
             (e as DragEvent)?.dataTransfer?.setData("text/plain", "f" + nowFolders[i].idx.toString());
         });
         folder!.addEventListener("dragover", (e) => {
@@ -913,7 +941,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
             e.preventDefault();
         });
         folder!.addEventListener("dragend", () => {
-            (document.querySelector("#parent") as HTMLElement)!.style.display = "none";
+            (document.querySelector("div#dragParentCard") as HTMLElement)!.style.display = "none";
         });
         folder!.addEventListener("drop", (e) => {
             if (folderIsEditing) return;

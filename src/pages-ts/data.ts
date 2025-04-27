@@ -10,6 +10,20 @@ enum Type{ // 类型枚举
 
 type Item = Folder | Password; // 项类型
 type clipboardItem = {type: Type, index: number};
+
+/**
+ * 密码类
+ * @member from 来源
+ * @member uname 用户名
+ * @member pwd 密码
+ * @member email 邮箱
+ * @member phone 手机号
+ * @member note 备注
+ * @member dir 父文件夹
+ * @member type 类型
+ * @member moDate 修改日期
+ * @member rmDate 删除日期
+ */
 class Password{ // 密码类
     from: string; // 来源
     uname: string // 用户名
@@ -170,6 +184,15 @@ class Password{ // 密码类
     isin(folder: Folder): boolean{
         const f = folder.stringify()
         return f == this.dir.stringify().slice(0, f.length);
+    }
+    /**
+     * 获得密码的深度
+     * @returns 深度
+     * @description 深度是指密码所在的文件夹树中的层数，主文件夹下为1，子文件夹为2，孙子文件夹为3，以此类推
+     * @example :/hello/password => 2
+     */
+    deepth() : number{
+        return this.dir.deepth() + 1;
     }
 }
 
@@ -400,6 +423,7 @@ class Folder {
      */
     isin(folder: Folder): boolean{
         const f = folder.stringify()
+        if (this.isSame(folder)) return false;
         return f == this.stringify().slice(0, f.length);
     }
     /**
@@ -459,6 +483,21 @@ class Folder {
         }
         return lans;
     }
+    /**
+     * 获得文件夹的深度
+     * @returns 深度
+     * @description 深度是指文件夹的层数，主文件夹为0，子文件夹为1，孙子文件夹为2，以此类推
+     * @example :/hello/world/ => 2
+     */
+    deepth() : number{
+        let ans : string = this.stringify(), deepth : number = 0;
+        for(let i = 0; i < ans.length; i++){
+            if (ans[i] == "/") deepth++;
+        }
+        // 可是深度是从0开始的，所以要减去1
+        if (deepth > 0) deepth--;
+        return deepth;
+    }
 }
 
 /**
@@ -503,13 +542,43 @@ function getData(ismemory: boolean = isremember): string{
     let enc = Cryp.pbkdf2(mainPwd, salt)
     let pwdListUpdated : Array<Password> = []
     let folderListUpdated : Array<Folder> = [];
+    let folderListUpdatedCopy : Array<Folder> = []; // 复制一份文件夹列表，用于加密
     let binItemUpdated : Array<Item> = [];
     let tasksUpdated : Array<TaskMapCrypto> = [];
+
+    for(let i = 0; i < pwdList.length; i++){
+        pwdListUpdated.push(new Password(pwdList[i]));
+    }
+    for(let i = 0; i < folderList.length; i++){
+        folderListUpdated.push(new Folder(folderList[i]));
+        folderListUpdatedCopy.push(new Folder(folderList[i]));
+    }
+
+    // 通过文件夹深度从大到小排序
+    folderListUpdatedCopy.sort((a, b) => {
+        return b.deepth() - a.deepth();
+    });
+
+    for(let i = 0; i < folderListUpdatedCopy.length; i++){
+        if (folderListUpdatedCopy[i].lock !== null && folderListUpdatedCopy[i].cachePwd !== null){
+            for(let j = 0; j < pwdListUpdated.length; j++){
+                if (pwdListUpdated[j].isin(folderListUpdatedCopy[i])){
+                    pwdListUpdated[j] = encrypt(pwdListUpdated[j], Cryp.pbkdf2(folderListUpdatedCopy[i].cachePwd!), ["dir"]) as Password;
+                }
+            }
+            for(let j = 0; j < folderListUpdated.length; j++){
+                if (folderListUpdated[j].isin(folderListUpdatedCopy[i]) && i != j){
+                    folderListUpdated[j] = encrypt(folderListUpdated[j], Cryp.pbkdf2(folderListUpdatedCopy[i].cachePwd!), ["parent"]) as Folder;
+                }
+            }
+        }
+    }
+
     for (let index = 0; index < pwdList.length; index++) {
-        pwdListUpdated.push(encrypt(pwdList[index], enc) as Password);
+        pwdListUpdated[index] = encrypt(pwdListUpdated[index], enc) as Password;
     }
     for (let index = 0; index < folderList.length; index++) {
-        folderListUpdated.push(encrypt(folderList[index], enc) as Folder);
+        folderListUpdated[index] = encrypt(folderListUpdated[index], enc) as Folder;
     }
     for (let index = 0; index < binItem.length; index++) {
         binItemUpdated.push(encrypt(binItem[index], enc) as Item);
@@ -553,7 +622,7 @@ function readUMC(path: string): void {
     window.fs.read(path)
     .then((res) => {
         window.fs.save("./data", res);
-        mkDialog("导入成功！", "重启以应用数据，是否立即重启？", ["立即重启", "再等等"], true)
+        mkDialog("导入成功！", "重启以应用数据，是否立即重启？", ["立即重启", "再等等"], {isStatic: true})
         .then((res) => {
             if (res == 0) location.reload();
         })

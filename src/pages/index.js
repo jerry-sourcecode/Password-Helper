@@ -39,7 +39,7 @@ class Cryp {
      * @returns 加密后的数据
      * @memberof Cryp
      */
-    static pbkdf2(data, salt) {
+    static pbkdf2(data, salt = "") {
         return CryptoJS.PBKDF2(data, salt, {
             keySize: 256 / 32,
             iterations: 10,
@@ -47,7 +47,8 @@ class Cryp {
         }).toString(CryptoJS.enc.Hex);
     }
 }
-function encrypt(data, key, index = 0) {
+const whitelistAttributes = ["type", "cachePwd"];
+function encrypt(data, key, except = []) {
     let enc;
     if (data instanceof Password)
         enc = new Password(data);
@@ -60,7 +61,7 @@ function encrypt(data, key, index = 0) {
     let keyList = Object.keys(data);
     keyList.sort();
     for (let v of keyList) {
-        if (v === "type")
+        if (whitelistAttributes.indexOf(v) !== -1 || except.indexOf(v) !== -1)
             continue;
         if (data[v] === null) {
             enc[v] = null;
@@ -72,7 +73,7 @@ function encrypt(data, key, index = 0) {
             enc[v] = Cryp.encrypt(data[v].toString(), key);
         }
         else if (typeof data[v] === "object" && data[v].type == Type.Folder) {
-            enc[v] = new Folder(encrypt(data[v], key, index));
+            enc[v] = new Folder(encrypt(data[v], key, except));
         }
         else {
             console.error("未知类型");
@@ -80,7 +81,7 @@ function encrypt(data, key, index = 0) {
     }
     return enc;
 }
-function decrypt(data, key, index = 0) {
+function decrypt(data, key, except = []) {
     let dec;
     if (data instanceof Password)
         dec = new Password(data);
@@ -91,7 +92,7 @@ function decrypt(data, key, index = 0) {
     let keyList = Object.keys(data);
     keyList.sort();
     for (let v of keyList) {
-        if (v === "type")
+        if (whitelistAttributes.indexOf(v) !== -1 || except.indexOf(v) !== -1)
             continue;
         if (data[v] === null) {
             dec[v] = null;
@@ -103,7 +104,7 @@ function decrypt(data, key, index = 0) {
             dec[v] = Cryp.decrypt(data[v].toString(), key);
         }
         else if (typeof data[v] === "object" && data[v].type == Type.Folder) {
-            dec[v] = new Folder(decrypt(data[v], key, index));
+            dec[v] = new Folder(decrypt(data[v], key, except));
         }
         else {
             console.error("未知类型");
@@ -250,6 +251,11 @@ function moveItem(type, index, dir_to, isCopy = false) {
             pwdList[index].dir = dir_to;
     }
     else {
+        // 检查权限
+        if (dir_to.lock !== null && dir_to.cachePwd === null) {
+            mkDialog("移动失败！", `目标文件夹“${dir_to.name}”已加密，请解密后重试。`);
+            return;
+        }
         if (hasDir(dir_to.stringify(), folderList[index].name)) {
             mkDialog("移动失败！", `“${folderList[index].name}”已存在。`);
             return;
