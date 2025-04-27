@@ -14,6 +14,7 @@ class TurnToPage{
             <p>安全设置</p>
             <div class="settingFormItem">
                 <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
+                <div><label for="mainPwdTip">密钥提示：</label><input type="text" id="mainPwdTip" value="${mainSetting.mainPwdTip === undefined ? "":mainSetting.mainPwdTip}"/></div>
                 <div><input type="checkbox" id="rememberPwd" ${mainPwd == "" ? "disabled" : `${isremember ? "checked" : ""}`}><label for="rememberPwd">记住密钥</label></div>
             </div>
             <p>其他个性化设置</p>
@@ -61,6 +62,10 @@ class TurnToPage{
         })
         saveKey.addEventListener("change", () => {
             isremember = saveKey.checked;
+            saveData();
+        })
+        document.querySelector("#mainPwdTip")?.addEventListener("change", () => {
+            mainSetting.mainPwdTip = (document.querySelector("#mainPwdTip") as HTMLInputElement).value;
             saveData();
         })
         document.querySelector("#autoCopy")?.addEventListener("change", () => {

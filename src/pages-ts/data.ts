@@ -516,10 +516,16 @@ enum SortBy{
 }
 
 class MainSetting{
+    /**自动复制密码 */
     autoCopy: boolean = false;
+    /**使用表单 */
     easyAppend: boolean = false;
+    /**密码排序方式 */
     pwdSortBy: SortBy = SortBy.name;
+    /**文件夹排序方式 */
     folderSortBy: SortBy = SortBy.name;
+    /**主密码提示 */
+    mainPwdTip: string = "";
 }
 
 /**
@@ -601,7 +607,7 @@ function getData(ismemory: boolean = isremember): string{
         isPwdNull: mainPwd === "",
         TODOTasks: tasksUpdated,
         score: encScore,
-        level: enclevel
+        level: enclevel,
     });
 }
 

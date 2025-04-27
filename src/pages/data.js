@@ -514,10 +514,16 @@ var SortBy;
 })(SortBy || (SortBy = {}));
 class MainSetting {
     constructor() {
+        /**自动复制密码 */
         this.autoCopy = false;
+        /**使用表单 */
         this.easyAppend = false;
+        /**密码排序方式 */
         this.pwdSortBy = SortBy.name;
+        /**文件夹排序方式 */
         this.folderSortBy = SortBy.name;
+        /**主密码提示 */
+        this.mainPwdTip = "";
     }
 }
 /**
@@ -594,7 +600,7 @@ function getData(ismemory = isremember) {
         isPwdNull: mainPwd === "",
         TODOTasks: tasksUpdated,
         score: encScore,
-        level: enclevel
+        level: enclevel,
     });
 }
 /**

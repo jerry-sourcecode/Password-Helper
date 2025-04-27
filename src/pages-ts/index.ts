@@ -795,6 +795,7 @@ function fmain(){
                 <div class="title">请输入访问密钥</div>
                 <div class="form">
                 <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild"/></div>
+                ${mainSetting.mainPwdTip === "" ? `` : `<div><p>密码提示：${mainSetting.mainPwdTip}</p></div>`}
                 <div><input type="checkbox" id="rememberPwd"} style="margin-right: 10px;"/><label for="rememberPwd">记住密钥</label></div>
                 </div>
                 <div class="action" id="Yes"><p>确定</p></div>

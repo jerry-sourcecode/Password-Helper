@@ -8,7 +8,7 @@ class TurnToPage {
      * 展示“设置”页面
      */
     static showSetting() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
         // 显示设置页面
         main.innerHTML = `
         <div class="title">设置</div>
@@ -16,6 +16,7 @@ class TurnToPage {
             <p>安全设置</p>
             <div class="settingFormItem">
                 <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
+                <div><label for="mainPwdTip">密钥提示：</label><input type="text" id="mainPwdTip" value="${mainSetting.mainPwdTip === undefined ? "" : mainSetting.mainPwdTip}"/></div>
                 <div><input type="checkbox" id="rememberPwd" ${mainPwd == "" ? "disabled" : `${isremember ? "checked" : ""}`}><label for="rememberPwd">记住密钥</label></div>
             </div>
             <p>其他个性化设置</p>
@@ -64,15 +65,19 @@ class TurnToPage {
             isremember = saveKey.checked;
             saveData();
         });
-        (_c = document.querySelector("#autoCopy")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", () => {
+        (_c = document.querySelector("#mainPwdTip")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", () => {
+            mainSetting.mainPwdTip = document.querySelector("#mainPwdTip").value;
+            saveData();
+        });
+        (_d = document.querySelector("#autoCopy")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", () => {
             mainSetting.autoCopy = document.querySelector("#autoCopy").checked;
             saveData();
         });
-        (_d = document.querySelector("#easyAppend")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", () => {
+        (_e = document.querySelector("#easyAppend")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => {
             mainSetting.easyAppend = document.querySelector("#easyAppend").checked;
             saveData();
         });
-        (_e = document.querySelector("#pwdSortBy")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => {
+        (_f = document.querySelector("#pwdSortBy")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => {
             switch (document.querySelector("#pwdSortBy").value) {
                 case "name":
                     mainSetting.pwdSortBy = SortBy.name;
@@ -88,7 +93,7 @@ class TurnToPage {
             }
             saveData();
         });
-        (_f = document.querySelector("#folderSortBy")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => {
+        (_g = document.querySelector("#folderSortBy")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", () => {
             switch (document.querySelector("#folderSortBy").value) {
                 case "name":
                     mainSetting.folderSortBy = SortBy.name;
@@ -104,19 +109,19 @@ class TurnToPage {
             }
             saveData();
         });
-        (_g = document.querySelector("div#exportUMC")) === null || _g === void 0 ? void 0 : _g.addEventListener("click", () => {
+        (_h = document.querySelector("div#exportUMC")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", () => {
             let ans = window.msg.showSaveDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
             if (ans === undefined)
                 return;
             saveUMC(ans);
         });
-        (_h = document.querySelector("div#importUMC")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", () => {
+        (_j = document.querySelector("div#importUMC")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
             let ans = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
             if (ans === undefined)
                 return;
             readUMC(ans);
         });
-        (_j = document.querySelector("#reset")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
+        (_k = document.querySelector("#reset")) === null || _k === void 0 ? void 0 : _k.addEventListener("click", () => {
             mkDialog("警告", "此操作会清空所有数据并立即重启，你确定要继续吗？", ["确定", "取消"])
                 .then((res) => {
                 if (res == 0) {
