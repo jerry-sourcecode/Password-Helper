@@ -784,7 +784,8 @@ function fmain(){
         data = data.replace(/\s/g,'')
         let obj = JSON.parse(data);
 
-        if (obj.version != "1.3") alert("数据版本已过期！");
+        const supportVersion = ["1.2", "1.3"]
+        if (supportVersion.indexOf(obj.version) === -1) alert("数据版本已过期！");
 
         mainSetting = obj.mainSetting;
         const salt = obj.salt;
@@ -847,9 +848,12 @@ function fmain(){
                 if (element.type == Type.Password) binItem.push(<Item>decrypt(new Password(element), key));
                 else binItem.push(<Item>decrypt(new Folder(element), key));
             });
-            obj.DONETasks.forEach((element: any) => {
-                DONETasks.push(TaskMap.dec(element, key));
-            })
+            if (obj.version === "1.2") DONETasks = [];
+            else if (obj.version === "1.3") {
+                obj.DONETasks.forEach((element: any) => {
+                    DONETasks.push(TaskMap.dec(element, key));
+                })
+            }
             score = Number(Cryp.decrypt(obj.score, key));
             level = Number(Cryp.decrypt(obj.level, key));
 

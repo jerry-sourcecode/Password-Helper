@@ -815,7 +815,8 @@ function fmain() {
             throw new Error("data is null");
         data = data.replace(/\s/g, '');
         let obj = JSON.parse(data);
-        if (obj.version != "1.3")
+        const supportVersion = ["1.2", "1.3"];
+        if (supportVersion.indexOf(obj.version) === -1)
             alert("数据版本已过期！");
         mainSetting = obj.mainSetting;
         const salt = obj.salt;
@@ -883,9 +884,13 @@ function fmain() {
                 else
                     binItem.push(decrypt(new Folder(element), key));
             });
-            obj.DONETasks.forEach((element) => {
-                DONETasks.push(TaskMap.dec(element, key));
-            });
+            if (obj.version === "1.2")
+                DONETasks = [];
+            else if (obj.version === "1.3") {
+                obj.DONETasks.forEach((element) => {
+                    DONETasks.push(TaskMap.dec(element, key));
+                });
+            }
             score = Number(Cryp.decrypt(obj.score, key));
             level = Number(Cryp.decrypt(obj.level, key));
             document.querySelector("#nav-home").click();
