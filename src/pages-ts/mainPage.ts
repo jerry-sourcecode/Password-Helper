@@ -42,6 +42,7 @@ class TurnToPage{
             <div class="settingFormItem" style="text-indent: 2em">
                 <p>导出的数据是一个加密的文件，你可以将它导出到本地，然后在另一台设备上导入。你可以使用数据来快速且安全的转移你的数据。</p>
                 <p>请注意，导出的数据是强制加密的，你需要输入你的访问密钥才能导入，即使你选中了“记住密码”。</p>
+                <p style="color: red;">请注意：导入文件将会覆盖掉原有数据，无法恢复。</p>
                 <div id="exportUMC"><p class="action">点此导出数据</p></div>
                 <div id="importUMC"><p class="action">点此导入数据</p></div>
             </div>
@@ -121,9 +122,13 @@ class TurnToPage{
             saveUMC(ans);
         });
         document.querySelector("div#importUMC")?.addEventListener("click", () => {
-            let ans: string | undefined = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }])
-            if (ans === undefined) return;
-            readUMC(ans);
+            mkDialog("警告", "此操作会覆盖原有数据，你确定要继续吗？", ["确定", "取消"])
+            .then((res) => {
+                if (res == 1) return;
+                let ans: string | undefined = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }])
+                if (ans === undefined) return;
+                readUMC(ans);
+            })
         });
         document.querySelector("#reset")?.addEventListener("click", () => {
             mkDialog("警告", "此操作会清空所有数据并立即重启，你确定要继续吗？", ["确定", "取消"])
@@ -380,6 +385,7 @@ class TurnToPage{
             const result = document.querySelector("#searchResult");
             let cnt: number = 0, flag : boolean = false;
             result!.innerHTML = "";
+            saveEditorData();
             if (input.value == ""){
                 result!.innerHTML = `<div class="alert alert-danger" role="alert">
                     请输入搜索内容！

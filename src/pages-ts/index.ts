@@ -771,6 +771,14 @@ function fmain(){
         update(Folder.search());
     })
     
+    window.fs.read("./editor").then((data) => {
+        if (data == "") throw new Error("editor is null");
+        data = data.replace(/\s/g,'')
+        let obj = JSON.parse(data);
+        if (obj.version != "e1.0") alert("数据版本已过期！");
+        searchMemory = obj.search;
+    })
+
     window.fs.read("./data").then((data) => {
         if (data == "") throw new Error("data is null");
         data = data.replace(/\s/g,'')

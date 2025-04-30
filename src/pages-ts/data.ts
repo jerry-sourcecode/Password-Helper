@@ -538,6 +538,15 @@ function saveData(): void{ // 保存数据
     window.fs.save("./data", data);
 }
 
+function saveEditorData(): void{ // 保存数据
+    // 数据保存
+    let data = {
+        version: "e1.0",
+        search: searchMemory
+    };
+    window.fs.save("./editor", JSON.stringify(data));
+}
+
 /**
  * 获得加密后的数据
  * @param ismemory 是否使用内存密码

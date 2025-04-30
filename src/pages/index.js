@@ -800,6 +800,15 @@ function fmain() {
     document.querySelector("span#nav-search").addEventListener("click", () => {
         update(Folder.search());
     });
+    window.fs.read("./editor").then((data) => {
+        if (data == "")
+            throw new Error("editor is null");
+        data = data.replace(/\s/g, '');
+        let obj = JSON.parse(data);
+        if (obj.version != "e1.0")
+            alert("数据版本已过期！");
+        searchMemory = obj.search;
+    });
     window.fs.read("./data").then((data) => {
         var _a;
         if (data == "")

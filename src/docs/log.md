@@ -2,10 +2,13 @@
 因为本项目不含node_modules，所以需要手动安装node_modules
 在项目处运行一下命令
 ```shell
-npm i electron --save-dev
-npm i nodemon --save--dev
+npm i electron --save
 npm i typescript --save--dev
-npm i bootstrap
+npm i @popperjs/core
+```
+如果想要监视，即运行`npm start`命令的，运行一下命令
+```shell
+npm i nodemon --save--dev
 ```
 如果想要启动程序，运行以下命令
 ```shell
@@ -71,50 +74,6 @@ pbkdf2: (pwd: string, salt: string) => string;
 - 图标新增文件夹来自https://github.com/stephenhutchings/typicons.font
 - 其余为原创图标或作者许可证未要求表明来源。
 
-# 文件结构
-```shell
-src
-├─ docs
-│      log.md
-│
-├─ electron
-│      main.js
-│      preload.js
-│
-├─ pages
-│  │  crypto-js.min.js
-│  │  data.js
-│  │  dialog.js
-│  │  home.js
-│  │  index.css
-│  │  index.html
-│  │  index.js
-│  │  mainPage.js
-│  │  password.js
-│  │  tools.js
-│  │
-│  └─ resources
-│          copy.png
-│          copy_done.png
-│          delete.png
-│          edit.png
-│          newFolder.png
-│          up.png
-│
-├─ pages-ts
-│      data.ts
-│      dialog.ts
-│      home.ts
-│      index.ts
-│      mainPage.ts
-│      password.ts
-│      tools.ts
-│
-└─ types
-    │  crypto-js.d.ts
-    │  index.d.ts
-    └─ bootstrap
-```
 **文件夹**
 - `docs`：存放文档
 - `electron`：存放electron相关文件
