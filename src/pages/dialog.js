@@ -41,9 +41,7 @@ function mkDialog(title, message, option = ["确定"], flag = {}) {
     else
         myModal = new bootstrap.Modal(modalDiv);
     myModal.show();
-    modalDiv.addEventListener("shown.bs.modal", () => {
-        otherAction();
-    });
+    modalDiv.addEventListener("shown.bs.modal", otherAction);
     modalDiv.addEventListener("keydown", (e) => {
         if (e.key == "Enter" && !e.isComposing) {
             modalDiv.dispatchEvent(new Event("typeEnterKey"));
@@ -54,11 +52,13 @@ function mkDialog(title, message, option = ["确定"], flag = {}) {
         for (let i = 0; i < option.length; i++) {
             (_a = document.querySelector(`#modalOption${i}`)) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
                 myModal.hide();
+                modalDiv.removeEventListener("shown.bs.modal", otherAction);
                 resolve(i);
             });
             modalDiv.addEventListener("typeEnterKey", () => {
                 if (defaultOption != -1 && defaultOption < option.length) {
                     myModal.hide();
+                    modalDiv.removeEventListener("shown.bs.modal", otherAction);
                     resolve(defaultOption);
                 }
             });

@@ -21,12 +21,12 @@
     "build": "electron-packager ./ Password-Helper --platform=win32 --arch=x64 --out=./out --overwrite"
   },
   "devDependencies": {
-    "electron": "^34.0.1"
-  },
-  "dependencies": {
-    "@popperjs/core": "^2.11.8",
     "electron-packager": "^17.1.2",
     "nodemon": "^3.1.9",
     "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "electron": "^34.0.1"
   }
 }

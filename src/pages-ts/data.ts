@@ -89,7 +89,7 @@ class Password{ // 密码类
      * @param checkable 是否可以被选择
      * @returns HTML代码
      */
-    getCard(id: number, isRecent: boolean = false): string{
+    getCard(id: number, isBin: boolean = false): string{
         return `
         <div class="card" style="width: 100%;" id="card${id}">
             <div class="card-body">
@@ -101,8 +101,8 @@ class Password{ // 密码类
                     ${this.email == ""?"":`<p>邮箱：${Password.format(this.email)}</p>`}
                     ${this.phone == ""?"":`<p>手机号：${Password.format(this.phone)}</p>`}
                     ${this.note == ""?"":`<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}
-                    <p>${isRecent?"删除时间":"修改时间"}：${getReadableTime(isRecent?this.rmDate!:this.moDate)}</p>
-                    <button type="button" class="btn ${isRecent?"btn-secondary":"btn-primary"}" id="card${id}-path">跳转到对应路径</button>
+                    <p>${isBin?"删除时间":"修改时间"}：${getReadableTime(isBin?this.rmDate!:this.moDate)}</p>
+                    <button type="button" class="btn ${isBin?"btn-secondary":"btn-primary"}" id="card${id}-path">跳转到对应路径</button>
                     <button type="button" class="btn btn-primary" id="card${id}-detail">查看详情</button>
                 </p>
             </div>
@@ -115,20 +115,22 @@ class Password{ // 密码类
      * @param checkable 是否可以被选择
      * @returns HTML代码
      */
-    getHtmlRecent(id: number, checkable: boolean = false): string{
+    getHtmlBin(id: number, checkable: boolean = false): string{
         let tool = `<div class="tool" style="width: ${checkable?"39vw":"43vw"};">
-                <p class="icon" id="recent${id}-recover" style="margin-right: 8px;">恢复</p>
-                <p class="icon" id="recent${id}-delete">删除</p>
+                <p class="icon" id="bin${id}-recover" style="margin-right: 8px;">恢复</p>
+                <p class="icon" id="bin${id}-delete">删除</p>
             </div>`
-        if (checkable) return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
-            <div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
+        if (checkable) return `<div class="info" style="flex-direction: row;" id="bin${id}" draggable="true">
+            <div class="checkbox" id="bin${id}-checkboxDiv"><input type="checkbox" id="bin${id}-checkbox"></div>
             <div class="check-content">
                 ${this.getBaseHtml(true)}
+                <p>原路径：${this.dir.toReadableText()}</p>
                 ${tool}
             </div>
         </div>`;
-        else return `<div class="info" id="recent${id}" draggable="true">
+        else return `<div class="info" id="bin${id}" draggable="true">
             ${this.getBaseHtml(true)}
+            <p>原路径：${this.dir.toReadableText()}</p>
             ${tool}
         </div>`;
     }
@@ -163,18 +165,18 @@ class Password{ // 密码类
     }
     /**
      * 获取密码的基本html
-     * @param isRecent 是否是最近删除的密码
+     * @param isBin 是否是回收站的密码
      * @returns HTML代码
-     * @description 这个函数是为了避免重复代码而写的，主要是为了在getHtml和getHtmlRecent中使用
+     * @description 这个函数是为了避免重复代码而写的，主要是为了在getHtml和getHtmlBin中使用
      */
-    private getBaseHtml(isRecent: boolean = false): string{
+    private getBaseHtml(isBin: boolean = false): string{
         return `<p>来源：${Password.format(this.from)}</p>
             <p>用户名：${Password.format(this.uname)}</p>
             <p>密码：******</p>
             ${this.email == ""?"":`<p>邮箱：${Password.format(this.email)}</p>`}
             ${this.phone == ""?"":`<p>手机号：${Password.format(this.phone)}</p>`}
             ${this.note == ""?"":`<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}
-            <p>${isRecent?"删除时间":"修改时间"}：${getReadableTime(isRecent?this.rmDate!:this.moDate)}</p>`
+            <p>${isBin?"删除时间":"修改时间"}：${getReadableTime(isBin?this.rmDate!:this.moDate)}</p>`
     };
     /**
      * 检查当前密码是否在folder或folder的子孙目录的目录下
@@ -268,15 +270,15 @@ class Folder {
      * @returns HTML代码
      */
 
-    getCard(id: number, isRecent: boolean = false): string{
+    getCard(id: number, isBin: boolean = false): string{
         return `
         <div class="card" style="width: 100%;" id="card${id}">
             <div class="card-body">
                 <p class="card-text">
                     <p>路径：${Password.format(Folder.fromString(this.parent).toReadableText(), showPathMaxLength, "front")}</p>
                     <p>文件名：${Password.format(this.name)}</p>
-                    <p>${isRecent?"删除时间":"修改时间"}：${getReadableTime(isRecent?this.rmDate!:this.moDate)}</p>
-                    <button type="button" class="btn ${isRecent?"btn-secondary":"btn-primary"}" id="card${id}-path">进入该文件夹</button>
+                    <p>${isBin?"删除时间":"修改时间"}：${getReadableTime(isBin?this.rmDate!:this.moDate)}</p>
+                    <button type="button" class="btn ${isBin?"btn-secondary":"btn-primary"}" id="card${id}-path">进入该文件夹</button>
                 </p>
             </div>
         </div>
@@ -289,24 +291,26 @@ class Folder {
      * @param checkable 是否可以被选择
      * @returns HTML代码
      */
-    getHtmlRecent(id: number, checkable: boolean = false): string{ // 获取密码在recent页面的html
+    getHtmlBin(id: number, checkable: boolean = false): string{ // 获取密码在bin页面的html
         let tool = `<div class="tool" style="width: ${checkable?"39vw":"43vw"};">
-                <p class="icon" id="recent${id}-recover" style="margin-right: 8px;">恢复</p>
-                <p class="icon" id="recent${id}-delete">删除</p>
+                <p class="icon" id="bin${id}-recover" style="margin-right: 8px;">恢复</p>
+                <p class="icon" id="bin${id}-delete">删除</p>
             </div>`;
-        if (checkable) return `<div class="info" style="flex-direction: row;" id="recent${id}" draggable="true">
-            <div class="checkbox" id="recent${id}-checkboxDiv"><input type="checkbox" id="recent${id}-checkbox"></div>
+        let inner = `
+        <p>${this.name}</p>
+        <p>删除日期：${getReadableTime(this.rmDate!)}</p>
+        <p>原路径：${this.toReadableText()}</p>
+        ${tool}
+        `;
+        if (checkable) return `<div class="info" style="flex-direction: row;" id="bin${id}" draggable="true">
+            <div class="checkbox" id="bin${id}-checkboxDiv"><input type="checkbox" id="bin${id}-checkbox"></div>
             <div class="check-content">
-                <p>${this.name}</p>
-                <p>删除日期：${getReadableTime(this.rmDate!)}</p>
-                ${tool}
+                ${inner}
             </div>
         </div>`;
         return `
-        <div class="info" id="recent${id}" draggable="true">
-            <p>${this.name}</p>
-            <p>删除日期：${getReadableTime(this.rmDate!)}</p>
-            ${tool}
+        <div class="info" id="bin${id}" draggable="true">
+            ${inner}
         </div>
         `;
     }
@@ -605,10 +609,10 @@ function getData(ismemory: boolean = isremember): string{
     let enclevel = Cryp.encrypt(level.toString(), enc);
     // 数据保存
     return JSON.stringify({
-        version: "1.3",
+        version: "1.4",
         pwd: pwdListUpdated,
         folder: folderListUpdated,
-        recent: binItemUpdated,
+        bin: binItemUpdated,
         mainPwd: Cryp.pbkdf2(enc, salt),
         mainSetting: mainSetting,
         salt: salt,

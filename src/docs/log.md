@@ -2,13 +2,7 @@
 因为本项目不含node_modules，所以需要手动安装node_modules
 在项目处运行一下命令
 ```shell
-npm i electron --save
-npm i typescript --save--dev
-npm i @popperjs/core
-```
-如果想要监视，即运行`npm start`命令的，运行一下命令
-```shell
-npm i nodemon --save--dev
+npm i
 ```
 如果想要启动程序，运行以下命令
 ```shell

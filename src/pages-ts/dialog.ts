@@ -49,9 +49,7 @@ function mkDialog(
     if (isStatic) myModal = new bootstrap.Modal(modalDiv, {backdrop: "static"});
     else myModal = new bootstrap.Modal(modalDiv);
     myModal.show();
-    modalDiv.addEventListener("shown.bs.modal", () => {
-        otherAction();
-    });
+    modalDiv.addEventListener("shown.bs.modal", otherAction);
     modalDiv.addEventListener("keydown", (e) => {
         if (e.key == "Enter" && !e.isComposing){
             modalDiv.dispatchEvent(new Event("typeEnterKey"));
@@ -61,11 +59,13 @@ function mkDialog(
         for(let i = 0; i < option.length; i++){
             document.querySelector(`#modalOption${i}`)?.addEventListener("click", () => {
                 myModal.hide();
+                modalDiv.removeEventListener("shown.bs.modal", otherAction);
                 resolve(i);
             });
             modalDiv.addEventListener("typeEnterKey", () => {
                 if (defaultOption != -1 && defaultOption < option.length){
                     myModal.hide();
+                    modalDiv.removeEventListener("shown.bs.modal", otherAction);
                     resolve(defaultOption);
                 }
             })

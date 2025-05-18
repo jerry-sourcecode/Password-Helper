@@ -118,7 +118,7 @@ let addBtn = document.querySelector("#addPwd");
 const main = document.querySelector("#contentDiv");
 /** 密码列表 */
 let pwdList = [];
-/** 最近删除的密码列表 */
+/** 回收站的密码列表 */
 let binItem = [];
 /** 文件夹列表 */
 let folderList = [];
@@ -134,7 +134,7 @@ let currentFolder = Folder.root();
 let clipboard = new Set();
 /** 设置对象 */
 let mainSetting = new MainSetting();
-/** 获得的碳排放量 */
+/** 获得的经验 */
 let score = 0;
 /** 目前等级 */
 let level = 1;
@@ -202,17 +202,24 @@ function hasDir(path, name, exceptIndex = []) {
 /**
  * 递归创建文件夹
  * @param dir 文件夹路径
+ * @param noCheck 是否检查用户组
  */
-function mkdir(dir) {
+function mkdir(dir, noCheck = false) {
     let parent = Folder.fromString(dir.parent);
     if (folderList.findIndex(v => v.isSame(dir)) != -1 || dir.isSame(Folder.root())) {
-        return; // 文件夹已存在
+        return true; // 文件夹已存在
+    }
+    // 检查用户组
+    if (!getCurrentUserGroup().permission.canAddFolder(folderList.length) && !noCheck) {
+        mkDialog("权限不足", "你没有权限添加更多文件夹。当前允许添加的文件夹数量为" + getCurrentUserGroup().permission.folderNum + "。");
+        return false;
     }
     if (folderList.findIndex(v => v.isSame(parent)) == -1) {
         mkdir(parent);
     }
     folderList.push(dir);
     saveData();
+    return true;
 }
 /**
  * 获取当前页面的滚动位置
@@ -246,9 +253,20 @@ function init(dir, checkable = false) {
  * @param isCopy 是否保留源文件
  */
 function moveItem(type, index, dir_to, isCopy = false) {
+    // 判断用户组
+    if (!getCurrentUserGroup().permission.canMove) {
+        mkDialog("权限不足", "你没有权限移动文件。");
+        return;
+    }
     if (type == Type.Password) {
-        if (isCopy)
+        if (isCopy) {
+            // 判断用户组
+            if (getCurrentUserGroup().permission.canAddPwd(pwdList.length)) {
+                mkDialog("权限不足", "你没有权限添加更多密码。当前允许添加的密码数量为" + getCurrentUserGroup().permission.pwdNum + "。");
+                return;
+            }
             pwdList[pwdList.push(new Password(pwdList[index])) - 1].dir = new Folder(dir_to);
+        }
         else
             pwdList[index].dir = dir_to;
     }
@@ -278,10 +296,15 @@ function moveItem(type, index, dir_to, isCopy = false) {
                 moveItem(Type.Password, idx, Folder.fromString(dir_to.stringify() + folderList[index].name), isCopy);
             }
         });
-        if (isCopy)
-            folderList[folderList.push(new Folder(folderList[index])) - 1].parent = dir_to.stringify();
-        else
+        if (isCopy) {
+            const newFolder = new Folder(folderList[index]);
+            newFolder.parent = dir_to.stringify();
+            mkdir(newFolder);
+        }
+        else {
             folderList[index].parent = dir_to.stringify();
+            mkdir(folderList[index]);
+        }
     }
 }
 /**
@@ -411,7 +434,7 @@ function deleteItem(type, index, dir_from, _save = true) {
     }
 }
 /**
- * 彻底删除最近删除的密码
+ * 彻底删除回收站的密码
  * @param index 密码在列表中的索引
  */
 function deletebinItem(index) {
@@ -434,22 +457,53 @@ function deletebinItem(index) {
     saveData();
 }
 /**
- * 恢复最近删除的密码
+ * 恢复回收站的密码
  * @param index 密码在列表中的索引
  */
 function recoverPwd(index) {
-    binItem[index].rmDate = null;
+    let binItemCopy = [];
+    for (let i = 0; i < binItem.length; i++) {
+        if (binItem[i] instanceof Password)
+            binItemCopy.push(new Password(binItem[i]));
+        else
+            binItemCopy.push(new Folder(binItem[i]));
+    }
+    let pwdListCopy = [];
+    for (let i = 0; i < pwdList.length; i++) {
+        pwdListCopy.push(new Password(pwdList[i]));
+    }
+    let folderListCopy = [];
+    for (let i = 0; i < folderList.length; i++) {
+        folderListCopy.push(new Folder(folderList[i]));
+    }
     if (binItem[index] instanceof Password) {
-        Task.tryDone("密码复活术");
+        // 检查用户组
+        binItem[index].rmDate = null;
         binItem[index].dir = Folder.fromString(Folder.root().stringify() + binItem[index].dir.stringify().slice(2));
-        mkdir(binItem[index].dir);
+        mkdir(binItem[index].dir, true);
         pwdList.push(binItem[index]);
+        if (!getCurrentUserGroup().permission.canAddPwd(pwdList.length - 1)) {
+            mkDialog("权限不足", "你没有权限添加更多密码。当前允许添加的密码数量为" + getCurrentUserGroup().permission.pwdNum + "。");
+            binItem = binItemCopy;
+            pwdList = pwdListCopy;
+            folderList = folderListCopy;
+            return;
+        }
+        if (!getCurrentUserGroup().permission.canAddFolder(folderList.length - 1)) {
+            mkDialog("权限不足", "你没有权限添加更多文件夹。当前允许添加的文件夹数量为" + getCurrentUserGroup().permission.folderNum + "。");
+            binItem = binItemCopy;
+            pwdList = pwdListCopy;
+            folderList = folderListCopy;
+            return;
+        }
+        Task.tryDone("密码复活术");
     }
     else {
         let x = binItem[index].moDate;
+        binItem[index].rmDate = null;
         binItem[index] = Folder.fromString(Folder.root().stringify() + binItem[index].stringify().slice(2));
         binItem[index].moDate = x;
-        mkdir(Folder.fromString(binItem[index].parent));
+        mkdir(Folder.fromString(binItem[index].parent), true);
         let has = false;
         folderList.forEach((item) => {
             if (item.isSame(binItem[index])) {
@@ -457,7 +511,13 @@ function recoverPwd(index) {
             }
         });
         if (!has)
-            mkdir(binItem[index]);
+            mkdir(binItem[index], true);
+        if (!getCurrentUserGroup().permission.canAddFolder(folderList.length - 1)) {
+            mkDialog("权限不足", "你没有权限添加更多文件夹。当前允许添加的文件夹数量为" + getCurrentUserGroup().permission.folderNum + "。");
+            folderList = folderListCopy;
+            binItem = binItemCopy;
+            return;
+        }
     }
     binItem.splice(index, 1);
     saveData();
@@ -470,6 +530,10 @@ function recoverPwd(index) {
  */
 function addPwd(dir, _step = 0, _result = new Password("", "", "", "", "", "", dir)) {
     var _a;
+    if (!getCurrentUserGroup().permission.canAddPwd(pwdList.length)) {
+        mkDialog("权限不足", "你没有权限添加更多密码。当前允许添加的密码数量为" + getCurrentUserGroup().permission.pwdNum + "。");
+        return;
+    }
     updatePos();
     currentFolder = Folder.append();
     if (mainSetting.easyAppend) {
@@ -655,7 +719,7 @@ function checkSafety(index) {
  * 展示密码
  * @param by 密码列表
  * @param index 目标密码在by中的索引
- * @param from 从哪个页面跳转过来的，如果是从最近删除跳转过来的，返回时会返回到最近删除页面，否则返回到主页面，需要填写Page枚举
+ * @param from 从哪个页面跳转过来的，如果是从回收站跳转过来的，返回时会返回到回收站页面，否则返回到主页面，需要填写Page枚举
  */
 function showPwd(by, index, from) {
     var _a, _b, _c, _d, _e, _f, _g;
@@ -789,16 +853,25 @@ function fmain() {
         update(pagePos.mainDir);
     });
     document.querySelector("span#nav-setting").addEventListener("click", () => {
-        update(Folder.setting());
+        if (getCurrentUserGroup().permission.canUseSetting)
+            update(Folder.setting());
+        else
+            mkDialog("权限不足", "你没有权限使用设置功能。");
     });
     document.querySelector("span#nav-bin").addEventListener("click", () => {
-        update(Folder.bin());
+        if (getCurrentUserGroup().permission.canUseBin)
+            update(Folder.bin());
+        else
+            mkDialog("权限不足", "你没有权限使用回收站。");
     });
     document.querySelector("span#nav-home").addEventListener("click", () => {
         update(Folder.home());
     });
     document.querySelector("span#nav-search").addEventListener("click", () => {
-        update(Folder.search());
+        if (getCurrentUserGroup().permission.canSearch)
+            update(Folder.search());
+        else
+            mkDialog("权限不足", "你没有权限使用搜索功能。");
     });
     window.fs.read("./editor").then((data) => {
         if (data == "")
@@ -815,7 +888,7 @@ function fmain() {
             throw new Error("data is null");
         data = data.replace(/\s/g, '');
         let obj = JSON.parse(data);
-        const supportVersion = ["1.2", "1.3"];
+        const supportVersion = ["1.2", "1.3", "1.4"];
         if (supportVersion.indexOf(obj.version) === -1)
             alert("数据版本已过期！");
         mainSetting = obj.mainSetting;
@@ -878,21 +951,29 @@ function fmain() {
             obj.folder.forEach((element) => {
                 folderList.push(decrypt(new Folder(element), key));
             });
-            obj.recent.forEach((element) => {
-                if (element.type == Type.Password)
-                    binItem.push(decrypt(new Password(element), key));
-                else
-                    binItem.push(decrypt(new Folder(element), key));
-            });
+            if (Number(obj.version) >= 1.4)
+                obj.bin.forEach((element) => {
+                    if (element.type == Type.Password)
+                        binItem.push(decrypt(new Password(element), key));
+                    else
+                        binItem.push(decrypt(new Folder(element), key));
+                });
+            else
+                obj.recent.forEach((element) => {
+                    if (element.type == Type.Password)
+                        binItem.push(decrypt(new Password(element), key));
+                    else
+                        binItem.push(decrypt(new Folder(element), key));
+                });
             if (obj.version === "1.2")
                 DONETasks = [];
-            else if (obj.version === "1.3") {
+            else if (Number(obj.version) >= 1.3) {
                 obj.DONETasks.forEach((element) => {
                     DONETasks.push(TaskMap.dec(element, key));
                 });
+                score = Number(Cryp.decrypt(obj.score, key));
+                level = Number(Cryp.decrypt(obj.level, key));
             }
-            score = Number(Cryp.decrypt(obj.score, key));
-            level = Number(Cryp.decrypt(obj.level, key));
             document.querySelector("#nav-home").click();
         }
     }).catch((err) => {

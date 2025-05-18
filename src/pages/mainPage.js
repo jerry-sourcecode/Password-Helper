@@ -139,13 +139,13 @@ class TurnToPage {
         main === null || main === void 0 ? void 0 : main.scrollTo(pagePos.setting);
     }
     /**
-     * 展示“最近删除”页面
+     * 展示“回收站”页面
      * @param checkable 是否开启“选择模式”
      */
     static showBin(checkable = false) {
         var _a, _b, _c, _d, _e, _f;
-        // 显示最近删除的密码
-        let inner = `<div class="title">最近删除</div>
+        // 显示回收站的密码
+        let inner = `<div class="title">回收站</div>
         <div id="MainToolBar">
         ${checkable ?
             `<p class="tool" id="checkable">取消选择</p>
@@ -160,7 +160,7 @@ class TurnToPage {
             return a.rmDate > b.rmDate ? -1 : 1;
         });
         for (let i = 0; i < binItem.length; i++) {
-            inner += binItem[i].getHtmlRecent(i, checkable);
+            inner += binItem[i].getHtmlBin(i, checkable);
         }
         if (binItem.length == 0) {
             inner += `<p>暂无删除密码</p>`;
@@ -172,18 +172,18 @@ class TurnToPage {
         if (checkable) {
             (_b = document.querySelector("#check-all")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
                 binItem.forEach((item, index) => {
-                    document.querySelector(`#recent${index}-checkbox`).checked = true;
+                    document.querySelector(`#bin${index}-checkbox`).checked = true;
                 });
             });
             (_c = document.querySelector("#check-invert")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
                 binItem.forEach((item, index) => {
-                    document.querySelector(`#recent${index}-checkbox`).checked = !document.querySelector(`#recent${index}-checkbox`).checked;
+                    document.querySelector(`#bin${index}-checkbox`).checked = !document.querySelector(`#bin${index}-checkbox`).checked;
                 });
             });
             (_d = document.querySelector("#delete")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
                 let cnt = 0;
                 binItem.forEach((item, index) => {
-                    if (document.querySelector(`#recent${index}-checkbox`).checked)
+                    if (document.querySelector(`#bin${index}-checkbox`).checked)
                         cnt++;
                 });
                 if (cnt == 0)
@@ -194,7 +194,7 @@ class TurnToPage {
                         Task.tryDone("选择操作，轻松掌控！");
                         let de = [];
                         binItem.forEach((item, index) => {
-                            if (document.querySelector(`#recent${index}-checkbox`).checked)
+                            if (document.querySelector(`#bin${index}-checkbox`).checked)
                                 de.push(index);
                         });
                         deletebinItem(de);
@@ -204,7 +204,7 @@ class TurnToPage {
             });
             (_e = document.querySelector("#recover")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
                 for (let i = binItem.length - 1; i >= 0; i--) {
-                    if (document.querySelector(`#recent${i}-checkbox`).checked)
+                    if (document.querySelector(`#bin${i}-checkbox`).checked)
                         recoverPwd(i);
                 }
                 Task.tryDone("选择操作，轻松掌控！");
@@ -212,13 +212,13 @@ class TurnToPage {
             });
         }
         for (let i = 0; i < binItem.length; i++) {
-            const recoverBtn = document.querySelector(`#recent${i}-recover`);
+            const recoverBtn = document.querySelector(`#bin${i}-recover`);
             recoverBtn.addEventListener("click", (e) => {
                 e === null || e === void 0 ? void 0 : e.stopPropagation();
                 recoverPwd(i);
                 init(Folder.bin());
             });
-            const deleteBtn = document.querySelector(`#recent${i}-delete`);
+            const deleteBtn = document.querySelector(`#bin${i}-delete`);
             deleteBtn.addEventListener("click", (e) => {
                 e === null || e === void 0 ? void 0 : e.stopPropagation();
                 mkDialog("警告", "此操作不可撤销，你确定要永久删除吗？", ["确定", "取消"])
@@ -229,14 +229,14 @@ class TurnToPage {
                     }
                 });
             });
-            const info = document.querySelector(`#recent${i}`);
+            const info = document.querySelector(`#bin${i}`);
             info.addEventListener("click", () => {
                 if (binItem[i] instanceof Password)
                     showPwd(binItem, i, Folder.bin());
             });
             if (checkable) {
-                const check = document.querySelector(`#recent${i}-checkboxDiv`);
-                const checkbox = document.querySelector(`#recent${i}-checkbox`);
+                const check = document.querySelector(`#bin${i}-checkboxDiv`);
+                const checkbox = document.querySelector(`#bin${i}-checkbox`);
                 check.addEventListener("click", (e) => {
                     e.stopPropagation();
                     checkbox.checked = !checkbox.checked;
@@ -438,7 +438,7 @@ class TurnToPage {
                 }
             }
             if (flag) {
-                result.insertAdjacentHTML("beforeend", "<div><h5><strong>最近删除</strong></h5></div>");
+                result.insertAdjacentHTML("beforeend", "<div><h5><strong>回收站</strong></h5></div>");
                 for (let i = 0; i < binItem.length; i++) {
                     if (binItem[i].type == Type.Password) {
                         showPwdCard(binItem, i);
@@ -484,7 +484,7 @@ class TurnToPage {
         }
     }
     /**
-     * 切换到“最近删除”页面。
+     * 切换到“回收站”页面。
      * @param token 访问token，请填写{@linkcode TurnToPage.Token}
      */
     static bin(token, checkable = false) {
@@ -511,7 +511,7 @@ class TurnToPage {
 /**一个token，可以填写在这个类的其余公开函数的token参数 */
 TurnToPage.token = Symbol("byFunctionUpdate");
 /**
- * 更改页面，支持切换到“最近删除”、“设置”、“搜索”页面。
+ * 更改页面，支持切换到“回收站”、“设置”、“搜索”页面。
  * @param dir 要切换到的文件夹
  * @param checkable 切换后是否开启“选择”模式
  */
@@ -713,6 +713,11 @@ function update(dir, checkable = false) {
     }
     else {
         (_g = document.querySelector("#paste")) === null || _g === void 0 ? void 0 : _g.addEventListener("click", () => {
+            // 检查用户组
+            if (!getCurrentUserGroup().permission.canMove) {
+                mkDialog("权限不足", "当前用户组没有权限进行移动操作。");
+                return;
+            }
             for (let i of clipboard) {
                 moveItem(i.type, i.index, dir, true);
             }
@@ -720,6 +725,10 @@ function update(dir, checkable = false) {
             init(dir);
         });
         (_h = document.querySelector("#move")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", () => {
+            if (!getCurrentUserGroup().permission.canMove) {
+                mkDialog("权限不足", "当前用户组没有权限进行移动操作。");
+                return;
+            }
             for (let i of clipboard) {
                 moveItem(i.type, i.index, dir);
             }
@@ -728,6 +737,10 @@ function update(dir, checkable = false) {
             init(dir);
         });
         (_j = document.querySelector("#lock")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
+            if (!getCurrentUserGroup().permission.canLock) {
+                mkDialog("权限不足", "当前用户组没有权限进行加密操作。");
+                return;
+            }
             let nowIndex = -1;
             for (let i = 0; i < folderList.length; i++) {
                 if (folderList[i].isSame(dir)) {
@@ -754,6 +767,7 @@ function update(dir, checkable = false) {
                     folderList[nowIndex].lock = Cryp.pbkdf2(Cryp.pbkdf2(input.value));
                     folderList[nowIndex].cachePwd = input.value;
                     saveData();
+                    Task.tryDone("双重加密，双重保护");
                     mkToast("设置成功！", "", "<p>二级锁已设置成功。</p>");
                 }
                 else if (res == 2) {
@@ -792,8 +806,8 @@ function update(dir, checkable = false) {
             }
             lowerBound++;
         }
-        mkdir(new Folder(`新建文件夹${lowerBound == 0 ? "" : lowerBound}`, dir.stringify()));
-        Task.tryDone("文件夹，你好！");
+        if (mkdir(new Folder(`新建文件夹${lowerBound == 0 ? "" : lowerBound}`, dir.stringify())))
+            Task.tryDone("文件夹，你好！");
         init(dir);
     });
     addBtn = document.querySelector("#addPwd");
