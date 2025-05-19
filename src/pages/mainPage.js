@@ -552,7 +552,6 @@ function update(dir, checkable = false) {
         document.querySelector("span#nav-mainPage").classList.add("active");
     }
     pagePos.mainDir = dir;
-    let faname = dir.getParent().name;
     let loca = dir.toReadableHTML(); // location
     let inner = `<div class="title">密码列表</div>
     ${dir.isSame(Folder.root()) ? "" : `<div class="subtitle"><p>当前位置：</p>${loca.html}</div>`}
@@ -570,7 +569,7 @@ function update(dir, checkable = false) {
         <p class="tool" id="checkable">选择</p>
         <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" data-bs-toggle="tooltip" data-bs-placement="top" id="newFolder">
         ${dir.isSame(Folder.root()) ? "" : `
-        <img src="../pages/resources/up.png" title="上移到${faname == ":" ? "主文件夹" : faname}" data-bs-toggle="tooltip" data-bs-placement="top" class="tool" id="up">
+        <img src="../pages/resources/up.png" title="上移到${dir.getParent().name == ":" ? "主文件夹" : dir.getParent().name}" data-bs-toggle="tooltip" data-bs-placement="top" class="tool" id="up">
         <img src="../pages/resources/lock.png" title="加密" class="tool" data-bs-toggle="tooltip" data-bs-placement="top" id="lock">
         `}`}
     </div>

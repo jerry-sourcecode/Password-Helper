@@ -436,7 +436,7 @@ class Folder {
      * @returns 父文件夹对象
      */
     getParent(): Folder{
-        if (this.isSystemFolder()) return this;
+        if (this.isSystemFolder()) throw new Error("System folder doesn't have parent.");
         let p = null;
         folderList.forEach(element => {
             if (element.stringify() == this.parent) {
@@ -656,7 +656,7 @@ function getData(ismemory: boolean = isremember): string{
     let enclevel = Cryp.encrypt(level.toString(), enc);
     // 数据保存
     return JSON.stringify({
-        version: "1.4",
+        version: "1.41",
         pwd: pwdListUpdated,
         folder: folderListUpdated,
         bin: binItemUpdated,
