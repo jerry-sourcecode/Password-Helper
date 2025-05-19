@@ -35,7 +35,7 @@ class Password {
             this.note = note;
             this.email = email;
             this.phone = phone;
-            this.dir = new Folder(dir.name, dir.parent);
+            this.dir = dir.stringify();
         }
         else {
             this.from = fromOrdata.from;
@@ -44,7 +44,7 @@ class Password {
             this.note = fromOrdata.note;
             this.email = fromOrdata.email;
             this.phone = fromOrdata.phone;
-            this.dir = new Folder(fromOrdata.dir.name, fromOrdata.dir.parent);
+            this.dir = (typeof fromOrdata.dir == "object" ? new Folder(fromOrdata.dir).stringify() : fromOrdata.dir);
             this.rmDate = fromOrdata.rmDate;
             this.moDate = fromOrdata.moDate;
         }
@@ -85,7 +85,7 @@ class Password {
         <div class="card" style="width: 100%;" id="card${id}">
             <div class="card-body">
                 <p class="card-text">
-                    <p>路径：${Password.format(this.dir.toReadableText(), showPathMaxLength, "front")}</p>
+                    <p>路径：${Password.format(this.getParent().toReadableText(), showPathMaxLength, "front")}</p>
                     <p>来源：${Password.format(this.from)}</p>
                     <p>用户名：${Password.format(this.uname)}</p>
                     <p>密码：******</p>
@@ -116,14 +116,14 @@ class Password {
             <div class="checkbox" id="bin${id}-checkboxDiv"><input type="checkbox" id="bin${id}-checkbox"></div>
             <div class="check-content">
                 ${this.getBaseHtml(true)}
-                <p>原路径：${this.dir.toReadableText()}</p>
+                <p>原路径：${this.getParent().toReadableText()}</p>
                 ${tool}
             </div>
         </div>`;
         else
             return `<div class="info" id="bin${id}" draggable="true">
             ${this.getBaseHtml(true)}
-            <p>原路径：${this.dir.toReadableText()}</p>
+            <p>原路径：${this.getParent().toReadableText()}</p>
             ${tool}
         </div>`;
     }
@@ -180,7 +180,7 @@ class Password {
      */
     isin(folder) {
         const f = folder.stringify();
-        return f == this.dir.stringify().slice(0, f.length);
+        return f == this.getParent().stringify().slice(0, f.length);
     }
     /**
      * 获得密码的深度
@@ -189,7 +189,30 @@ class Password {
      * @example :/hello/password => 2
      */
     deepth() {
-        return this.dir.deepth() + 1;
+        return this.getParent().deepth() + 1;
+    }
+    /**
+     * 检查这个密码是否被二级锁加密了
+     */
+    isLocked() {
+        return this.getParent().isLocked();
+    }
+    /**
+     * 得到密码所在的文件夹
+     * @returns 文件夹
+     */
+    getParent() {
+        let p = null;
+        folderList.forEach(v => {
+            if (v.stringify() == this.dir)
+                p = v;
+        });
+        if (p)
+            return p;
+        return Folder.fromString(this.dir);
+    }
+    setParent(parent) {
+        this.dir = parent.stringify();
     }
 }
 /**
@@ -230,25 +253,25 @@ class Folder {
      * @returns HTML代码
      */
     getHtml(id, checkable = false) {
-        let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
+        let inner = `
+        <p><img class="FolderIcon" style="margin-right: 8px;" src="./resources/folder.png">${this.name}</p>
+        <p>修改日期：${getReadableTime(this.moDate)}</p>
+        <div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
             <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="重命名">
             <img class="icon" id="folder${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
             ${this.lock !== null && this.cachePwd === null ? `<img src="../pages/resources/lock.png" title="此文件夹已被加密！" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top">` : ""}
+            ${this.lock !== null && this.cachePwd !== null ? `<img src="../pages/resources/unlock.png" title="此文件夹已被解锁！" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top">` : ""}
         </div>`;
         if (checkable)
             return `<div class="info" style="flex-direction: row;" id="folder${id}" draggable="true">
             <div class="checkbox" id="folder${id}-checkboxDiv"><input type="checkbox" id="folder${id}-checkbox"></div>
             <div class="check-content">
-                <p>${this.name}</p>
-                <p>修改日期：${getReadableTime(this.moDate)}</p>
-                ${tool}
+                ${inner}
             </div>
         </div>`;
         else
             return `<div class="info" id="folder${id}" draggable="true">
-            <p>${this.name}</p>
-            <p>修改日期：${getReadableTime(this.moDate)}</p>
-            ${tool}
+            ${inner}
         </div>`;
     }
     /**
@@ -283,7 +306,7 @@ class Folder {
                 <p class="icon" id="bin${id}-delete">删除</p>
             </div>`;
         let inner = `
-        <p>${this.name}</p>
+        <p><img class="FolderIcon" style="margin-right: 8px;" src="./resources/folder.png">${this.name}</p>
         <p>删除日期：${getReadableTime(this.rmDate)}</p>
         <p>原路径：${this.toReadableText()}</p>
         ${tool}
@@ -358,6 +381,12 @@ class Folder {
         return new Folder("SHW", "");
     }
     /**
+     * 判断是否是系统文件夹
+     */
+    isSystemFolder() {
+        return this.parent == "";
+    }
+    /**
      * 通过字符串获得文件夹对象
      * @param str 文件夹路径
      * @param time 时间戳
@@ -397,6 +426,16 @@ class Folder {
      * @returns 父文件夹对象
      */
     getParent() {
+        if (this.isSystemFolder())
+            return this;
+        let p = null;
+        folderList.forEach(element => {
+            if (element.stringify() == this.parent) {
+                p = element;
+            }
+        });
+        if (p)
+            return p;
         return Folder.fromString(this.parent);
     }
     /**
@@ -408,7 +447,7 @@ class Folder {
         if (item instanceof Folder)
             return item.parent == this.stringify();
         else
-            return item.dir.isSame(this);
+            return item.getParent().isSame(this);
     }
     /**
      * 判断文件夹是否在当前文件夹或后代文件夹下
@@ -499,6 +538,19 @@ class Folder {
         if (deepth > 0)
             deepth--;
         return deepth;
+    }
+    /**
+     * 判断给文件夹是否还被加密
+     * @description 一个文件夹时被加密的，当且仅当该文件夹或其父文件夹有密码，即lock属性不为null
+     */
+    isLocked() {
+        let folder = this;
+        while (!folder.isSystemFolder()) {
+            if (folder.lock !== null && folder.cachePwd === null)
+                return true;
+            folder = folder.getParent();
+        }
+        return false;
     }
 }
 /**

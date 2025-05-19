@@ -348,7 +348,7 @@ class TurnToPage {
                     var _a, _b;
                     result.insertAdjacentHTML("beforeend", list[index].getCard(cnt));
                     (_a = document.querySelector(`#card${cnt}-path`)) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
-                        update(list[index].dir);
+                        update(list[index].getParent());
                     });
                     (_b = document.querySelector(`#card${cnt}-detail`)) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
                         showPwd(list, index, Folder.search());
@@ -371,6 +371,8 @@ class TurnToPage {
                     mkIt();
             }
             function hasItemCard(item) {
+                if (item.isLocked())
+                    return false;
                 if (item instanceof Password) {
                     if (canFound(item.from, input.value) && searchSetting.searchFrom.checked)
                         return true;
@@ -550,7 +552,7 @@ function update(dir, checkable = false) {
         document.querySelector("span#nav-mainPage").classList.add("active");
     }
     pagePos.mainDir = dir;
-    let faname = Folder.fromString(dir.parent).name;
+    let faname = dir.getParent().name;
     let loca = dir.toReadableHTML(); // location
     let inner = `<div class="title">密码列表</div>
     ${dir.isSame(Folder.root()) ? "" : `<div class="subtitle"><p>当前位置：</p>${loca.html}</div>`}
@@ -625,7 +627,7 @@ function update(dir, checkable = false) {
     <div class="action" id="addPwd"><p>添加密码</p></div>
     `;
     main.innerHTML = inner;
-    [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(t => new bootstrap.Tooltip(t));
+    removeTips();
     (_a = document.querySelector("#up")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
         update(dir.getParent());
     });
@@ -643,10 +645,10 @@ function update(dir, checkable = false) {
             const num = parseInt(index.substring(1));
             parent.style.display = "none";
             if (index[0] == "p") {
-                moveItem(Type.Password, num, Folder.fromString(dir.parent));
+                moveItem(Type.Password, num, dir.getParent());
             }
             else {
-                moveItem(Type.Folder, num, Folder.fromString(dir.parent));
+                moveItem(Type.Folder, num, dir.getParent());
             }
             Task.tryDone("文件向上冲");
             init(dir, checkable);
@@ -681,16 +683,31 @@ function update(dir, checkable = false) {
             });
         });
         (_f = document.querySelector("#delete")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
+            let errNum = 0;
             nowFolders.forEach((value, index) => {
-                if (document.querySelector(`#folder${index}-checkbox`).checked)
-                    deleteItem(Type.Folder, index, dir, false);
+                if (document.querySelector(`#folder${index}-checkbox`).checked) {
+                    try {
+                        deleteItem(Type.Folder, value.idx, dir, false);
+                    }
+                    catch (error) {
+                        errNum++;
+                    }
+                }
             });
             nowPwds.forEach((value, index) => {
                 if (document.querySelector(`#pwd${index}-checkbox`).checked) {
-                    deleteItem(Type.Password, index, dir, false);
+                    try {
+                        deleteItem(Type.Password, value.idx, dir, false);
+                    }
+                    catch (error) {
+                        errNum++;
+                    }
                 }
             });
-            Task.tryDone("文件大扫除");
+            if (errNum > 0)
+                mkDialog("删除失败", `有${errNum}个文件因为权限问题而无法删除，请先解开所有二级锁。`);
+            else
+                Task.tryDone("文件大扫除");
             init(dir);
         });
         let copy = document.querySelector("#copy");
@@ -823,7 +840,12 @@ function update(dir, checkable = false) {
         const deleteBtn = document.querySelector(`#pwd${i}-delete`);
         deleteBtn.addEventListener("click", (e) => {
             e === null || e === void 0 ? void 0 : e.stopPropagation();
-            deleteItem(Type.Password, nowPwds[i].idx, dir);
+            try {
+                deleteItem(Type.Password, nowPwds[i].idx, dir);
+            }
+            catch (error) {
+                mkDialog("删除失败", "此文件因为权限问题无法删除，请先解锁所有二级锁。");
+            }
         });
         const info = document.querySelector(`#pwd${i}`);
         info.addEventListener("click", () => {
@@ -893,7 +915,7 @@ function update(dir, checkable = false) {
                 }
                 for (let j = 0; j < pwdList.length; j++) {
                     if (nowFolders[i].item.isInclude(pwdList[j])) {
-                        pwdList[j].dir = newFolder;
+                        pwdList[j].setParent(newFolder);
                     }
                 }
                 for (let j = 0; j < folderList.length; j++) {
@@ -912,7 +934,12 @@ function update(dir, checkable = false) {
             if (folderIsEditing)
                 return;
             e === null || e === void 0 ? void 0 : e.stopPropagation();
-            deleteItem(Type.Folder, nowFolders[i].idx, dir);
+            try {
+                deleteItem(Type.Folder, nowFolders[i].idx, dir);
+            }
+            catch (error) {
+                mkDialog("删除失败", "此文件因为权限问题无法删除，请先解锁所有二级锁。");
+            }
             init(dir);
         });
         const folder = document.querySelector(`#folder${i}`);

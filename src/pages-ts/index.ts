@@ -201,7 +201,7 @@ function getReadableTime(time: Date | string): string{
  */
 function hasDir(path: string, name: string, exceptIndex: Array<number> = []): boolean{
     for(let i = 0; i < folderList.length; i++){
-        if (folderList[i].name == name && folderList[i].parent == path && exceptIndex.indexOf(i) == -1){
+        if (folderList[i].name == name && folderList[i].getParent().stringify() == path && exceptIndex.indexOf(i) == -1){
             return true;
         }
     }
@@ -213,7 +213,7 @@ function hasDir(path: string, name: string, exceptIndex: Array<number> = []): bo
  * @param noCheck 是否检查用户组
  */
 function mkdir(dir: Folder, noCheck: boolean = false): boolean{ // 创建文件夹
-    let parent = Folder.fromString(dir.parent);
+    let parent = dir.getParent();
     if (folderList.findIndex(v => v.isSame(dir)) != -1 || dir.isSame(Folder.root())){
         return true; // 文件夹已存在
     }
@@ -270,9 +270,9 @@ function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = f
                 mkDialog("权限不足", "你没有权限添加更多密码。当前允许添加的密码数量为" + getCurrentUserGroup().permission.pwdNum + "。");
                 return;
             }
-            pwdList[pwdList.push(new Password(pwdList[index])) - 1].dir = new Folder(dir_to);
+            pwdList[pwdList.push(new Password(pwdList[index])) - 1].setParent(new Folder(dir_to));
         }
-        else pwdList[index].dir = dir_to;
+        else pwdList[index].setParent(dir_to);
     } else {
         // 检查权限
         if (dir_to.lock !== null && dir_to.cachePwd === null) {
@@ -284,7 +284,7 @@ function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = f
             return;
         }
         let newFolder = new Folder(folderList[index]);
-        newFolder.parent = dir_to.stringify();
+        newFolder.setParent(dir_to);
         if (newFolder.isin(folderList[index])) {
             mkDialog("移动失败！", `目标文件夹“${folderList[index].name}”是源文件夹的子文件夹。`);
             return;
@@ -301,10 +301,10 @@ function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = f
         });
         if (isCopy) {
             const newFolder = new Folder(folderList[index]);
-            newFolder.parent = dir_to.stringify();
+            newFolder.setParent(dir_to);
             mkdir(newFolder);
         } else {
-            folderList[index].parent = dir_to.stringify();
+            folderList[index].setParent(dir_to);
             mkdir(folderList[index]);
         }
     }
@@ -383,7 +383,7 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
             mkDialog("提交失败！", "来源、用户名和密码不能为空。");
             return;
         }
-        const dir = by[index].dir;
+        const dir = by[index].getParent();
         by[index] = new Password(name, uname, pwd, note, email, phone, dir);
         doneMkPwd(isAppend, index);
         init(dir);
@@ -401,12 +401,16 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
  * @param index 目标在对应列表的索引
  * @param dir_from 来源文件夹
  * @param _save 此选项请保持默认，不应被填写
+ * @error 可能会因为权限问题而导致报错
  */
 function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean = true) : void{
+    if ((type == Type.Folder && folderList[index].isLocked()) || (type == Type.Password && pwdList[index].isLocked())){
+        throw new Error("Can't delete item. The item is locked.");
+    }
     if (type == Type.Password) {
         Task.tryDone("密码清理，双倍给力！");
         clipboard.delete({type: Type.Password, index: index});
-        pwdList[index].dir = Folder.fromString(Folder.bin().stringify() + pwdList[index].dir.stringify().slice(2));
+        pwdList[index].setParent(Folder.fromString(Folder.bin().stringify() + pwdList[index].getParent().stringify().slice(2)));
         pwdList[index].rmDate = Date.now().toString();
         binItem.unshift(new Password(pwdList[index]));
         pwdList.splice(index, 1);
@@ -474,8 +478,8 @@ function recoverPwd(index: number) : void{
     if (binItem[index] instanceof Password) {
         // 检查用户组
         binItem[index].rmDate = null;
-        binItem[index].dir = Folder.fromString(Folder.root().stringify() + binItem[index].dir.stringify().slice(2));
-        mkdir((<Password>binItem[index]).dir, true);
+        binItem[index].setParent(Folder.fromString(Folder.root().stringify() + binItem[index].getParent().stringify().slice(2)));
+        mkdir((<Password>binItem[index]).getParent(), true);
         pwdList.push(binItem[index]);
         if (!getCurrentUserGroup().permission.canAddPwd(pwdList.length-1)) {
             mkDialog("权限不足", "你没有权限添加更多密码。当前允许添加的密码数量为" + getCurrentUserGroup().permission.pwdNum + "。");
@@ -498,7 +502,7 @@ function recoverPwd(index: number) : void{
         binItem[index].rmDate = null;
         binItem[index] = Folder.fromString(Folder.root().stringify() + binItem[index].stringify().slice(2)); 
         binItem[index].moDate = x;
-        mkdir(Folder.fromString(binItem[index].parent), true);
+        mkdir(binItem[index].getParent(), true);
         let has: boolean = false;
         folderList.forEach((item) => {
             if (item.isSame(<Folder>binItem[index])) {
@@ -851,7 +855,7 @@ function fmain(){
         data = data.replace(/\s/g,'')
         let obj = JSON.parse(data);
 
-        const supportVersion = ["1.2", "1.3", "1.4"]
+        const supportVersion = ["1.4"]
         if (supportVersion.indexOf(obj.version) === -1) alert("数据版本已过期！");
 
         mainSetting = obj.mainSetting;
