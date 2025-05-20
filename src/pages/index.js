@@ -984,7 +984,7 @@ function fmain() {
             if (obj.version === "1.2") {
                 DONETasks = [];
                 score = 0;
-                level = 0;
+                level = 1;
             }
             else if (Number(obj.version) >= 1.3) {
                 obj.DONETasks.forEach((element) => {
