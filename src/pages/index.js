@@ -50,9 +50,9 @@ class Cryp {
 const whitelistAttributes = ["type", "cachePwd"];
 function encrypt(data, key, except = []) {
     let enc;
-    if (data instanceof Password)
+    if (data.type == Type.Password)
         enc = new Password(data);
-    else if (data instanceof Folder) {
+    else if (data.type == Type.Folder) {
         enc = new Folder(data);
         enc.cachePwd = null;
     }
@@ -83,9 +83,9 @@ function encrypt(data, key, except = []) {
 }
 function decrypt(data, key, except = []) {
     let dec;
-    if (data instanceof Password)
+    if (data.type == Type.Password)
         dec = new Password(data);
-    else if (data instanceof Folder)
+    else if (data.type == Type.Folder)
         dec = new Folder(data);
     else
         dec = new Task(data);
@@ -467,7 +467,7 @@ function deletebinItem(index) {
 function recoverPwd(index) {
     let binItemCopy = [];
     for (let i = 0; i < binItem.length; i++) {
-        if (binItem[i] instanceof Password)
+        if (binItem[i].type == Type.Password)
             binItemCopy.push(new Password(binItem[i]));
         else
             binItemCopy.push(new Folder(binItem[i]));
@@ -480,7 +480,7 @@ function recoverPwd(index) {
     for (let i = 0; i < folderList.length; i++) {
         folderListCopy.push(new Folder(folderList[i]));
     }
-    if (binItem[index] instanceof Password) {
+    if (binItem[index].type == Type.Password) {
         // 检查用户组
         binItem[index].rmDate = null;
         binItem[index].setParent(Folder.fromString(Folder.root().stringify() + binItem[index].getParent().stringify().slice(2)));
@@ -892,7 +892,7 @@ function fmain() {
             throw new Error("data is null");
         data = data.replace(/\s/g, '');
         let obj = JSON.parse(data);
-        const supportVersion = ["1.4"];
+        const supportVersion = ["1.2", "1.3", "1.4"];
         if (supportVersion.indexOf(obj.version) === -1)
             alert("数据版本已过期！");
         mainSetting = obj.mainSetting;
@@ -949,8 +949,20 @@ function fmain() {
             }
         }
         function enc(key) {
+            if (Number(obj.version) < 1.4) {
+                obj.pwd.forEach((element) => {
+                    element.dir = decrypt(element.dir, key);
+                });
+                obj.recent.forEach((element) => {
+                    if (element.type == Type.Password)
+                        element.dir = decrypt(element.dir, key);
+                });
+            }
             obj.pwd.forEach((element) => {
-                pwdList.push(decrypt(new Password(element), key));
+                if (Number(obj.version) < 1.4)
+                    pwdList.push(decrypt(new Password(element), key, ["dir"]));
+                else
+                    pwdList.push(decrypt(new Password(element), key));
             });
             obj.folder.forEach((element) => {
                 folderList.push(decrypt(new Folder(element), key));
@@ -965,12 +977,15 @@ function fmain() {
             else
                 obj.recent.forEach((element) => {
                     if (element.type == Type.Password)
-                        binItem.push(decrypt(new Password(element), key));
+                        binItem.push(decrypt(new Password(element), key, ["dir"]));
                     else
                         binItem.push(decrypt(new Folder(element), key));
                 });
-            if (obj.version === "1.2")
+            if (obj.version === "1.2") {
                 DONETasks = [];
+                score = 0;
+                level = 0;
+            }
             else if (Number(obj.version) >= 1.3) {
                 obj.DONETasks.forEach((element) => {
                     DONETasks.push(TaskMap.dec(element, key));

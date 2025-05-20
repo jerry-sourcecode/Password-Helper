@@ -444,7 +444,7 @@ class Folder {
      * @returns 结果
      */
     isInclude(item) {
-        if (item instanceof Folder)
+        if (item.type == Type.Folder)
             return item.parent == this.stringify();
         else
             return item.getParent().isSame(this);
@@ -653,7 +653,7 @@ function getData(ismemory = isremember) {
     let enclevel = Cryp.encrypt(level.toString(), enc);
     // 数据保存
     return JSON.stringify({
-        version: "1.41",
+        version: "1.4",
         pwd: pwdListUpdated,
         folder: folderListUpdated,
         bin: binItemUpdated,

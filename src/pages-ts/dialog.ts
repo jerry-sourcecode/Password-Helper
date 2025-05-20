@@ -65,7 +65,6 @@ function mkDialog(
             modalDiv.addEventListener("typeEnterKey", () => {
                 if (defaultOption != -1 && defaultOption < option.length){
                     myModal.hide();
-                    modalDiv.removeEventListener("shown.bs.modal", otherAction);
                     resolve(defaultOption);
                 }
             })

@@ -50,12 +50,12 @@ const whitelistAttributes = ["type", "cachePwd"];
 
 function encrypt(data: Item | Task, key: string, except: string[] = []): Item | Task{ // 加密
     let enc: Item | Task;
-    if (data instanceof Password) enc = new Password(data);
-    else if (data instanceof Folder) {
-        enc = new Folder(data);
+    if (data.type == Type.Password) enc = new Password(data as Password);
+    else if (data.type == Type.Folder) {
+        enc = new Folder(data as Folder);
         enc.cachePwd = null;
     }
-    else enc = new Task(data);
+    else enc = new Task(data as Task);
     let keyList: Array<keyof (Item | Task)> = <Array<keyof (Item | Task)>>Object.keys(data);
     keyList.sort();
     for (let v of keyList){
@@ -76,9 +76,9 @@ function encrypt(data: Item | Task, key: string, except: string[] = []): Item | 
 }
 function decrypt(data:Item | Task, key: string, except: string[] = []): Item | Task{ // 解密
     let dec: Item | Task;
-    if (data instanceof Password) dec = new Password(data);
-    else if (data instanceof Folder) dec = new Folder(data);
-    else dec = new Task(data);
+    if (data.type == Type.Password) dec = new Password(data as Password);
+    else if (data.type == Type.Folder) dec = new Folder(data as Folder);
+    else dec = new Task(data as Task);
     let keyList: Array<keyof (Item | Task)> = <Array<keyof (Item | Task)>>Object.keys(data);
     keyList.sort();
     for (let v of keyList){
@@ -464,7 +464,7 @@ function deletebinItem(index: number | Array<number>) : void{
 function recoverPwd(index: number) : void{
     let binItemCopy = [];
     for(let i = 0; i < binItem.length; i++){
-        if (binItem[i] instanceof Password) binItemCopy.push(new Password(binItem[i] as Password));
+        if (binItem[i].type == Type.Password) binItemCopy.push(new Password(binItem[i] as Password));
         else binItemCopy.push(new Folder(binItem[i] as Folder));
     }
     let pwdListCopy = [];
@@ -475,12 +475,12 @@ function recoverPwd(index: number) : void{
     for(let i = 0; i < folderList.length; i++){
         folderListCopy.push(new Folder(folderList[i] as Folder));
     }
-    if (binItem[index] instanceof Password) {
+    if (binItem[index].type == Type.Password) {
         // 检查用户组
         binItem[index].rmDate = null;
         binItem[index].setParent(Folder.fromString(Folder.root().stringify() + binItem[index].getParent().stringify().slice(2)));
         mkdir((<Password>binItem[index]).getParent(), true);
-        pwdList.push(binItem[index]);
+        pwdList.push(binItem[index] as Password);
         if (!getCurrentUserGroup().permission.canAddPwd(pwdList.length-1)) {
             mkDialog("权限不足", "你没有权限添加更多密码。当前允许添加的密码数量为" + getCurrentUserGroup().permission.pwdNum + "。");
             binItem = binItemCopy;
@@ -500,7 +500,7 @@ function recoverPwd(index: number) : void{
     else {
         let x: string = binItem[index].moDate;
         binItem[index].rmDate = null;
-        binItem[index] = Folder.fromString(Folder.root().stringify() + binItem[index].stringify().slice(2)); 
+        binItem[index] = Folder.fromString(Folder.root().stringify() + (binItem[index] as Folder).stringify().slice(2)); 
         binItem[index].moDate = x;
         mkdir(binItem[index].getParent(), true);
         let has: boolean = false;
@@ -855,7 +855,7 @@ function fmain(){
         data = data.replace(/\s/g,'')
         let obj = JSON.parse(data);
 
-        const supportVersion = ["1.4"]
+        const supportVersion = ["1.2", "1.3", "1.4"]
         if (supportVersion.indexOf(obj.version) === -1) alert("数据版本已过期！");
 
         mainSetting = obj.mainSetting;
@@ -909,8 +909,17 @@ function fmain(){
             }
         }
         function enc(key: string) : void{
+            if (Number(obj.version) < 1.4) {
+                obj.pwd.forEach((element: any) => {
+                    element.dir = decrypt(element.dir, key);
+                });
+                obj.recent.forEach((element: any) => {
+                    if (element.type == Type.Password) element.dir = decrypt(element.dir, key);
+                });
+            }
             obj.pwd.forEach((element: any) => {
-                pwdList.push(<Password>decrypt(new Password(element), key));
+                if (Number(obj.version) < 1.4) pwdList.push(<Password>decrypt(new Password(element), key, ["dir"]));
+                else pwdList.push(<Password>decrypt(new Password(element), key));
             });
             obj.folder.forEach((element: any) => {
                 folderList.push(<Folder>decrypt(new Folder(element), key));
@@ -922,10 +931,14 @@ function fmain(){
                 });
             else 
                 obj.recent.forEach((element: any) => {
-                    if (element.type == Type.Password) binItem.push(<Item>decrypt(new Password(element), key));
+                    if (element.type == Type.Password) binItem.push(<Item>decrypt(new Password(element), key, ["dir"]));
                     else binItem.push(<Item>decrypt(new Folder(element), key));
                 });
-            if (obj.version === "1.2") DONETasks = [];
+            if (obj.version === "1.2") {
+                DONETasks = [];
+                score = 0;
+                level = 0;
+            }
             else if (Number(obj.version) >= 1.3) {
                 obj.DONETasks.forEach((element: any) => {
                     DONETasks.push(TaskMap.dec(element, key));

@@ -231,7 +231,7 @@ class TurnToPage {
             });
             const info = document.querySelector(`#bin${i}`);
             info.addEventListener("click", () => {
-                if (binItem[i] instanceof Password)
+                if (binItem[i].type == Type.Password)
                     showPwd(binItem, i, Folder.bin());
             });
             if (checkable) {
@@ -373,7 +373,8 @@ class TurnToPage {
             function hasItemCard(item) {
                 if (item.isLocked())
                     return false;
-                if (item instanceof Password) {
+                if (item.type == Type.Password) {
+                    item = item;
                     if (canFound(item.from, input.value) && searchSetting.searchFrom.checked)
                         return true;
                     else if (canFound(item.uname, input.value) && searchSetting.searchUname.checked)
@@ -389,6 +390,7 @@ class TurnToPage {
                     return false;
                 }
                 else {
+                    item = item;
                     return canFound(item.name, input.value) && searchSetting.searchFolder.checked;
                 }
             }
