@@ -628,7 +628,7 @@ function update(dir, checkable = false) {
     <div class="action" id="addPwd"><p>添加密码</p></div>
     `;
     main.innerHTML = inner;
-    removeTips();
+    updateTooltip();
     (_a = document.querySelector("#up")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
         update(dir.getParent());
     });
@@ -943,6 +943,15 @@ function update(dir, checkable = false) {
             }
             init(dir);
         });
+        if (nowFolders[i].item.lock !== null && nowFolders[i].item.cachePwd !== null) {
+            const fUnlocked = document.querySelector(`#folder${i}-unlocked`);
+            fUnlocked.addEventListener("click", (e) => {
+                e === null || e === void 0 ? void 0 : e.stopPropagation();
+                lockFolder(nowFolders[i].item);
+                update(dir);
+                saveData();
+            });
+        }
         const folder = document.querySelector(`#folder${i}`);
         folder.addEventListener("click", () => {
             if (folderIsEditing)

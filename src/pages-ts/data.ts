@@ -272,7 +272,7 @@ class Folder {
             <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="重命名">
             <img class="icon" id="folder${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
             ${this.lock !== null && this.cachePwd === null ? `<img src="../pages/resources/lock.png" title="此文件夹已被加密！" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top">` : ""}
-            ${this.lock !== null && this.cachePwd !== null ? `<img src="../pages/resources/unlock.png" title="此文件夹已被解锁！" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top">` : ""}
+            ${this.lock !== null && this.cachePwd !== null ? `<img src="../pages/resources/unlock.png" title="此文件夹已解锁！点击以加密" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top" id="folder${id}-unlocked">` : ""}
         </div>`
         if (checkable) return `<div class="info" style="flex-direction: row;" id="folder${id}" draggable="true">
             <div class="checkbox" id="folder${id}-checkboxDiv"><input type="checkbox" id="folder${id}-checkbox"></div>
@@ -627,16 +627,7 @@ function getData(ismemory: boolean = isremember): string{
 
     for(let i = 0; i < folderListUpdatedCopy.length; i++){
         if (folderListUpdatedCopy[i].lock !== null && folderListUpdatedCopy[i].cachePwd !== null){
-            for(let j = 0; j < pwdListUpdated.length; j++){
-                if (pwdListUpdated[j].isin(folderListUpdatedCopy[i])){
-                    pwdListUpdated[j] = encrypt(pwdListUpdated[j], Cryp.pbkdf2(folderListUpdatedCopy[i].cachePwd!), ["dir"]) as Password;
-                }
-            }
-            for(let j = 0; j < folderListUpdated.length; j++){
-                if (folderListUpdated[j].isin(folderListUpdatedCopy[i]) && i != j){
-                    folderListUpdated[j] = encrypt(folderListUpdated[j], Cryp.pbkdf2(folderListUpdatedCopy[i].cachePwd!), ["parent"]) as Folder;
-                }
-            }
+            lockFolder(folderListUpdatedCopy[i], folderListUpdated, pwdListUpdated);
         }
     }
 
@@ -669,6 +660,30 @@ function getData(ismemory: boolean = isremember): string{
         score: encScore,
         level: enclevel,
     });
+}
+
+/**
+ * 对于一个已经被解锁的文件夹，重新进行加密
+ * @param folder 已被上锁且被解锁的文件夹
+ */
+function lockFolder(folder: Folder, foldersList: Folder[] = folderList, pwdsList: Password[] = pwdList): void{
+    // 首先判断一下是否正在被加密
+    if (folder.lock !== null && folder.cachePwd === null) return;
+    if (folder.lock === null) {
+        console.log("加密失败，因为文件夹没有被加密");
+        return;
+    }
+    foldersList.forEach((v, idx) => {
+        if (v.isin(folder) && !v.isSame(folder)){
+            foldersList[idx] = encrypt(v, Cryp.pbkdf2(folder.cachePwd!), ["parent"]) as Folder;
+        }
+    });
+    pwdsList.forEach((v, idx) => {
+        if (v.isin(folder)){
+            pwdsList[idx] = encrypt(v, Cryp.pbkdf2(folder.cachePwd!), ["dir"]) as Password;
+        }
+    });
+    folder.cachePwd = null;
 }
 
 /**

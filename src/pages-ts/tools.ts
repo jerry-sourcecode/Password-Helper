@@ -83,3 +83,10 @@ function removeTips(): void{
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => {bootstrap.Tooltip.getInstance(tooltip)?.dispose();});
     return;
 }
+
+/**
+ * 触发所有的悬浮提示
+ */
+function updateTooltip(): void{
+    [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(t => new bootstrap.Tooltip(t));
+}

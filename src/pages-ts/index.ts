@@ -222,7 +222,7 @@ function mkdir(dir: Folder, noCheck: boolean = false): boolean{ // 创建文件�
         mkDialog("权限不足", "你没有权限添加更多文件夹。当前允许添加的文件夹数量为" + getCurrentUserGroup().permission.folderNum + "。");
         return false;
     }
-    if (folderList.findIndex(v => v.isSame(parent)) == -1){
+    if (folderList.findIndex(v => v.isSame(parent)) == -1 && !parent.isSystemFolder()){
         mkdir(parent);
     }
     folderList.push(dir);
@@ -727,7 +727,7 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
     <div class="action" id="back"><p>返回</p></div>
     `
     main!.innerHTML = inner;
-    [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(t => new bootstrap.Tooltip(t));
+    updateTooltip();
     const safety : HTMLDivElement = document.querySelector("#safety")!;
     Task.tryDone("例行检查");
     if (from != Folder.bin()) {
@@ -846,7 +846,7 @@ function fmain(){
         if (data == "") throw new Error("editor is null");
         data = data.replace(/\s/g,'')
         let obj = JSON.parse(data);
-        if (obj.version != "e1.0") alert("数据版本已过期！");
+        if (obj.version != "e1.0") console.log("编辑器数据版本已过期！");
         searchMemory = obj.search;
     })
 
@@ -856,7 +856,7 @@ function fmain(){
         let obj = JSON.parse(data);
 
         const supportVersion = ["1.2", "1.3", "1.4"]
-        if (supportVersion.indexOf(obj.version) === -1) alert("数据版本已过期！");
+        if (supportVersion.indexOf(obj.version) === -1) mkDialog("数据无效", `不支持数据版本${obj.version}！`);
 
         mainSetting = obj.mainSetting;
         const salt = obj.salt;
