@@ -205,6 +205,8 @@ function hasDir(path, name, exceptIndex = []) {
  * @param noCheck 是否检查用户组
  */
 function mkdir(dir, noCheck = false) {
+    if (dir.isSystemFolder())
+        return true;
     let parent = dir.getParent();
     if (folderList.findIndex(v => v.isSame(dir)) != -1 || dir.isSame(Folder.root())) {
         return true; // 文件夹已存在
@@ -261,7 +263,7 @@ function moveItem(type, index, dir_to, isCopy = false) {
     if (type == Type.Password) {
         if (isCopy) {
             // 判断用户组
-            if (getCurrentUserGroup().permission.canAddPwd(pwdList.length)) {
+            if (!getCurrentUserGroup().permission.canAddPwd(pwdList.length)) {
                 mkDialog("权限不足", "你没有权限添加更多密码。当前允许添加的密码数量为" + getCurrentUserGroup().permission.pwdNum + "。");
                 return;
             }
