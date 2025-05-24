@@ -1,4 +1,7 @@
 "use strict";
+/**
+ * 这个文件是用来定义和存储数据的
+ */
 const showNoteMaxLength = 152; // 在main页面显示备注的最大长度
 const showOtherMaxLength = 60; // 在main页面显示来源、用户名、密码的最大长度
 const showPathMaxLength = 35; // 在main页面显示路径的最大长度
@@ -642,6 +645,7 @@ function getData(ismemory = isremember) {
     }
     let encScore = Cryp.encrypt(score.toString(), enc);
     let enclevel = Cryp.encrypt(level.toString(), enc);
+    let encSignUpTime = Cryp.encrypt(signUpTime, enc);
     // 数据保存
     return JSON.stringify({
         version: "1.4",
@@ -656,6 +660,7 @@ function getData(ismemory = isremember) {
         DONETasks: tasksUpdated,
         score: encScore,
         level: enclevel,
+        signUpTime: encSignUpTime,
     });
 }
 /**

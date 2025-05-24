@@ -1,5 +1,8 @@
 "use strict";
 /**
+ * 一些关于用户组、任务、权限的类
+ */
+/**
  * 任务基类
  * @member title 任务标题
  * @member description 任务描述
@@ -431,6 +434,16 @@ function goHome(token) {
         </div>
     </div>
     ${taskHTML}
+    <div class="card taskCard">
+            <div class="card-body">
+                <h5 class="card-title">数据统计</h5>
+                <p class="card-text" style="text-indent: 2em">你注册的时间是：${getReadableTime(signUpTime)}，今天是你注册的第${Math.ceil((Number(Date.now().toString()) - Number(signUpTime)) / (1000 * 60 * 60 * 24))}天。</p>
+                <p class="card-text" style="text-indent: 2em">你一共创建了${pwdList.length}个密码，其中有${pwdList.filter((_, idx) => checkSafety(idx) === "").length}个是很安全的。</p>
+                <p class="card-text" style="text-indent: 2em">你一共创建了${folderList.length}个文件夹，其中有${folderList.filter((v) => v.lock !== null).length}个是加密的。</p>
+                <p class="card-text" style="text-indent: 2em">你的回收站中还有${binItem.length}个项目。</p>
+                <p class="card-text" style="text-indent: 2em">你一共完成了${DONETasks.filter((v) => v.fulfilled).length}个任务。</p>
+            </div>
+        </div>
     `;
     const newWarning = document.querySelector("#badgeNew");
     if (isHasNewUserGroup) {

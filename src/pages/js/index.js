@@ -1,5 +1,9 @@
 "use strict";
 /**
+ * 一些操作函数和变量
+ * 主函数定义在此
+ */
+/**
  * @class 加密函数静态库
  */
 class Cryp {
@@ -167,6 +171,8 @@ let pagePos = {
     bin: { top: 0, left: 0 },
     search: { top: 0, left: 0 },
 };
+/** 注册时间 */
+let signUpTime = Date.now().toString();
 // 一些工具函数
 /**
  * 得到可读的时间格式
@@ -681,7 +687,7 @@ function addPwd(dir, _step = 0, _result = new Password("", "", "", "", "", "", d
 /**
  * 检查密码的安全性
  * @param index 密码的索引
- * @returns HTML代码，安全性提示
+ * @returns HTML代码，安全性提示，如果很安全则返回空字符串
  */
 function checkSafety(index) {
     let list = [], safety = "";
@@ -900,7 +906,7 @@ function fmain() {
         mainSetting = obj.mainSetting;
         const salt = obj.salt;
         if (obj.isPwdNull) {
-            enc(Cryp.pbkdf2("", salt));
+            UMC.decrypt(obj, Cryp.pbkdf2("", salt));
         }
         else {
             if (obj.memory !== null && obj.memory !== undefined) {
@@ -909,7 +915,7 @@ function fmain() {
                 if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd) {
                     isremember = true;
                     mainPwd = m;
-                    enc(dpwd);
+                    UMC.decrypt(obj, dpwd);
                 }
                 else {
                     isremember = false;
@@ -934,7 +940,7 @@ function fmain() {
                         isremember = document.querySelector("#rememberPwd").checked;
                         mainPwd = m;
                         document.querySelector("#navBar").style.display = "flex";
-                        enc(dpwd);
+                        UMC.decrypt(obj, dpwd);
                         saveData();
                     }
                     else {
@@ -950,55 +956,9 @@ function fmain() {
                 });
             }
         }
-        function enc(key) {
-            if (Number(obj.version) < 1.4) {
-                obj.pwd.forEach((element) => {
-                    element.dir = decrypt(element.dir, key);
-                });
-                obj.recent.forEach((element) => {
-                    if (element.type == Type.Password)
-                        element.dir = decrypt(element.dir, key);
-                });
-            }
-            obj.pwd.forEach((element) => {
-                if (Number(obj.version) < 1.4)
-                    pwdList.push(decrypt(new Password(element), key, ["dir"]));
-                else
-                    pwdList.push(decrypt(new Password(element), key));
-            });
-            obj.folder.forEach((element) => {
-                folderList.push(decrypt(new Folder(element), key));
-            });
-            if (Number(obj.version) >= 1.4)
-                obj.bin.forEach((element) => {
-                    if (element.type == Type.Password)
-                        binItem.push(decrypt(new Password(element), key));
-                    else
-                        binItem.push(decrypt(new Folder(element), key));
-                });
-            else
-                obj.recent.forEach((element) => {
-                    if (element.type == Type.Password)
-                        binItem.push(decrypt(new Password(element), key, ["dir"]));
-                    else
-                        binItem.push(decrypt(new Folder(element), key));
-                });
-            if (obj.version === "1.2") {
-                DONETasks = [];
-                score = 0;
-                level = 1;
-            }
-            else if (Number(obj.version) >= 1.3) {
-                obj.DONETasks.forEach((element) => {
-                    DONETasks.push(TaskMap.dec(element, key));
-                });
-                score = Number(Cryp.decrypt(obj.score, key));
-                level = Number(Cryp.decrypt(obj.level, key));
-            }
-            document.querySelector("#nav-home").click();
-        }
     }).catch((err) => {
         console.log(err);
+        saveData();
         document.querySelector("#nav-home").click();
     });
 }

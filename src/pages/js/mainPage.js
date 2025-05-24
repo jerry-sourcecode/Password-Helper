@@ -1,5 +1,8 @@
 "use strict";
 /**
+ * 页面的渲染和切换
+ */
+/**
  * 如果你不在{@link mainPage.ts}这个文件中，请使用{@linkcode update}函数
  * @private
  */

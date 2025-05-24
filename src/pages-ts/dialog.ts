@@ -1,3 +1,7 @@
+/**
+ * 交互逻辑，提供对话框和Toast的功能
+ */
+
 let toastIdCounter = 0;
 
 /**

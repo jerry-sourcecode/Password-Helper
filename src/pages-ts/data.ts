@@ -1,3 +1,6 @@
+/**
+ * 这个文件是用来定义和存储数据的
+ */
 const showNoteMaxLength: number = 152; // 在main页面显示备注的最大长度
 const showOtherMaxLength: number = 60; // 在main页面显示来源、用户名、密码的最大长度
 const showPathMaxLength: number = 35; // 在main页面显示路径的最大长度
@@ -645,6 +648,7 @@ function getData(ismemory: boolean = isremember): string{
     }
     let encScore = Cryp.encrypt(score.toString(), enc);
     let enclevel = Cryp.encrypt(level.toString(), enc);
+    let encSignUpTime = Cryp.encrypt(signUpTime, enc);
     // 数据保存
     return JSON.stringify({
         version: "1.4",
@@ -659,6 +663,7 @@ function getData(ismemory: boolean = isremember): string{
         DONETasks: tasksUpdated,
         score: encScore,
         level: enclevel,
+        signUpTime: encSignUpTime,
     });
 }
 

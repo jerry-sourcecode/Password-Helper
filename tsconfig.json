@@ -7,7 +7,7 @@
       "isolatedModules": true,
       "moduleResolution": "node",
       "esModuleInterop": true,
-      "outDir": "./src/pages",
+      "outDir": "./src/pages/js",
   },
   "include": [
     "./src/pages-ts/**/*.ts",

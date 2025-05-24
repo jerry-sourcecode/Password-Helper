@@ -1,4 +1,9 @@
 /**
+ * 一些操作函数和变量
+ * 主函数定义在此
+ */
+
+/**
  * @class 加密函数静态库
  */
 class Cryp{
@@ -177,6 +182,8 @@ let pagePos: {
     bin: {top: 0, left: 0},
     search: {top: 0, left: 0},
 };
+/** 注册时间 */
+let signUpTime: string = Date.now().toString();
 
 // 一些工具函数
 /**
@@ -666,7 +673,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
 /**
  * 检查密码的安全性
  * @param index 密码的索引
- * @returns HTML代码，安全性提示
+ * @returns HTML代码，安全性提示，如果很安全则返回空字符串
  */
 function checkSafety(index: number) : string{
     let list : Array<number> = [], safety: string = "";
@@ -862,7 +869,7 @@ function fmain(){
         mainSetting = obj.mainSetting;
         const salt = obj.salt;
         if (obj.isPwdNull){
-            enc(Cryp.pbkdf2("", salt));
+            UMC.decrypt(obj, Cryp.pbkdf2("", salt));
         } else {
             if (obj.memory !== null && obj.memory !== undefined){
                 let m = obj.memory;
@@ -870,7 +877,7 @@ function fmain(){
                 if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
                     isremember = true;
                     mainPwd = m;
-                    enc(dpwd);
+                    UMC.decrypt(obj, dpwd);
                 } else {
                     isremember = false;
                 }
@@ -894,7 +901,7 @@ function fmain(){
                         isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
                         mainPwd = m;
                         (<HTMLDivElement>document.querySelector("#navBar")).style.display = "flex";
-                        enc(dpwd);
+                        UMC.decrypt(obj, dpwd);
                         saveData();
                     } else {
                         document.querySelector("#error")!.innerHTML = `
@@ -909,49 +916,9 @@ function fmain(){
                 });
             }
         }
-        function enc(key: string) : void{
-            if (Number(obj.version) < 1.4) {
-                obj.pwd.forEach((element: any) => {
-                    element.dir = decrypt(element.dir, key);
-                });
-                obj.recent.forEach((element: any) => {
-                    if (element.type == Type.Password) element.dir = decrypt(element.dir, key);
-                });
-            }
-            obj.pwd.forEach((element: any) => {
-                if (Number(obj.version) < 1.4) pwdList.push(<Password>decrypt(new Password(element), key, ["dir"]));
-                else pwdList.push(<Password>decrypt(new Password(element), key));
-            });
-            obj.folder.forEach((element: any) => {
-                folderList.push(<Folder>decrypt(new Folder(element), key));
-            })
-            if (Number(obj.version) >= 1.4) 
-                obj.bin.forEach((element: any) => {
-                    if (element.type == Type.Password) binItem.push(<Item>decrypt(new Password(element), key));
-                    else binItem.push(<Item>decrypt(new Folder(element), key));
-                });
-            else 
-                obj.recent.forEach((element: any) => {
-                    if (element.type == Type.Password) binItem.push(<Item>decrypt(new Password(element), key, ["dir"]));
-                    else binItem.push(<Item>decrypt(new Folder(element), key));
-                });
-            if (obj.version === "1.2") {
-                DONETasks = [];
-                score = 0;
-                level = 1;
-            }
-            else if (Number(obj.version) >= 1.3) {
-                obj.DONETasks.forEach((element: any) => {
-                    DONETasks.push(TaskMap.dec(element, key));
-                })
-                score = Number(Cryp.decrypt(obj.score, key));
-                level = Number(Cryp.decrypt(obj.level, key));
-            }
-
-            (document.querySelector("#nav-home") as HTMLSpanElement).click();
-        }
     }).catch((err) => {
         console.log(err);
+        saveData();
         (document.querySelector("#nav-home") as HTMLSpanElement).click();
     });
 }
