@@ -102,3 +102,67 @@ pbkdf2: (pwd: string, salt: string) => string;
 - `newFolder.png`：新建文件夹图标
 - `up.png`：向上图标
 
+# 文件格式
+本项目使用.umc（User migration credentials，用户迁移凭证）文件进行数据交换
+
+## umc v1.4
+```json
+{
+    "version": "1.4", // 版本号
+    "pwd": [ // 密码列表
+        {
+            // 描述一个password的格式
+            "type": "<int>", // 文件类型，因为pwd中的都是密码，所以应该为1，明文储存
+            "rmDate": "<int> | <null>", // 删除日期，因为没有被删除，所以是null
+            "from": "<string>", // 来源字段
+            "uname": "<string>", // 用户名字段
+            "pwd": "<string>", // 密码字段
+            "email": "<string>", // 邮箱字段
+            "phone": "<string>", // 手机号字段
+            "dir": "<string>", // 密码所处位置
+            "moDate": "<int>" // 最近一次修改的日期
+        },
+        // ...
+    ],
+    "folder": [ // 文件夹列表
+        {
+            // 描述一个folder的格式
+            "lock": "<string>", // 二级锁密码
+            "cachePwd": null, // 用作缓存，请忽视
+            "type": "<int>", // 文件类型，因为folder中的都是文件夹，所以应该为0，明文储存
+            "name": "<string>", // 文件名
+            "parent": "<string>", // 地址
+            "moDate": "<int>", // 最近一次修改的日期
+            "rmDate": "<int> | <null>" // 删除日期，因为没有被删除，所以是null
+        },
+        // ...
+    ],
+    "bin": [ // 回收站
+        {
+            "type": "<int>",
+            // 如果type属性为0，则是上面描述一个folder的格式
+            // 如果type属性为1，则是上面描述一个password的格式
+            // ...
+        },
+        // ...
+    ],
+    "mainPwd": "<string>", // 主密码，会经过二次加密
+    "mainSetting": { // 全局设置，明文储存
+        "autoCopy" : "<bool>", // 自动复制
+        "easyAppend": "<bool>" // 使用表单添加数据
+    },
+    "salt": "<string>", // 加密所用盐值
+    "memory": "<string> | null", // 如果使用了“记住密码”功能，会在此处记录密码，否则为null，不会被加密
+    "isPwdNull": "<bool>", // 有没有设置密码，明文储存
+    "DONETasks": [ // 已经完成至少一次的任务
+        {
+            "task": "<int>", // 在全局task数组中的索引
+            "doTimes": "<int>", // 完成的次数
+            "fulfilled": "<bool>", // 有没有领取奖励
+        },
+        // ...
+    ],
+    "score": "<int>", // 分数
+    "level": "<int>" // 等级
+}
+```
