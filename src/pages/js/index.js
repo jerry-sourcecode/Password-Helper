@@ -865,10 +865,7 @@ function fmain() {
         update(pagePos.mainDir);
     });
     document.querySelector("span#nav-setting").addEventListener("click", () => {
-        if (getCurrentUserGroup().permission.canUseSetting)
-            update(Folder.setting());
-        else
-            mkDialog("权限不足", "你没有权限使用设置功能。");
+        update(Folder.setting());
     });
     document.querySelector("span#nav-bin").addEventListener("click", () => {
         if (getCurrentUserGroup().permission.canUseBin)

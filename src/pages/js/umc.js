@@ -1,5 +1,11 @@
 "use strict";
 class UMC {
+    /**
+     * Decrypts the given object using the provided key.
+     * @param obj The object to decrypt.
+     * @param key The key to use for decryption.
+     * @returns True if decryption was successful, false otherwise.
+     */
     static decrypt(obj, key) {
         if (Number(obj.version) <= 1.4)
             this.encV1_2V1_3V1_4(obj, key);
@@ -7,6 +13,12 @@ class UMC {
             return false;
         return true;
     }
+    /**
+     * Decrypts the given object using the provided key.
+     * @param obj The object to decrypt.
+     * @param key The key to use for decryption.
+     * 适用于 1.2, 1.3, 1.4 版本
+     */
     static encV1_2V1_3V1_4(obj, key) {
         if (Number(obj.version) < 1.4) {
             obj.pwd.forEach((element) => {

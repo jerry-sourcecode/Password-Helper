@@ -97,8 +97,7 @@ class Task {
  * @member canUseSetting 是否允许使用设置功能
  */
 class Permission {
-    constructor(pwdNum, folderNum, canUseBin, canMove, canSearch, canLock, canUseSetting) {
-        this.canUseSetting = canUseSetting;
+    constructor(pwdNum, folderNum, canUseBin, canMove, canSearch, canLock) {
         this.pwdNum = pwdNum;
         this.folderNum = folderNum;
         this.canUseBin = canUseBin;
@@ -136,7 +135,7 @@ class Permission {
  * @member needLevel 用户组所需等级
  */
 class UserGroup {
-    constructor(name, description = "", needLevel = 0, permission = new Permission(0, 0, false, false, false, false, false)) {
+    constructor(name, description = "", needLevel = 0, permission = new Permission(0, 0, false, false, false, false)) {
         if (typeof name == "string") {
             this.name = name;
             this.description = description;
@@ -263,14 +262,14 @@ const tasks = [
     new Task("双重加密，双重保护", "设置二级锁。你可以在一个文件夹中点击右上角的“加密”图标，这样就可以给这个文件夹加设二级锁。你可以通过文件夹左下角的图标来知晓加密状态。对于已经被解锁的文件夹，点击“已解锁”图标可以重新加密文件夹。", Folder.root(), 500),
 ];
 const userGroups = [
-    new UserGroup("新进用户", "获得一些基础功能", 1, new Permission(3, 0, false, false, false, false, true)),
-    new UserGroup("初级用户", "获得更多的密码额度，解锁使用回收站的权限", 2, new Permission(5, 0, true, false, false, false, true)),
-    new UserGroup("中级用户", "解锁使用文件夹的权限", 3, new Permission(5, 2, true, false, false, false, true)),
-    new UserGroup("高级用户", "解锁移动文件的权限", 4, new Permission(5, 2, true, true, false, false, true)),
-    new UserGroup("银卡用户", "获得更多配额", 5, new Permission(10, 5, true, true, false, false, true)),
-    new UserGroup("金卡用户", "解锁搜索文件的权限", 6, new Permission(10, 5, true, true, true, false, true)),
-    new UserGroup("钻石用户", "解锁二级锁的权限", 7, new Permission(10, 5, true, true, true, true, true)),
-    new UserGroup("元老", "文件的创建将无配额限制", 8, new Permission(-1, -1, true, true, true, true, true))
+    new UserGroup("新进用户", "获得一些基础功能", 1, new Permission(3, 0, false, false, false, false)),
+    new UserGroup("初级用户", "获得更多的密码额度，解锁使用回收站的权限", 2, new Permission(5, 0, true, false, false, false)),
+    new UserGroup("中级用户", "解锁使用文件夹的权限", 3, new Permission(5, 2, true, false, false, false)),
+    new UserGroup("高级用户", "解锁移动文件的权限", 4, new Permission(5, 2, true, true, false, false)),
+    new UserGroup("银卡用户", "获得更多配额", 5, new Permission(10, 5, true, true, false, false)),
+    new UserGroup("金卡用户", "解锁搜索文件的权限", 6, new Permission(10, 5, true, true, true, false)),
+    new UserGroup("钻石用户", "解锁二级锁的权限", 7, new Permission(10, 5, true, true, true, true)),
+    new UserGroup("元老", "文件的创建将无配额限制", 8, new Permission(-1, -1, true, true, true, true))
 ];
 /**
  * 获取当前用户组
@@ -371,21 +370,13 @@ function goHome(token) {
             </div>
         </div>`;
     }
-    let maxScore, levelHtml = "";
+    let maxScore;
     if (level >= getMaxLevel())
         maxScore = levelMap[getMaxLevel()];
     else
         maxScore = levelMap[level + 1];
-    for (let i = 0; i < userGroups.length; i++) {
-        if (level >= userGroups[i].needLevel) {
-            levelHtml += `
-            <p>
-                <strong>${userGroups[i].name}</strong>：${userGroups[i].description}
-            </p>
-            `;
-        }
-    }
     let scorePercent = Math.min(Math.round(score / maxScore * 1000) / 10, 100);
+    let nowUserGroup = getCurrentUserGroup();
     main.innerHTML = `
     <div class="title">我的</div>
     <div class="accordion" id="mainAccordion">
@@ -409,7 +400,13 @@ function goHome(token) {
             </h2>
             <div id="collapseForUserGroup" class="accordion-collapse collapse" aria-labelledby="accordionHeadingForUserGroup" data-bs-parent="#mainAccordion">
                 <div class="accordion-body">
-                    ${levelHtml}
+                    <p><strong>当前用户组</strong>：${nowUserGroup.name}</p>
+                    <p><strong>密码限额</strong>：${nowUserGroup.permission.pwdNum == -1 ? `无限制` : `${nowUserGroup.permission.pwdNum}个密码，已创建${pwdList.length}个`}</p>
+                    <p><strong>文件夹限额</strong>：${nowUserGroup.permission.folderNum == -1 ? `无限制` : `${nowUserGroup.permission.folderNum}个文件夹，已创建${folderList.length}个`}</p>
+                    <p><strong>回收站</strong>：${nowUserGroup.permission.canUseBin ? `可以使用` : `禁止使用`}</p>
+                    <p><strong>移动文件</strong>：${nowUserGroup.permission.canMove ? `可以使用` : `禁止使用`}</p>
+                    <p><strong>搜索文件</strong>：${nowUserGroup.permission.canSearch ? `可以使用` : `禁止使用`}</p>
+                    <p><strong>二级锁</strong>：${nowUserGroup.permission.canLock ? `可以使用` : `禁止使用`}</p>
                 </div>
             </div>
         </div>
