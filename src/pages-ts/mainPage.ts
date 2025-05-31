@@ -328,7 +328,6 @@ class TurnToPage{
         document.querySelector("#searchFolder")?.addEventListener("change", () => {searchMemory.setting.searchFolder = searchSetting.searchFolder.checked;})
 
         document.querySelector("#searchBtn")?.addEventListener("click", () => {
-            searchMemory.isSearched = true;
             searchMemory.lastSearchTxt = searchMemory.txt;
             function canFound(test: string, by: string): boolean{
                 if (!searchSetting.isCaseSensitive.checked){
@@ -458,7 +457,7 @@ class TurnToPage{
         searchSetting.searchPhone.checked = searchMemory.setting.searchPhone;
         searchSetting.searchNote.checked = searchMemory.setting.searchNote;
         searchSetting.searchFolder.checked = searchMemory.setting.searchFolder;
-        if (searchMemory.lastSearchTxt != "" && searchMemory.isSearched){
+        if (searchMemory.lastSearchTxt !== "" && searchMemory.lastSearchTxt !== null){
             (document.querySelector("#searchInput") as HTMLInputElement)!.value = searchMemory.lastSearchTxt;
             (document.querySelector("#searchBtn") as HTMLButtonElement).click();
         }

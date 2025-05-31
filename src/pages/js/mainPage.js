@@ -348,7 +348,6 @@ class TurnToPage {
         (_h = document.querySelector("#searchNote")) === null || _h === void 0 ? void 0 : _h.addEventListener("change", () => { searchMemory.setting.searchNote = searchSetting.searchNote.checked; });
         (_j = document.querySelector("#searchFolder")) === null || _j === void 0 ? void 0 : _j.addEventListener("change", () => { searchMemory.setting.searchFolder = searchSetting.searchFolder.checked; });
         (_k = document.querySelector("#searchBtn")) === null || _k === void 0 ? void 0 : _k.addEventListener("click", () => {
-            searchMemory.isSearched = true;
             searchMemory.lastSearchTxt = searchMemory.txt;
             function canFound(test, by) {
                 if (!searchSetting.isCaseSensitive.checked) {
@@ -486,7 +485,7 @@ class TurnToPage {
         searchSetting.searchPhone.checked = searchMemory.setting.searchPhone;
         searchSetting.searchNote.checked = searchMemory.setting.searchNote;
         searchSetting.searchFolder.checked = searchMemory.setting.searchFolder;
-        if (searchMemory.lastSearchTxt != "" && searchMemory.isSearched) {
+        if (searchMemory.lastSearchTxt !== "" && searchMemory.lastSearchTxt !== null) {
             document.querySelector("#searchInput").value = searchMemory.lastSearchTxt;
             document.querySelector("#searchBtn").click();
         }

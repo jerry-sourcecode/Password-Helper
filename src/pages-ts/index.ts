@@ -131,9 +131,11 @@ let DONETasks: Array<TaskMap> = [];
 let NEEDTODO: Array<TaskMap> = [];
 /** 搜索设置的记忆 */
 let searchMemory: {
+    /** 当前搜索框中的文本内容，随着用户的输入实时更新 */
     txt: string, 
-    isSearched: boolean, 
-    lastSearchTxt: string,
+    /** 上一次搜索的文字，如果没有上一次则为null */
+    lastSearchTxt: string | null,
+    /** 搜索设置 */
     setting: {
         isReg: boolean,
         isCaseSensitive: boolean,
@@ -147,8 +149,7 @@ let searchMemory: {
     };
 } = {
     txt: "", 
-    isSearched: false, 
-    lastSearchTxt: "",
+    lastSearchTxt: null,
     setting: {
         isReg: false,
         isCaseSensitive: true,
@@ -851,6 +852,8 @@ function fmain(){
         let obj = JSON.parse(data);
         if (obj.version != "e1.0") console.log("编辑器数据版本已过期！");
         searchMemory = obj.search;
+        searchMemory.lastSearchTxt = null;
+        searchMemory.txt = "";
     })
 
     window.fs.read("./data").then((data) => {

@@ -145,8 +145,7 @@ let NEEDTODO = [];
 /** 搜索设置的记忆 */
 let searchMemory = {
     txt: "",
-    isSearched: false,
-    lastSearchTxt: "",
+    lastSearchTxt: null,
     setting: {
         isReg: false,
         isCaseSensitive: true,
@@ -886,6 +885,8 @@ function fmain() {
         if (obj.version != "e1.0")
             console.log("编辑器数据版本已过期！");
         searchMemory = obj.search;
+        searchMemory.lastSearchTxt = null;
+        searchMemory.txt = "";
     });
     window.fs.read("./data").then((data) => {
         var _a;
