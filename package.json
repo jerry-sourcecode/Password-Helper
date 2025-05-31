@@ -27,6 +27,8 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",
+    "@types/bootstrap-datepicker": "^1.10.0",
+    "@types/jquery": "^3.5.32",
     "electron": "^34.0.1"
   }
 }

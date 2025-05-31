@@ -146,6 +146,8 @@ let searchMemory: {
         searchEmail: boolean,
         searchNote: boolean,
         searchFolder: boolean,
+        startDate: number | null, // 搜索开始时间
+        endDate: number | null, // 搜索结束时间
     };
 } = {
     txt: "", 
@@ -160,6 +162,8 @@ let searchMemory: {
         searchEmail: true,
         searchNote: true,
         searchFolder: true,
+        startDate: null, // 搜索开始时间
+        endDate: null, // 搜索结束时间
     }
 };
 /** 页面滚动位置的记忆 */

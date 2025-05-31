@@ -318,3 +318,8 @@ div.toast strong,div.toast small{
 div.card,div.toast{
     margin-bottom: 10px;
 }
+input.datepicker{
+    display: inline-block;
+    margin: 3px;
+    width: 10vw;
+}

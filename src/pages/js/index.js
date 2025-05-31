@@ -156,6 +156,8 @@ let searchMemory = {
         searchEmail: true,
         searchNote: true,
         searchFolder: true,
+        startDate: null, // 搜索开始时间
+        endDate: null, // 搜索结束时间
     }
 };
 let pagePos = {

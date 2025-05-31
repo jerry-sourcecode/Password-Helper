@@ -253,22 +253,33 @@ class TurnToPage{
      * 展示“搜索”页面
      */
     private static showSearch(): void{
-        main!.innerHTML = `<div class="title">搜索</div>
+    function getNowFormatDate(date: Date) {
+        let year = date.getFullYear(), //获取完整的年份(4位)
+            month = date.getMonth() + 1, //获取当前月份(0-11,0代表1月)
+            ddate = date.getDate() // 获取当前日(1-31)
+        let strmonth = month.toString(), strDate = ddate.toString(); // 将月份和日转换为字符串
+        if (month < 10) strmonth = `0${month}` // 如果月份是个位数，在前面补0
+        if (ddate < 10) strDate = `0${ddate}` // 如果日是个位数，在前面补0
+        
+        return `${year}-${strmonth}-${strDate}`
+    }
+    main!.innerHTML = `<div class="title">搜索</div>
         <div class="form">
             <!-- 搜索表单 -->
-            <div role="search" style="width: 100%; margin-bottom: 10px;">
+            <div role="search" style="width: 100%; margin-bottom: 5px;">
                 <div class="input-group d-flex">
                     <input 
                         type="search" 
                         class="form-control form-control-lg" 
                         placeholder="搜索内容..." 
                         aria-label="搜索"
-                        style="font-size: 15px;"
+                        style="font-size: 15px; margin: 5px;"
                         id="searchInput"
                     >
                     <button 
                         class="btn btn-outline-secondary" 
                         id="searchBtn"
+                        style="margin: 5px;"
                     >
                         搜索
                     </button>
@@ -290,12 +301,49 @@ class TurnToPage{
                             <div><input type="checkbox" id="searchNote"/><label for="searchNote">备注</label></div>
                         </div>
                         <div><input type="checkbox" id="searchFolder"/><label for="searchFolder">搜索文件夹</label></div>
+                        <div>
+                            <label>搜索时间范围：自</label>
+                            <input type="text" id="datepicker-start" class="form-control datepicker" placeholder="不填写则无限制" readonly value="${searchMemory.setting.startDate === null? "":getNowFormatDate(new Date(searchMemory.setting.startDate))}">
+                            <label>至</label>
+                            <input type="text" id="datepicker-end" class="form-control datepicker" placeholder="不填写则无限制" readonly value="${searchMemory.setting.endDate === null? "":getNowFormatDate(new Date(searchMemory.setting.endDate))}">
+                        </div>
                     </div>
                 </div>
             </div>
             <div id="searchResult" style="width: 100%;"></div>
         </div>
             `;
+        jQuery('.datepicker').each(function () {
+            var $input = jQuery(this);
+            $input.datepicker({
+                defaultViewDate:'today',
+                language: 'zh-CN',
+                clearBtn: true,
+            });
+        });
+        
+        $('#datepicker-start').datepicker().on('changeDate', function(){
+            const startDate = $('#datepicker-start').datepicker('getDate');
+            $('#datepicker-end').datepicker('setStartDate', startDate);
+            searchMemory.setting.startDate = startDate === null? null : startDate.getTime();
+        });
+
+        $("#datepicker-start").datepicker().on("clearDate", function() {
+            $('#datepicker-end').datepicker('setStartDate', null);
+            searchMemory.setting.startDate = null;
+        });
+
+        $('#datepicker-end').datepicker().on('changeDate', function(){
+            const endDate = $('#datepicker-end').datepicker('getDate') as Date;
+            $('#datepicker-start').datepicker('setEndDate', endDate);
+            endDate.setHours(23, 59, 59, 999); // 设置结束时间为当天的最后一刻
+            searchMemory.setting.endDate = endDate === null? null : endDate.getTime();
+        });
+
+        $("#datepicker-end").datepicker().on("clearDate", function() {
+            $('#datepicker-start').datepicker('setEndDate', null);
+            searchMemory.setting.endDate = null;
+        });
         const searchSetting = {
             isReg: document.querySelector("#isReg") as HTMLInputElement,
             isCaseSensitive: document.querySelector("#isCaseSensitive") as HTMLInputElement,
@@ -365,6 +413,17 @@ class TurnToPage{
             }
             function hasItemCard(item: Item): boolean{
                 if (item.isLocked()) return false;
+                if (item.rmDate !== null){
+                    if ((searchMemory.setting.startDate !== null && Number(item.rmDate) < searchMemory.setting.startDate) || 
+                        (searchMemory.setting.endDate !== null && Number(item.rmDate) > searchMemory.setting.endDate)){
+                        return false;
+                    }
+                } else {
+                    if ((searchMemory.setting.startDate !== null && Number(item.moDate) < searchMemory.setting.startDate) || 
+                        (searchMemory.setting.endDate !== null && Number(item.moDate) > searchMemory.setting.endDate)){
+                        return false;
+                    }
+                }
                 if (item.type == Type.Password)
                 {
                     item = item as Password;
