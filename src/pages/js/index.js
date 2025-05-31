@@ -26,15 +26,11 @@ class Cryp {
      * @memberof Cryp
      */
     static decrypt(data, key) {
-        try {
-            // 先使用Latin1编码获取原始字节数据
-            const bytes = CryptoJS.AES.decrypt(data, key);
-            const UTF8String = bytes.toString(CryptoJS.enc.Utf8);
-            return UTF8String;
-        }
-        catch (_a) {
-            return Cryp.decrypt(data, key);
-        }
+        if (!data)
+            throw new Error("数据不能为空");
+        const bytes = CryptoJS.AES.decrypt(data, key);
+        const UTF8String = bytes.toString(CryptoJS.enc.Utf8);
+        return UTF8String;
     }
     /**
      * pbkdf2加密函数
