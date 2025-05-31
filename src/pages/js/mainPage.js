@@ -11,7 +11,7 @@ class TurnToPage {
      * 展示“设置”页面
      */
     static showSetting() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
         // 显示设置页面
         main.innerHTML = `
         <div class="title">设置</div>
@@ -52,6 +52,7 @@ class TurnToPage {
                 <div id="importUMC"><p class="action">点此导入数据</p></div>
             </div>
             <div id="reset"><p class="action">点此重置</p></div>
+            <p class="btn btn-secondary" id="apply" style="margin-left: auto;">应用</p>
         </div>
         `;
         const saveKey = document.querySelector("#rememberPwd");
@@ -60,66 +61,81 @@ class TurnToPage {
             if (saveKey.disabled)
                 saveKey.checked = false;
         });
-        (_b = document.querySelector("#mainPwd")) === null || _b === void 0 ? void 0 : _b.addEventListener("change", () => {
+        let applyStyle = () => {
+            var _a, _b;
+            (_a = document.querySelector("#apply")) === null || _a === void 0 ? void 0 : _a.classList.add("btn-primary");
+            (_b = document.querySelector("#apply")) === null || _b === void 0 ? void 0 : _b.classList.remove("btn-secondary");
+        };
+        (_b = document.querySelector("#mainPwd")) === null || _b === void 0 ? void 0 : _b.addEventListener("input", () => {
             Task.tryDone("妈妈再也不用担心我密码泄露啦！");
-            mainPwd = document.querySelector("#mainPwd").value;
-            saveData();
+            applyStyle();
         });
         saveKey.addEventListener("change", () => {
-            isremember = saveKey.checked;
-            saveData();
+            applyStyle();
         });
-        (_c = document.querySelector("#mainPwdTip")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", () => {
-            mainSetting.mainPwdTip = document.querySelector("#mainPwdTip").value;
-            saveData();
+        (_c = document.querySelector("#mainPwdTip")) === null || _c === void 0 ? void 0 : _c.addEventListener("input", () => {
+            applyStyle();
         });
         (_d = document.querySelector("#autoCopy")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", () => {
-            mainSetting.autoCopy = document.querySelector("#autoCopy").checked;
-            saveData();
+            applyStyle();
         });
         (_e = document.querySelector("#easyAppend")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => {
-            mainSetting.easyAppend = document.querySelector("#easyAppend").checked;
-            saveData();
+            applyStyle();
         });
         (_f = document.querySelector("#pwdSortBy")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => {
-            switch (document.querySelector("#pwdSortBy").value) {
-                case "name":
-                    mainSetting.pwdSortBy = SortBy.name;
-                    break;
-                case "name_reserve":
-                    mainSetting.pwdSortBy = SortBy.name_reverse;
-                    break;
-                case "time_early":
-                    mainSetting.pwdSortBy = SortBy.time_early;
-                    break;
-                case "time_late":
-                    mainSetting.pwdSortBy = SortBy.time_late;
-            }
-            saveData();
+            applyStyle();
         });
         (_g = document.querySelector("#folderSortBy")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", () => {
-            switch (document.querySelector("#folderSortBy").value) {
-                case "name":
-                    mainSetting.folderSortBy = SortBy.name;
-                    break;
-                case "name_reserve":
-                    mainSetting.folderSortBy = SortBy.name_reverse;
-                    break;
-                case "time_early":
-                    mainSetting.folderSortBy = SortBy.time_early;
-                    break;
-                case "time_late":
-                    mainSetting.folderSortBy = SortBy.time_late;
-            }
-            saveData();
+            applyStyle();
         });
-        (_h = document.querySelector("div#exportUMC")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", () => {
+        (_h = document.querySelector("p#apply")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", (e) => {
+            var _a, _b, _c;
+            if ((_a = document.querySelector("p#apply")) === null || _a === void 0 ? void 0 : _a.classList.contains("btn-primary")) {
+                mainPwd = document.querySelector("#mainPwd").value;
+                isremember = saveKey.checked;
+                mainSetting.mainPwdTip = document.querySelector("#mainPwdTip").value;
+                mainSetting.autoCopy = document.querySelector("#autoCopy").checked;
+                mainSetting.easyAppend = document.querySelector("#easyAppend").checked;
+                switch (document.querySelector("#pwdSortBy").value) {
+                    case "name":
+                        mainSetting.pwdSortBy = SortBy.name;
+                        break;
+                    case "name_reserve":
+                        mainSetting.pwdSortBy = SortBy.name_reverse;
+                        break;
+                    case "time_early":
+                        mainSetting.pwdSortBy = SortBy.time_early;
+                        break;
+                    case "time_late":
+                        mainSetting.pwdSortBy = SortBy.time_late;
+                        break;
+                }
+                switch (document.querySelector("#folderSortBy").value) {
+                    case "name":
+                        mainSetting.folderSortBy = SortBy.name;
+                        break;
+                    case "name_reserve":
+                        mainSetting.folderSortBy = SortBy.name_reverse;
+                        break;
+                    case "time_early":
+                        mainSetting.folderSortBy = SortBy.time_early;
+                        break;
+                    case "time_late":
+                        mainSetting.folderSortBy = SortBy.time_late;
+                        break;
+                }
+                saveData();
+                (_b = document.querySelector("p#apply")) === null || _b === void 0 ? void 0 : _b.classList.remove("btn-primary");
+                (_c = document.querySelector("p#apply")) === null || _c === void 0 ? void 0 : _c.classList.add("btn-secondary");
+            }
+        });
+        (_j = document.querySelector("div#exportUMC")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
             let ans = window.msg.showSaveDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
             if (ans === undefined)
                 return;
             saveUMC(ans);
         });
-        (_j = document.querySelector("div#importUMC")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
+        (_k = document.querySelector("div#importUMC")) === null || _k === void 0 ? void 0 : _k.addEventListener("click", () => {
             mkDialog("警告", "此操作会覆盖原有数据，你确定要继续吗？", ["确定", "取消"])
                 .then((res) => {
                 if (res == 1)
@@ -130,7 +146,7 @@ class TurnToPage {
                 readUMC(ans);
             });
         });
-        (_k = document.querySelector("#reset")) === null || _k === void 0 ? void 0 : _k.addEventListener("click", () => {
+        (_l = document.querySelector("#reset")) === null || _l === void 0 ? void 0 : _l.addEventListener("click", () => {
             mkDialog("警告", "此操作会清空所有数据并立即重启，你确定要继续吗？", ["确定", "取消"])
                 .then((res) => {
                 if (res == 0) {

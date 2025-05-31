@@ -50,6 +50,7 @@ class TurnToPage{
                 <div id="importUMC"><p class="action">点此导入数据</p></div>
             </div>
             <div id="reset"><p class="action">点此重置</p></div>
+            <p class="btn btn-secondary" id="apply" style="margin-left: auto;">应用</p>
         </div>
         `;
         const saveKey = document.querySelector("#rememberPwd") as HTMLInputElement;
@@ -59,64 +60,57 @@ class TurnToPage{
         });
 
 
-        document.querySelector("#mainPwd")?.addEventListener("change", () => {
+        let applyStyle = () => {
+            document.querySelector("#apply")?.classList.add("btn-primary");
+            document.querySelector("#apply")?.classList.remove("btn-secondary");
+        }
+        
+        document.querySelector("#mainPwd")?.addEventListener("input", () => {
             Task.tryDone("妈妈再也不用担心我密码泄露啦！")
-            mainPwd = (document.querySelector("#mainPwd") as HTMLInputElement).value;
-            saveData();
+            applyStyle();
         })
         saveKey.addEventListener("change", () => {
-            isremember = saveKey.checked;
-            saveData();
+            applyStyle();
         })
-        document.querySelector("#mainPwdTip")?.addEventListener("change", () => {
-            mainSetting.mainPwdTip = (document.querySelector("#mainPwdTip") as HTMLInputElement).value;
-            saveData();
+        document.querySelector("#mainPwdTip")?.addEventListener("input", () => {
+            applyStyle();
         })
         document.querySelector("#autoCopy")?.addEventListener("change", () => {
-            mainSetting.autoCopy = (document.querySelector("#autoCopy") as HTMLInputElement).checked;
-            saveData();
+            applyStyle();
         })
         document.querySelector("#easyAppend")?.addEventListener("change", () => {
-            mainSetting.easyAppend = (document.querySelector("#easyAppend") as HTMLInputElement).checked;
-            saveData();
+            applyStyle();
         })
         document.querySelector("#pwdSortBy")?.addEventListener("change", () => {
-            switch ((document.querySelector("#pwdSortBy") as HTMLInputElement).value) {
-                case "name":
-                    mainSetting.pwdSortBy = SortBy.name;
-                    break;
-            
-                case "name_reserve":
-                    mainSetting.pwdSortBy = SortBy.name_reverse;
-                    break;
-                
-                case "time_early":
-                    mainSetting.pwdSortBy = SortBy.time_early;
-                    break;
-
-                case "time_late":
-                    mainSetting.pwdSortBy = SortBy.time_late;
-            }
-            saveData();
+            applyStyle();
         })
         document.querySelector("#folderSortBy")?.addEventListener("change", () => {
-            switch ((document.querySelector("#folderSortBy") as HTMLInputElement).value) {
-                case "name":
-                    mainSetting.folderSortBy = SortBy.name;
-                    break;
-            
-                case "name_reserve":
-                    mainSetting.folderSortBy = SortBy.name_reverse;
-                    break;
-                
-                case "time_early":
-                    mainSetting.folderSortBy = SortBy.time_early;
-                    break;
+            applyStyle();
+        })
 
-                case "time_late":
-                    mainSetting.folderSortBy = SortBy.time_late;
+        document.querySelector("p#apply")?.addEventListener("click", (e) => {
+            if (document.querySelector("p#apply")?.classList.contains("btn-primary")) {
+                mainPwd = (document.querySelector("#mainPwd") as HTMLInputElement).value;
+                isremember = saveKey.checked;
+                mainSetting.mainPwdTip = (document.querySelector("#mainPwdTip") as HTMLInputElement).value;
+                mainSetting.autoCopy = (document.querySelector("#autoCopy") as HTMLInputElement).checked;
+                mainSetting.easyAppend = (document.querySelector("#easyAppend") as HTMLInputElement).checked;
+                switch ((document.querySelector("#pwdSortBy") as HTMLInputElement).value) {
+                    case "name": mainSetting.pwdSortBy = SortBy.name; break;
+                    case "name_reserve": mainSetting.pwdSortBy = SortBy.name_reverse; break;
+                    case "time_early": mainSetting.pwdSortBy = SortBy.time_early; break;
+                    case "time_late": mainSetting.pwdSortBy = SortBy.time_late; break;
+                }
+                switch ((document.querySelector("#folderSortBy") as HTMLInputElement).value) {
+                    case "name": mainSetting.folderSortBy = SortBy.name; break;
+                    case "name_reserve": mainSetting.folderSortBy = SortBy.name_reverse; break;
+                    case "time_early": mainSetting.folderSortBy = SortBy.time_early; break;
+                    case "time_late": mainSetting.folderSortBy = SortBy.time_late; break;
+                }
+                saveData();
+                document.querySelector("p#apply")?.classList.remove("btn-primary");
+                document.querySelector("p#apply")?.classList.add("btn-secondary");
             }
-            saveData();
         })
 
         document.querySelector("div#exportUMC")?.addEventListener("click", () => {
