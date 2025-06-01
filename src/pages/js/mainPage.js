@@ -394,22 +394,32 @@ class TurnToPage {
         (_j = document.querySelector("#searchFolder")) === null || _j === void 0 ? void 0 : _j.addEventListener("change", () => { searchMemory.setting.searchFolder = searchSetting.searchFolder.checked; });
         (_k = document.querySelector("#searchBtn")) === null || _k === void 0 ? void 0 : _k.addEventListener("click", () => {
             searchMemory.lastSearchTxt = searchMemory.txt;
+            /**
+             * 检查字符串是否可以被匹配到。
+             * @param test 要测试的字符串
+             * @param by 要匹配的字符串
+             * @returns 匹配到的字符串，如果没有匹配到则返回null
+             */
             function canFound(test, by) {
                 if (!searchSetting.isCaseSensitive.checked) {
                     test = test.toLowerCase();
                     by = by.toLowerCase();
                 }
                 if (searchSetting.isReg.checked) {
-                    return new RegExp(by).test(test);
+                    if (new RegExp(by).exec(test) === null)
+                        return null;
+                    return new RegExp(by).exec(test)[0];
                 }
                 else {
-                    return test.indexOf(by) != -1;
+                    if (test.indexOf(by) != -1)
+                        return by;
+                    return null;
                 }
             }
             function showPwdCard(list, index) {
-                function mkIt() {
+                function mkIt(str) {
                     var _a, _b;
-                    result.insertAdjacentHTML("beforeend", list[index].getCard(cnt));
+                    result.insertAdjacentHTML("beforeend", list[index].getCard(cnt, false, str));
                     (_a = document.querySelector(`#card${cnt}-path`)) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
                         update(list[index].getParent());
                     });
@@ -418,56 +428,59 @@ class TurnToPage {
                     });
                     cnt++;
                 }
-                if (hasItemCard(list[index]))
-                    mkIt();
+                if (hasItemCard(list[index]) !== null)
+                    mkIt(hasItemCard(list[index]));
             }
-            function showFolderCard(item) {
-                function mkIt() {
+            function showFolderCard(item, isBin = false) {
+                function mkIt(k) {
                     var _a;
-                    result.insertAdjacentHTML("beforeend", item.getCard(cnt));
+                    result.insertAdjacentHTML("beforeend", item.getCard(cnt, isBin, k));
                     (_a = document.querySelector(`#card${cnt}-path`)) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
                         update(item);
                     });
                     cnt++;
                 }
                 if (hasItemCard(item))
-                    mkIt();
+                    mkIt(hasItemCard(item));
             }
             function hasItemCard(item) {
                 if (item.isLocked())
-                    return false;
+                    return null;
                 if (item.rmDate !== null) {
                     if ((searchMemory.setting.startDate !== null && Number(item.rmDate) < searchMemory.setting.startDate) ||
                         (searchMemory.setting.endDate !== null && Number(item.rmDate) > searchMemory.setting.endDate)) {
-                        return false;
+                        return null;
                     }
                 }
                 else {
                     if ((searchMemory.setting.startDate !== null && Number(item.moDate) < searchMemory.setting.startDate) ||
                         (searchMemory.setting.endDate !== null && Number(item.moDate) > searchMemory.setting.endDate)) {
-                        return false;
+                        return null;
                     }
                 }
                 if (item.type == Type.Password) {
                     item = item;
                     if (canFound(item.from, input.value) && searchSetting.searchFrom.checked)
-                        return true;
+                        return canFound(item.from, input.value);
                     else if (canFound(item.uname, input.value) && searchSetting.searchUname.checked)
-                        return true;
+                        return canFound(item.uname, input.value);
                     else if (canFound(item.phone, input.value) && searchSetting.searchPhone.checked)
-                        return true;
+                        return canFound(item.phone, input.value);
                     else if (canFound(item.pwd, input.value) && searchSetting.searchPwd.checked)
-                        return true;
+                        return canFound(item.pwd, input.value);
                     else if (canFound(item.email, input.value) && searchSetting.searchEmail.checked)
-                        return true;
+                        canFound(item.email, input.value);
                     else if (canFound(item.note, input.value) && searchSetting.searchNote.checked)
-                        return true;
-                    return false;
+                        return canFound(item.note, input.value);
+                    return null;
                 }
                 else {
                     item = item;
-                    return canFound(item.name, input.value) && searchSetting.searchFolder.checked;
+                    if (canFound(item.name, input.value) && searchSetting.searchFolder.checked) {
+                        return canFound(item.name, input.value);
+                    }
                 }
+                return null;
             }
             const input = document.querySelector("#searchInput");
             const result = document.querySelector("#searchResult");
@@ -481,7 +494,7 @@ class TurnToPage {
                 return;
             }
             Task.tryDone("密码侦探");
-            result === null || result === void 0 ? void 0 : result.insertAdjacentHTML("beforeend", `<div><h5><strong>在所有文件中搜索“${input.value}”，发现以下结果：</strong></h5></div>`);
+            result === null || result === void 0 ? void 0 : result.insertAdjacentHTML("beforeend", `<div><h5><strong style="word-wrap: break-word;">在所有文件中搜索“${input.value}”，发现以下结果：</strong></h5></div>`);
             try {
                 // 检查是否有
                 flag = false;
@@ -531,7 +544,7 @@ class TurnToPage {
                         showPwdCard(binItem, i);
                     }
                     else {
-                        showFolderCard(binItem[i]);
+                        showFolderCard(binItem[i], true);
                     }
                 }
             }

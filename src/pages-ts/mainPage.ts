@@ -377,68 +377,80 @@ class TurnToPage{
 
         document.querySelector("#searchBtn")?.addEventListener("click", () => {
             searchMemory.lastSearchTxt = searchMemory.txt;
-            function canFound(test: string, by: string): boolean{
+            /**
+             * 检查字符串是否可以被匹配到。
+             * @param test 要测试的字符串
+             * @param by 要匹配的字符串
+             * @returns 匹配到的字符串，如果没有匹配到则返回null
+             */
+            function canFound(test: string, by: string): string | null {
                 if (!searchSetting.isCaseSensitive.checked){
                     test = test.toLowerCase();
                     by = by.toLowerCase();
                 }
                 if (searchSetting.isReg.checked){
-                    return new RegExp(by).test(test);
+                    if (new RegExp(by).exec(test) === null) return null;
+                    return new RegExp(by).exec(test)![0];
                 } else {
-                    return test.indexOf(by) != -1;
+                    if (test.indexOf(by) != -1) return by;
+                    return null;
                 }
             }
             function showPwdCard(list: Array<Password>, index: number): void{
-                function mkIt(): void{
-                    result!.insertAdjacentHTML("beforeend", list[index].getCard(cnt));
+                function mkIt(str: string): void{
+                    result!.insertAdjacentHTML("beforeend", list[index].getCard(cnt, false, str));
                     document.querySelector(`#card${cnt}-path`)?.addEventListener("click", () => {
                         update(list[index].getParent());
                     })
                     document.querySelector(`#card${cnt}-detail`)?.addEventListener("click", () => {
-                        showPwd(list,  index, Folder.search());
+                        showPwd(list, index, Folder.search());
                     })
                     cnt++;
                 }
-                if (hasItemCard(list[index])) mkIt();
+                if (hasItemCard(list[index]) !== null) mkIt(hasItemCard(list[index])!);
             }
-            function showFolderCard(item: Folder): void{
-                function mkIt(): void{
-                    result!.insertAdjacentHTML("beforeend", item.getCard(cnt));
+            function showFolderCard(item: Folder, isBin: boolean = false): void{
+                function mkIt(k: string): void{
+                    result!.insertAdjacentHTML("beforeend", item.getCard(cnt, isBin, k));
                     document.querySelector(`#card${cnt}-path`)?.addEventListener("click", () => {
                         update(item);
                     })
                     cnt++;
                 }
-                if (hasItemCard(item)) mkIt();
+                if (hasItemCard(item)) mkIt(hasItemCard(item)!)
             }
-            function hasItemCard(item: Item): boolean{
-                if (item.isLocked()) return false;
+            function hasItemCard(item: Item): string | null{
+                if (item.isLocked()) return null;
                 if (item.rmDate !== null){
                     if ((searchMemory.setting.startDate !== null && Number(item.rmDate) < searchMemory.setting.startDate) || 
                         (searchMemory.setting.endDate !== null && Number(item.rmDate) > searchMemory.setting.endDate)){
-                        return false;
+                        return null;
                     }
                 } else {
                     if ((searchMemory.setting.startDate !== null && Number(item.moDate) < searchMemory.setting.startDate) || 
                         (searchMemory.setting.endDate !== null && Number(item.moDate) > searchMemory.setting.endDate)){
-                        return false;
+                        return null;
                     }
                 }
                 if (item.type == Type.Password)
                 {
                     item = item as Password;
-                    if (canFound(item.from, input.value) && searchSetting.searchFrom.checked) return true;
-                    else if (canFound(item.uname, input.value) && searchSetting.searchUname.checked) return true;
-                    else if (canFound(item.phone, input.value) && searchSetting.searchPhone.checked) return true;
-                    else if (canFound(item.pwd, input.value) && searchSetting.searchPwd.checked) return true;
-                    else if (canFound(item.email, input.value) && searchSetting.searchEmail.checked) return true;
-                    else if (canFound(item.note, input.value) && searchSetting.searchNote.checked) return true;
-                    return false;
+                    if (canFound(item.from, input.value) && searchSetting.searchFrom.checked) return canFound(item.from, input.value);
+                    else if (canFound(item.uname, input.value) && searchSetting.searchUname.checked) return canFound(item.uname, input.value);
+                    else if (canFound(item.phone, input.value) && searchSetting.searchPhone.checked) return canFound(item.phone, input.value);
+                    else if (canFound(item.pwd, input.value) && searchSetting.searchPwd.checked) return canFound(item.pwd, input.value);
+                    else if (canFound(item.email, input.value) && searchSetting.searchEmail.checked) canFound(item.email, input.value);
+                    else if (canFound(item.note, input.value) && searchSetting.searchNote.checked) return canFound(item.note, input.value);
+                    return null;
                 } else {
                     item = item as Folder;
-                    return canFound(item.name, input.value) && searchSetting.searchFolder.checked;
+                    if (canFound(item.name, input.value) && searchSetting.searchFolder.checked) {
+                        return canFound(item.name, input.value);
+                    }
                 }
+                return null;
             }
+            
             const input = document.querySelector("#searchInput") as HTMLInputElement;
             const result = document.querySelector("#searchResult");
             let cnt: number = 0, flag : boolean = false;
@@ -451,7 +463,7 @@ class TurnToPage{
                 return;
             }
             Task.tryDone("密码侦探");
-            result?.insertAdjacentHTML("beforeend", `<div><h5><strong>在所有文件中搜索“${input.value}”，发现以下结果：</strong></h5></div>`)
+            result?.insertAdjacentHTML("beforeend", `<div><h5><strong style="word-wrap: break-word;">在所有文件中搜索“${input.value}”，发现以下结果：</strong></h5></div>`)
 
 
             try {
@@ -503,7 +515,7 @@ class TurnToPage{
                     if (binItem[i].type == Type.Password){
                         showPwdCard(binItem as Array<Password>, i);
                     } else {
-                        showFolderCard(binItem[i] as Folder);
+                        showFolderCard(binItem[i] as Folder, true);
                     }
                 }
             }

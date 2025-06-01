@@ -2,8 +2,9 @@
 /**
  * 这个文件是用来定义和存储数据的
  */
-const showNoteMaxLength = 152; // 在main页面显示备注的最大长度
+const showNoteMaxLength = 135; // 在main页面显示备注的最大长度
 const showOtherMaxLength = 60; // 在main页面显示来源、用户名、密码的最大长度
+const showSearchMaxLength = 47; // 在搜索页面显示来源、用户名、密码的最大长度
 const showPathMaxLength = 35; // 在main页面显示路径的最大长度
 var Type;
 (function (Type) {
@@ -81,20 +82,54 @@ class Password {
      * 得到卡片形式的HTML代码
      * @param id 作为这个HTML的唯一身份标识符的一部分，而给的一个编号
      * @param checkable 是否可以被选择
+     * @param searchPart 搜索Regex的文字，默认为undefined，表示不搜索
      * @returns HTML代码
      */
-    getCard(id, isBin = false) {
+    getCard(id, isBin = false, searchPart) {
+        let newPwd = new Password(this);
+        function markSearchWord(key) {
+            // 和Folder.getCard类似，处理搜索部分
+            if (searchPart) {
+                const regStr = searchPart.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); // 转义正则表达式特殊字符
+                const reg = new RegExp(regStr, "i");
+                const match = newPwd[key].match(reg);
+                if (match && match.index !== undefined) {
+                    // 格式化到合适长度
+                    let formatted = Password.format(newPwd[key], showSearchMaxLength, match.index + match[0].length / 2);
+                    // 格式化后还能匹配则高亮，否则整体标红
+                    if (new RegExp(regStr, "i").test(formatted)) {
+                        newPwd[key] = formatted.replace(new RegExp(regStr, "i"), (m) => `<span class="highlight">${m}</span>`);
+                    }
+                    else {
+                        newPwd[key] = `<span class="highlight">${formatted}</span>`;
+                    }
+                }
+                else {
+                    // 源文本无法匹配，正常格式化
+                    newPwd[key] = Password.format(newPwd[key], showSearchMaxLength);
+                }
+            }
+            else {
+                newPwd[key] = Password.format(newPwd[key], showSearchMaxLength);
+            }
+        }
+        markSearchWord("from");
+        markSearchWord("uname");
+        markSearchWord("pwd");
+        markSearchWord("email");
+        markSearchWord("phone");
+        markSearchWord("note");
         return `
         <div class="card" style="width: 100%;" id="card${id}">
             <div class="card-body">
                 <p class="card-text">
                     <p>路径：${Password.format(this.getParent().toReadableText(), showPathMaxLength, "front")}</p>
-                    <p>来源：${Password.format(this.from)}</p>
-                    <p>用户名：${Password.format(this.uname)}</p>
-                    <p>密码：******</p>
-                    ${this.email == "" ? "" : `<p>邮箱：${Password.format(this.email)}</p>`}
-                    ${this.phone == "" ? "" : `<p>手机号：${Password.format(this.phone)}</p>`}
-                    ${this.note == "" ? "" : `<p>备注：${Password.format(this.note, showNoteMaxLength)}</p>`}
+                    <p>来源：${newPwd.from}</p>
+                    <p>用户名：${newPwd.uname}</p>
+                    <p>密码：${newPwd.pwd}</p>
+                    ${this.email == "" ? "" : `<p>邮箱：${newPwd.email}</p>`}
+                    ${this.phone == "" ? "" : `<p>手机号：${newPwd.phone}</p>`}
+                    ${this.note == "" ? "" : `<p>备注：${newPwd.note}</p>`}
                     <p>${isBin ? "删除时间" : "修改时间"}：${getReadableTime(isBin ? this.rmDate : this.moDate)}</p>
                     <button type="button" class="btn ${isBin ? "btn-secondary" : "btn-primary"}" id="card${id}-path">跳转到对应路径</button>
                     <button type="button" class="btn btn-primary" id="card${id}-detail">查看详情</button>
@@ -130,19 +165,12 @@ class Password {
             ${tool}
         </div>`;
     }
-    /**
-     * 格式化字符串，超过最大长度的部分用...代替
-     * @param str 源字符串
-     * @param max 最大长度
-     * @param OmitWhere 在前面还是后面省略，前面为"front"，后面为"back"
-     * @returns 处理后的字符串
-     */
-    static format(str, max = showOtherMaxLength, OmitWhere = "back") {
+    static format(str, max = showOtherMaxLength, OmitWhereOrMidPoint = "back") {
         if (str.length == 0) {
             return "暂无";
         }
         let left = max;
-        if (OmitWhere == "front") {
+        if (OmitWhereOrMidPoint === "front") {
             for (let i = str.length - 1; i >= 0; i--) {
                 left -= isFullWidthChar(str[i]) ? 2 : 1;
                 if (left < 0) {
@@ -150,13 +178,30 @@ class Password {
                 }
             }
         }
-        else {
+        else if (OmitWhereOrMidPoint === "back") {
             for (let i = 0; i < str.length; i++) {
                 left -= isFullWidthChar(str[i]) ? 2 : 1;
                 if (left < 0) {
                     return str.slice(0, i) + "...";
                 }
             }
+        }
+        else {
+            let startIdx = Math.floor(OmitWhereOrMidPoint - max / 2);
+            if (startIdx < 0)
+                startIdx = 0;
+            let endIdx = startIdx + max;
+            if (endIdx > str.length)
+                endIdx = str.length;
+            let ans = "";
+            if (startIdx > 0) {
+                ans += "...";
+            }
+            ans += str.slice(startIdx, endIdx);
+            if (endIdx < str.length) {
+                ans += "...";
+            }
+            return ans;
         }
         return str;
     }
@@ -281,17 +326,42 @@ class Folder {
      * 得到卡片形式的HTML代码
      * @param id 作为这个HTML的唯一身份标识符的一部分，而给的一个编号
      * @param checkable 是否可以被选择
+     * @param searchPart 被搜索出来，需要标红的部分，默认为undefined，表示不搜索
      * @returns HTML代码
      */
-    getCard(id, isBin = false) {
+    getCard(id, isBin = false, searchPart) {
+        let newname = this.name;
+        if (searchPart) {
+            const regStr = searchPart.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); // 转义正则表达式特殊字符
+            const reg = new RegExp(regStr, "i");
+            const match = this.name.match(reg);
+            if (match && match.index !== undefined) {
+                // 格式化到合适长度
+                let formatted = Password.format(this.name, showSearchMaxLength, match.index + match[0].length / 2);
+                // 格式化后还能匹配则高亮，否则整体标红
+                if (new RegExp(regStr, "i").test(formatted)) {
+                    newname = formatted.replace(new RegExp(regStr, "i"), (m) => `<span class="highlight">${m}</span>`);
+                }
+                else {
+                    newname = `<span class="highlight">${formatted}</span>`;
+                }
+            }
+            else {
+                // 源文本无法匹配，正常格式化
+                newname = Password.format(this.name, showSearchMaxLength);
+            }
+        }
+        else {
+            newname = Password.format(this.name, showSearchMaxLength);
+        }
         return `
         <div class="card" style="width: 100%;" id="card${id}">
             <div class="card-body">
                 <p class="card-text">
                     <p>路径：${Password.format(Folder.fromString(this.parent).toReadableText(), showPathMaxLength, "front")}</p>
-                    <p>文件名：${Password.format(this.name)}</p>
+                    <p>文件名：${newname}</p>
                     <p>${isBin ? "删除时间" : "修改时间"}：${getReadableTime(isBin ? this.rmDate : this.moDate)}</p>
-                    <button type="button" class="btn ${isBin ? "btn-secondary" : "btn-primary"}" id="card${id}-path">进入该文件夹</button>
+                    ${isBin ? "" : `<button type="button" class="btn ${isBin ? "btn-secondary" : "btn-primary"}" id="card${id}-path">进入该文件夹</button>`}
                 </p>
             </div>
         </div>

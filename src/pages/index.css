@@ -176,7 +176,7 @@ div.info:active img.icon:active{
 }
 div.info:hover:not(:has(.icon:hover)){
     cursor: pointer;
-    font-weight: bold;
+    background-color: rgba(214, 217, 220, 0.918);
 }
 div.tool{
     display: flex;
@@ -322,4 +322,9 @@ input.datepicker{
     display: inline-block;
     margin: 3px;
     width: 10vw;
+}
+span.highlight{
+    background-color: #d7ba7d;
+    border-radius: 3px;
+    color: black;
 }
