@@ -1,9 +1,23 @@
-const {app, BrowserWindow, ipcMain, dialog} = require("electron");
+const {app, BrowserWindow, ipcMain, dialog, Menu} = require("electron");
 const path = require('path');
 const fs = require('fs');
 
 const projectRoot = app.getAppPath();
 let defaultPath = app.getPath("home");
+
+const MenuTemplate = [
+    {
+        label: '帮助',
+        submenu: [
+            {
+                label: '正则表达式',
+                click: () => {
+                    const win = createWindow("正则表达式", "./src/pages/regex.html", ()=>{return;});
+                }
+            },
+        ]
+    }
+];
 
 function setIpc(win){
     ipcMain.on("save-file", (event, filename, data)=>{
@@ -69,19 +83,25 @@ function setIpc(win){
     });
 }
 
-function createWindow(){
+/**
+ * 创造一个窗口
+ * @param {string} title 窗口名
+ * @param {string} loadFile 载入文件的相对路径
+ * @param {Function} callbacks 回调函数，在创造窗口前执行，有参数win，表示创造出的窗口对象
+ * @returns 一个 BrowserWindow 对象，创造出的窗口对象
+ */
+function createWindow(title, loadFile, callbacks = (win) => {return;}) {
     const isDebug = true;
     const win = new BrowserWindow({
         width: 800,
         height: 600,
-        autoHideMenuBar: true,
         show: false,
         webPreferences: {
-            preload: path.join(__dirname, './preload.js'),
+            preload: path.join(__dirname, "./preload.js"),
             sandbox: false,
-            devTools: isDebug
+            devTools: isDebug,
         },
-        title: "Password Helper"
+        title: title
     })
 
     if (!isDebug){
@@ -91,17 +111,21 @@ function createWindow(){
             }
         });
     }
+    callbacks(win);
 
-    win.maximize();
     win.show();
 
-    setIpc(win);
-
-    win.loadFile("./src/pages/index.html")
+    win.loadFile(loadFile)
+    return win;
 }
 
 app.on("ready", ()=>{
-    createWindow()
+    const appMenu = Menu.buildFromTemplate(MenuTemplate);
+    Menu.setApplicationMenu(appMenu);
+    const win = createWindow("Password Helper", "./src/pages/index.html", (win) => {
+        setIpc(win);
+        win.maximize();
+    });
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
