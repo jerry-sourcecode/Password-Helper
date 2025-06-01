@@ -453,41 +453,49 @@ class TurnToPage{
             Task.tryDone("密码侦探");
             result?.insertAdjacentHTML("beforeend", `<div><h5><strong>在所有文件中搜索“${input.value}”，发现以下结果：</strong></h5></div>`)
 
-            // 检查是否有
-            flag = false;
-            for (let i = 0; i < pwdList.length; i++){
-                if (hasItemCard(pwdList[i])){
-                    flag = true;
-                    break;
-                }
-            }
-            if (flag){
-                result!.insertAdjacentHTML("beforeend", "<div><h5><strong>密码</strong></h5></div>");
-                for(let i = 0; i < pwdList.length; i++){
-                    showPwdCard(pwdList, i);
-                }
-            }
 
-            flag = false;
-            for (let i = 0; i < folderList.length; i++){
-                if (hasItemCard(folderList[i])){
-                    flag = true;
-                    break;
+            try {
+                // 检查是否有
+                flag = false;
+                for (let i = 0; i < pwdList.length; i++){
+                    if (hasItemCard(pwdList[i])){
+                        flag = true;
+                        break;
+                    }
                 }
-            }
-            if (flag){
-                result!.insertAdjacentHTML("beforeend", "<div><h5><strong>文件夹</strong></h5></div>");
-                for(let i = 0; i < folderList.length; i++){
-                    showFolderCard(folderList[i]);
+                if (flag){
+                    result!.insertAdjacentHTML("beforeend", "<div><h5><strong>密码</strong></h5></div>");
+                    for(let i = 0; i < pwdList.length; i++){
+                        showPwdCard(pwdList, i);
+                    }
                 }
-            }
 
-            flag = false;
-            for (let i = 0; i < binItem.length; i++){
-                if (hasItemCard(binItem[i])){
-                    flag = true;
-                    break;
+                flag = false;
+                for (let i = 0; i < folderList.length; i++){
+                    if (hasItemCard(folderList[i])){
+                        flag = true;
+                        break;
+                    }
                 }
+                if (flag){
+                    result!.insertAdjacentHTML("beforeend", "<div><h5><strong>文件夹</strong></h5></div>");
+                    for(let i = 0; i < folderList.length; i++){
+                        showFolderCard(folderList[i]);
+                    }
+                }
+
+                flag = false;
+                for (let i = 0; i < binItem.length; i++){
+                    if (hasItemCard(binItem[i])){
+                        flag = true;
+                        break;
+                    }
+                }
+            } catch (error) {
+                result!.innerHTML = `<div class="alert alert-danger" role="alert">
+                    正则表达式不合法！
+                </div>`;
+                return;
             }
             if (flag){
                 result!.insertAdjacentHTML("beforeend", "<div><h5><strong>回收站</strong></h5></div>");

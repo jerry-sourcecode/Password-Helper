@@ -12,7 +12,13 @@ const MenuTemplate = [
             {
                 label: '正则表达式',
                 click: () => {
-                    const win = createWindow("正则表达式", "./src/pages/regex.html", ()=>{return;});
+                    const win = createWindow("正则表达式", "./src/pages/regex.html");
+                }
+            },
+            {
+                label: 'Github',
+                click: () => {
+                    const win = createWindow("Github", "https://www.github.com/jerry-sourcecode/password-helper", ()=>{}, {isURL: true});
                 }
             },
         ]
@@ -90,7 +96,7 @@ function setIpc(win){
  * @param {Function} callbacks 回调函数，在创造窗口前执行，有参数win，表示创造出的窗口对象
  * @returns 一个 BrowserWindow 对象，创造出的窗口对象
  */
-function createWindow(title, loadFile, callbacks = (win) => {return;}) {
+function createWindow(title, loadFile, callbacks = (win) => {return;}, options = {isURL : false}) {
     const isDebug = true;
     const win = new BrowserWindow({
         width: 800,
@@ -109,13 +115,24 @@ function createWindow(title, loadFile, callbacks = (win) => {return;}) {
             if ((input.control || input.meta) && input.key.toLowerCase() === 'r') {
               event.preventDefault();
             }
+            if ((input.control || input.meta) && input.shift && input.key.toLowerCase() === 'i') {
+                event.preventDefault();
+            }
+        });
+    } else {
+        win.webContents.on('before-input-event', (event, input) => {
+            if ((input.control || input.meta) && input.shift && input.key.toLowerCase() === 'i') {
+                win.webContents.openDevTools();
+                event.preventDefault();
+            }
         });
     }
     callbacks(win);
 
     win.show();
 
-    win.loadFile(loadFile)
+    if (!options.isURL) win.loadFile(loadFile)
+    else win.loadURL(loadFile);
     return win;
 }
 
