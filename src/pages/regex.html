@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,13 +16,13 @@
             --border: #dee2e6;
             --shadow: rgba(0, 0, 0, 0.1);
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
@@ -30,12 +31,12 @@
             padding: 20px;
             min-height: 100vh;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
-        
+
         header {
             text-align: center;
             padding: 2rem 0;
@@ -46,7 +47,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         header::before {
             content: "";
             position: absolute;
@@ -56,26 +57,26 @@
             height: 5px;
             background: linear-gradient(90deg, var(--primary), var(--accent), var(--warning));
         }
-        
+
         h1 {
             color: var(--primary);
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
         }
-        
+
         .subtitle {
             color: var(--secondary);
             font-size: 1.2rem;
             max-width: 700px;
             margin: 0 auto;
         }
-        
+
         .tutorial-container {
             display: flex;
             gap: 30px;
             margin-bottom: 40px;
         }
-        
+
         .tutorial-content {
             background: white;
             border-radius: 10px;
@@ -84,23 +85,23 @@
             flex: 1;
             border-top: 5px solid var(--success);
         }
-        
+
         h2 {
             color: var(--secondary);
             margin-bottom: 1.5rem;
             padding-bottom: 0.5rem;
             border-bottom: 2px solid var(--border);
         }
-        
+
         h3 {
             color: var(--primary);
             margin: 1.5rem 0 1rem;
         }
-        
+
         .section {
             margin-bottom: 2rem;
         }
-        
+
         .regex-card {
             background: var(--light);
             border-left: 4px solid var(--primary);
@@ -108,7 +109,7 @@
             margin: 15px 0;
             border-radius: 0 5px 5px 0;
         }
-        
+
         span.regex {
             font-family: Menlo, Monaco, Consolas, 'Andale Mono', 'lucida console', 'Courier New', monospace;
             font-size: 1.1rem;
@@ -119,33 +120,34 @@
             border: 1px solid var(--border);
             display: inline-block;
         }
-        
+
         .explanation {
             margin-top: 10px;
             color: #555;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
         }
-        
-        th, td {
+
+        th,
+        td {
             border: 1px solid var(--border);
             padding: 12px 15px;
             text-align: left;
         }
-        
+
         th {
             background-color: var(--primary);
             color: white;
         }
-        
+
         tr:nth-child(even) {
             background-color: #f8f9fa;
         }
-        
+
         .demo-area {
             background: white;
             border-radius: 10px;
@@ -153,19 +155,20 @@
             padding: 30px;
             margin-bottom: 40px;
         }
-        
+
         .input-group {
             margin-bottom: 20px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             color: var(--secondary);
         }
-        
-        input, textarea {
+
+        input,
+        textarea {
             width: 100%;
             padding: 12px 15px;
             border: 1px solid var(--border);
@@ -173,12 +176,16 @@
             font-family: monospace;
             font-size: 16px;
         }
-        
+
+        input[type="checkbox"] {
+            width: auto;
+        }
+
         textarea {
             min-height: 150px;
             resize: vertical;
         }
-        
+
         button {
             background: var(--primary);
             color: white;
@@ -191,13 +198,13 @@
             transition: all 0.3s ease;
             display: inline-block;
         }
-        
+
         button:hover {
             background: var(--secondary);
             transform: translateY(-2px);
             box-shadow: 0 4px 8px var(--shadow);
         }
-        
+
         .results {
             margin-top: 30px;
             padding: 20px;
@@ -205,13 +212,13 @@
             border-radius: 5px;
             min-height: 100px;
         }
-        
+
         .match {
             background-color: rgba(76, 201, 240, 0.3);
             padding: 2px 4px;
             border-radius: 3px;
         }
-        
+
         .match-info {
             background: white;
             padding: 10px;
@@ -219,20 +226,20 @@
             border-radius: 5px;
             border-left: 3px solid var(--accent);
         }
-        
+
         .footer {
             text-align: center;
             padding: 20px;
             color: #6c757d;
             font-size: 0.9rem;
         }
-        
+
         .tabs {
             display: flex;
             margin-bottom: 20px;
             border-bottom: 2px solid var(--border);
         }
-        
+
         .tab {
             padding: 10px 20px;
             cursor: pointer;
@@ -240,71 +247,151 @@
             border-radius: 5px 5px 0 0;
             margin-right: 5px;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
-        
+
+        .tab:hover {
+            background: #dde7ff;
+        }
+
         .tab.active {
             background: var(--primary);
             color: white;
         }
-        
+
         .tab-content {
             display: none;
         }
-        
+
         .tab-content.active {
             display: block;
         }
-        
+
+        .regex-example {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 3px solid var(--accent);
+        }
+
+        .regex-example .regex {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .regex-example .description {
+            color: #555;
+            font-size: 0.95em;
+        }
+
         @media (max-width: 768px) {
             .tutorial-container {
                 flex-direction: column;
             }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab {
+                margin-bottom: 5px;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
+
         <div class="tutorial-container">
             <div class="tutorial-content">
                 <div class="tabs">
-                    <div class="tab active" data-tab="basic">基础概念</div>
-                    <div class="tab" data-tab="advanced">高级特性</div>
+                    <div class="tab active" data-tab="basic">语法</div>
                     <div class="tab" data-tab="examples">实用示例</div>
                 </div>
-                
+
                 <div class="tab-content active" id="basic-tab">
                     <h2>正则表达式基础</h2>
-                    
+
                     <div class="section">
                         <h3>什么是正则表达式？</h3>
                         <p>正则表达式（Regular Expression）是用于匹配字符串中字符组合的模式。它是一种强大的文本处理工具，广泛应用于编程、文本编辑器和数据处理中。</p>
                         <p>正则表达式由普通字符（如字母、数字）和特殊字符（称为"元字符"）组成，这些元字符具有特殊的含义和功能。</p>
                     </div>
-                    
+
                     <div class="section">
                         <h3>基本匹配</h3>
                         <p>最简单的正则表达式是普通文本匹配。例如，正则表达式 <span class="regex">hello</span> 将匹配任何包含 "hello" 的字符串。</p>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">gr[ae]y</span></div>
-                            <div class="explanation">匹配 "gray" 或 "grey"（方括号表示字符集合）</div>
-                        </div>
 
-                        <div class="regex-card">
-                            <div><span class="regex">[0-9]</span></div>
-                            <div class="explanation">匹配任意单个数字（0到9）</div>
-                        </div>
-
-                        <div class="regex-card">
-                            <div><span class="regex">[a-zA-Z]</span></div>
-                            <div class="explanation">匹配任意单个字母（大小写）</div>
-                        </div>
+                        <table>
+                            <tr>
+                                <th>表达式</th>
+                                <th>说明</th>
+                                <th>示例</th>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">[...]</span></td>
+                                <td>匹配方括号中的所有字符</td>
+                                <td><span class="regex">gr[ae]y</span> 匹配 "gray" 或 "grey"</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">[0-9]</span></td>
+                                <td>匹配任意单个数字（0到9）</td>
+                                <td><span class="regex">[0-9]</span> 匹配 "5"、"9" 等</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">[^...]</span></td>
+                                <td>匹配除方括号中字符外的所有字符</td>
+                                <td><span class="regex">[^aeiou]</span> 匹配非元音字符</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">[a-zA-Z]</span></td>
+                                <td>匹配任意单个字母（大小写）</td>
+                                <td><span class="regex">[a-zA-Z]</span> 匹配 "a"、"B" 等</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\d</span></td>
+                                <td>匹配任意数字（等价于 [0-9]）</td>
+                                <td><span class="regex">\d{3}</span> 匹配三位数字</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\D</span></td>
+                                <td>匹配非任意数字（等价于 [^0-9]）</td>
+                                <td><span class="regex">\D{3}</span> 匹配三位非数字</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\w</span></td>
+                                <td>匹配字母、数字或下划线（等价于 [a-zA-Z0-9_]）</td>
+                                <td><span class="regex">\w+</span> 匹配一个或多个单词字符</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\W</span></td>
+                                <td>匹配非字母、数字或下划线（等价于 [^a-zA-Z0-9_]）</td>
+                                <td><span class="regex">\W+</span> 匹配一个或多个非单词字符</td>
+                            <tr>
+                                <td><span class="regex">\s</span></td>
+                                <td>匹配任意空白字符（空格、制表符、换行符等）</td>
+                                <td><span class="regex">\s+</span> 匹配一个或多个空白字符</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\S</span></td>
+                                <td>匹配任意非空白字符</td>
+                                <td><span class="regex">\S+</span> 匹配一个或多个非空白字符</td>
+                            </tr>
+                        </table>
                     </div>
-                    
+
                     <div class="section">
                         <h3>元字符</h3>
                         <p>元字符是正则表达式中具有特殊含义的字符。以下是常用的元字符：</p>
-                        
+
                         <table>
                             <tr>
                                 <th>元字符</th>
@@ -319,60 +406,24 @@
                                 <td><span class="regex">a.c</span> 匹配 "abc"、"aac"、"axc" 等</td>
                             </tr>
                             <tr>
-                                <td><span class="regex">*</span></td>
-                                <td>星号</td>
-                                <td>匹配前面的元素零次或多次</td>
-                                <td><span class="regex">ab*c</span> 匹配 "ac"、"abc"、"abbc" 等</td>
+                                <td><span class="regex">|</span></td>
+                                <td>竖线</td>
+                                <td>表示逻辑"或"，匹配多个选择中的一个</td>
+                                <td><span class="regex">cat|dog</span> 匹配 "cat" 或 "dog"</td>
                             </tr>
                             <tr>
-                                <td><span class="regex">+</span></td>
-                                <td>加号</td>
-                                <td>匹配前面的元素一次或多次</td>
-                                <td><span class="regex">ab+c</span> 匹配 "abc"、"abbc"，但不匹配 "ac"</td>
-                            </tr>
-                            <tr>
-                                <td><span class="regex">?</span></td>
-                                <td>问号</td>
-                                <td>匹配前面的元素零次或一次</td>
-                                <td><span class="regex">colou?r</span> 匹配 "color" 和 "colour"</td>
-                            </tr>
-                            <tr>
-                                <td><span class="regex">^</span></td>
-                                <td>脱字符</td>
-                                <td>匹配字符串的开始位置</td>
-                                <td><span class="regex">^Hello</span> 匹配以 "Hello" 开头的字符串</td>
-                            </tr>
-                            <tr>
-                                <td><span class="regex">$</span></td>
-                                <td>美元符</td>
-                                <td>匹配字符串的结束位置</td>
-                                <td><span class="regex">world$</span> 匹配以 "world" 结尾的字符串</td>
-                            </tr>
-                            <tr>
-                                <td><span class="regex">\d</span></td>
-                                <td>数字字符</td>
-                                <td>匹配任意数字（等价于 [0-9]）</td>
-                                <td><span class="regex">\d{3}</span> 匹配三位数字</td>
-                            </tr>
-                            <tr>
-                                <td><span class="regex">\w</span></td>
-                                <td>单词字符</td>
-                                <td>匹配字母、数字或下划线（等价于 [a-zA-Z0-9_]）</td>
-                                <td><span class="regex">\w+</span> 匹配一个或多个单词字符</td>
-                            </tr>
-                            <tr>
-                                <td><span class="regex">\s</span></td>
-                                <td>空白字符</td>
-                                <td>匹配任意空白字符（空格、制表符、换行符等）</td>
-                                <td><span class="regex">\s+</span> 匹配一个或多个空白字符</td>
+                                <td><span class="regex">\n</span></td>
+                                <td>换行符</td>
+                                <td>匹配换行符</td>
+                                <td><span class="regex">Hello\nWorld</span> 匹配 "Hello" 后跟换行符和 "World"</td>
                             </tr>
                         </table>
                     </div>
-                    
+
                     <div class="section">
                         <h3>量词</h3>
                         <p>量词用于指定匹配字符的数量：</p>
-                        
+
                         <table>
                             <tr>
                                 <th>量词</th>
@@ -411,81 +462,140 @@
                             </tr>
                         </table>
                     </div>
-                </div>
-                
-                <div class="tab-content" id="advanced-tab">
-                    <h2>正则表达式高级特性</h2>
-                    
+
                     <div class="section">
-                        <h3>分组和捕获</h3>
-                        <p>使用圆括号 () 可以对表达式进行分组，并捕获匹配的内容：</p>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">(ab)+</span></div>
-                            <div class="explanation">匹配一个或多个 "ab" 序列</div>
-                        </div>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">(\d{3})-(\d{4})</span></div>
-                            <div class="explanation">匹配电话号码并捕获区号和号码部分</div>
-                        </div>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">(?:abc)</span></div>
-                            <div class="explanation">非捕获分组，只分组不捕获</div>
-                        </div>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">a(b|c)d</span></div>
-                            <div class="explanation">匹配 "abd" 或 "acd"</div>
-                        </div>
+                        <h3>转义字符</h3>
+                        <p>使用反斜杠 \ 可以转义特殊字符，使其失去特殊含义：</p>
+
+                        <table>
+                            <tr>
+                                <th>表达式</th>
+                                <th>说明</th>
+                                <th>示例</th>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\.</span></td>
+                                <td>匹配点号字符</td>
+                                <td><span class="regex">example\.com</span> 匹配 "example.com"</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\\</span></td>
+                                <td>匹配反斜杠字符</td>
+                                <td><span class="regex">C:\\</span> 匹配 "C:\"</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\*</span></td>
+                                <td>匹配星号字符</td>
+                                <td><span class="regex">5\*5=25</span> 匹配 "5*5=25"</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\?</span></td>
+                                <td>匹配问号字符</td>
+                                <td><span class="regex">what\?</span> 匹配 "what?"</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="section">
+                        <h3>分组</h3>
+                        <p>使用圆括号 () 可以对表达式进行分组：</p>
+                    
+                        <table>
+                            <tr>
+                                <th>表达式</th>
+                                <th>说明</th>
+                                <th>示例</th>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">(ab)+</span></td>
+                                <td>匹配一个或多个 "ab" 序列</td>
+                                <td>"abab" 匹配 "abab"</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">a(b|c)d</span></td>
+                                <td>匹配 "abd" 或 "acd"</td>
+                                <td>"abd" 或 "acd"</td>
+                            </tr>
+                        </table>
                     </div>
                     
                     <div class="section">
                         <h3>边界匹配</h3>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">\b</span></div>
-                            <div class="explanation">匹配单词边界（单词的开始或结束位置）</div>
-                        </div>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">\B</span></div>
-                            <div class="explanation">匹配非单词边界</div>
-                        </div>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">^</span></div>
-                            <div class="explanation">匹配字符串的开始</div>
-                        </div>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">$</span></div>
-                            <div class="explanation">匹配字符串的结束</div>
-                        </div>
-                        
-                        <p>示例：<span class="regex">\bword\b</span> 匹配独立的单词 "word"</p>
+                    
+                        <table>
+                            <tr>
+                                <th>表达式</th>
+                                <th>说明</th>
+                                <th>示例</th>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\b</span></td>
+                                <td>匹配单词边界（单词的开始或结束位置）</td>
+                                <td><span class="regex">\bword\b</span> 匹配独立的单词 "word"</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\B</span></td>
+                                <td>匹配非单词边界</td>
+                                <td><span class="regex">\Bword\B</span> 匹配 "password" 中的 "word"</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">^</span></td>
+                                <td>匹配字符串的开始</td>
+                                <td><span class="regex">^Start</span> 匹配以 "Start" 开头的字符串</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">$</span></td>
+                                <td>匹配字符串的结束</td>
+                                <td><span class="regex">end$</span> 匹配以 "end" 结尾的字符串</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\A</span></td>
+                                <td>匹配整个字符串的开头</td>
+                                <td><span class="regex">\A\d+</span> 匹配字符串开头的数字</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">\Z</span></td>
+                                <td>匹配整个字符串的结尾</td>
+                                <td><span class="regex">\d+\Z</span> 匹配字符串结尾的数字</td>
+                            </tr>
+                        </table>
                     </div>
                     
                     <div class="section">
                         <h3>贪婪与非贪婪匹配</h3>
                         <p>默认情况下，正则表达式是贪婪的，会尽可能匹配更长的字符串。添加 ? 可使其变为非贪婪（懒惰）匹配：</p>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">&lt;.*&gt;</span></div>
-                            <div class="explanation">贪婪匹配：匹配整个 &lt;div&gt;content&lt;/div&gt; 标签</div>
-                        </div>
-                        
-                        <div class="regex-card">
-                            <div><span class="regex">&lt;.*?&gt;</span></div>
-                            <div class="explanation">非贪婪匹配：匹配单个标签 &lt;div&gt; 和 &lt;/div&gt;</div>
-                        </div>
+                    
+                        <table>
+                            <tr>
+                                <th>表达式</th>
+                                <th>类型</th>
+                                <th>说明</th>
+                                <th>示例</th>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">&lt;.*&gt;</span></td>
+                                <td>贪婪匹配</td>
+                                <td>匹配整个 &lt;div&gt;content&lt;/div&gt; 标签</td>
+                                <td>匹配整个标签内容</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">&lt;.*?&gt;</span></td>
+                                <td>非贪婪匹配</td>
+                                <td>匹配单个标签 &lt;div&gt; 和 &lt;/div&gt;</td>
+                                <td>匹配单独的标签</td>
+                            </tr>
+                            <tr>
+                                <td><span class="regex">".+?"</span></td>
+                                <td>非贪婪匹配</td>
+                                <td>匹配双引号内的内容</td>
+                                <td><span class="regex">"abc"</span> 匹配 "abc"</td>
+                            </tr>
+                        </table>
                     </div>
                     
                     <div class="section">
                         <h3>断言（Lookaround）</h3>
                         <p>断言用于匹配某些位置而不消耗字符：</p>
-                        
+                    
                         <table>
                             <tr>
                                 <th>断言</th>
@@ -516,73 +626,111 @@
                                 <td>负向后行断言</td>
                                 <td>匹配前面不是...的位置</td>
                                 <td><span class="regex">(?&lt;!\$)\d+</span> 匹配前面没有美元符号的数字</td>
+                            </tr>23.45 匹配 "45"</td>
                             </tr>
                         </table>
                     </div>
                 </div>
-                
+
                 <div class="tab-content" id="examples-tab">
                     <h2>正则表达式实用示例</h2>
-                    
+
                     <div class="section">
-                        <h3>电子邮件地址</h3>
-                        <div class="regex-card">
-                            <div><span class="regex">\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b</span></div>
-                            <div class="explanation">匹配标准电子邮件地址</div>
-                        </div>
+                        <h3>常用正则表达式</h3>
+
+                        <table>
+                            <tr>
+                                <th>名称</th>
+                                <th>表达式</th>
+                                <th>说明</th>
+                            </tr>
+                            <tr>
+                                <td>电子邮件地址</td>
+                                <td><span class="regex">\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b</span></td>
+                                <td>匹配标准电子邮件地址</td>
+                            </tr>
+                            <tr>
+                                <td>URL匹配</td>
+                                <td><span
+                                        class="regex">https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)</span>
+                                </td>
+                                <td>匹配HTTP/HTTPS URL</td>
+                            </tr>
+                            <tr>
+                                <td>电话号码</td>
+                                <td><span class="regex">(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}</span></td>
+                                <td>匹配多种格式的电话号码</td>
+                            </tr>
+                            <tr>
+                                <td>日期格式</td>
+                                <td><span class="regex">\b\d{4}[-/]\d{1,2}[-/]\d{1,2}\b</span></td>
+                                <td>匹配YYYY-MM-DD或YYYY/MM/DD格式的日期</td>
+                            </tr>
+                            <tr>
+                                <td>HTML标签</td>
+                                <td><span class="regex">&lt;([a-z][a-z0-9]*)\b[^&gt;]*&gt;(.*?)&lt;\/\1&gt;</span></td>
+                                <td>匹配HTML标签及其内容</td>
+                            </tr>
+                            <tr>
+                                <td>IPv4地址</td>
+                                <td><span
+                                        class="regex">\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b</span>
+                                </td>
+                                <td>匹配IPv4地址</td>
+                            </tr>
+                            <tr>
+                                <td>邮政编码</td>
+                                <td><span class="regex">\b\d{5}(?:-\d{4})?\b</span></td>
+                                <td>匹配美国邮政编码（5位或5+4位）</td>
+                            </tr>
+                            <tr>
+                                <td>十六进制颜色</td>
+                                <td><span class="regex">#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})\b</span></td>
+                                <td>匹配十六进制颜色代码</td>
+                            </tr>
+                        </table>
                     </div>
-                    
+
                     <div class="section">
-                        <h3>URL匹配</h3>
-                        <div class="regex-card">
-                            <div><span class="regex">https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)</span></div>
-                            <div class="explanation">匹配HTTP/HTTPS URL</div>
+                        <h3>实用技巧示例</h3>
+
+                        <div class="regex-example">
+                            <span class="regex">\b(\w+)\b\s+\1\b</span>
+                            <div class="description">匹配重复的单词（如 "the the"）</div>
                         </div>
-                    </div>
-                    
-                    <div class="section">
-                        <h3>电话号码</h3>
-                        <div class="regex-card">
-                            <div><span class="regex">(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}</span></div>
-                            <div class="explanation">匹配多种格式的电话号码</div>
+
+                        <div class="regex-example">
+                            <span class="regex">(?&lt;=\()(.*?)(?=\))</span>
+                            <div class="description">匹配括号内的内容（不包括括号）</div>
                         </div>
-                    </div>
-                    
-                    <div class="section">
-                        <h3>日期格式</h3>
-                        <div class="regex-card">
-                            <div><span class="regex">\b\d{4}[-/]\d{1,2}[-/]\d{1,2}\b</span></div>
-                            <div class="explanation">匹配YYYY-MM-DD或YYYY/MM/DD格式的日期</div>
+
+                        <div class="regex-example">
+                            <span class="regex">\d{1,3}(?:,\d{3})*</span>
+                            <div class="description">匹配逗号分隔的数字（如 1,000,000）</div>
                         </div>
-                    </div>
-                    
-                    <div class="section">
-                        <h3>HTML标签</h3>
-                        <div class="regex-card">
-                            <div><span class="regex">&lt;([a-z][a-z0-9]*)\b[^&gt;]*&gt;(.*?)&lt;\/\1&gt;</span></div>
-                            <div class="explanation">匹配HTML标签及其内容</div>
+
+                        <div class="regex-example">
+                            <span class="regex">(?&lt;=\s|^)(?:[a-z][a-z0-9]*[A-Z][a-z0-9]*)+</span>
+                            <div class="description">匹配驼峰命名法的变量名</div>
                         </div>
-                    </div>
-                    
-                    <div class="section">
-                        <h3>IPv4地址</h3>
-                        <div class="regex-card">
-                            <div><span class="regex">\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b</span></div>
-                            <div class="explanation">匹配IPv4地址</div>
+
+                        <div class="regex-example">
+                            <span class="regex">(?&lt;=\s|^)(?:[A-Z][a-z0-9]*)+</span>
+                            <div class="description">匹配帕斯卡命名法的变量名</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <div class="demo-area">
             <h2>正则表达式测试器</h2>
-            
+
             <div class="input-group">
                 <label for="regex-input">正则表达式：</label>
-                <input type="text" id="regex-input" placeholder="输入正则表达式，例如：\b\w{5}\b">
+                <input type="text" id="regex-input" value="\b\w{5}\b" placeholder="输入正则表达式，例如：\b\w{5}\b">
             </div>
-            
+
             <div class="input-group">
                 <label for="test-text">测试文本：</label>
                 <textarea id="test-text">正则表达式是处理字符串的强大工具。使用正则表达式可以快速搜索、匹配和替换文本中的特定模式。本教程将帮助你掌握正则表达式的基础知识和高级技巧。
@@ -591,17 +739,38 @@
 电子邮件：contact@example.com
 URL：https://www.example.com/path?query=123
 电话：+1 (555) 123-4567
-日期：2023-10-15</textarea>
+日期：2023-10-15
+HTML标签：<div class="container">Content</div>
+IPv4地址：192.168.0.1
+重复单词：This is a a test of duplicate words.</textarea>
             </div>
-            
+
+            <div class="input-group">
+                <label for="flags">匹配选项：</label>
+                <div>
+                    <div>
+                    <input type="checkbox" id="global" checked> <label for="global" style="display:inline">全局匹配
+                        (g)</label>
+                    </div>
+                    <div>
+                    <input type="checkbox" id="ignore-case"> <label for="ignore-case" style="display:inline">忽略大小写
+                        (i)</label>
+                    </div>
+                    <div>
+                    <input type="checkbox" id="multiline"> <label for="multiline" style="display:inline">多行模式
+                        (m)</label>
+                    </div>
+                </div>
+            </div>
+
             <button id="test-btn">测试匹配</button>
-            
+
             <div class="results" id="results">
                 <p>匹配结果将显示在这里...</p>
             </div>
         </div>
     </div>
-    
+
     <script>
         // 标签切换功能
         const tabs = document.querySelectorAll('.tab');
@@ -611,7 +780,7 @@ URL：https://www.example.com/path?query=123
                 tabs.forEach(t => t.classList.remove('active'));
                 // 隐藏所有内容
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
+
                 // 激活当前标签
                 tab.classList.add('active');
                 // 显示对应内容
@@ -619,25 +788,31 @@ URL：https://www.example.com/path?query=123
                 document.getElementById(`${tabId}-tab`).classList.add('active');
             });
         });
-        
+
         // 正则测试功能
-        document.getElementById('test-btn').addEventListener('click', function() {
-            const regexInput = document.getElementById('regex-input').value;
+        document.getElementById('test-btn').addEventListener('click', function () {
+            let regexInput = document.getElementById('regex-input').value;
             const testText = document.getElementById('test-text').value;
             const resultsDiv = document.getElementById('results');
-            
+
             // 清空结果区域
             resultsDiv.innerHTML = '';
-            
+
             try {
+                // 构建标志字符串
+                let flags = '';
+                if (document.getElementById('global').checked) flags += 'g';
+                if (document.getElementById('ignore-case').checked) flags += 'i';
+                if (document.getElementById('multiline').checked) flags += 'm';
+
                 // 创建正则表达式
-                const regex = new RegExp(regexInput, 'g');
-                
+                const regex = new RegExp(regexInput, flags);
+
                 // 测试匹配
                 let match;
                 let matches = [];
                 let matchCount = 0;
-                
+
                 while ((match = regex.exec(testText)) !== null) {
                     matches.push({
                         text: match[0],
@@ -646,58 +821,59 @@ URL：https://www.example.com/path?query=123
                     });
                     matchCount++;
                 }
-                
+
                 if (matches.length === 0) {
                     resultsDiv.innerHTML = '<p>没有找到匹配项</p>';
                     return;
                 }
-                
+
                 // 显示匹配结果
                 resultsDiv.innerHTML = `<p>找到 ${matchCount} 个匹配项：</p>`;
-                
+
                 // 构建带有高亮的文本
                 let lastIndex = 0;
                 let highlightedText = '';
-                
+
                 matches.forEach((m, idx) => {
                     // 添加匹配前的文本
                     highlightedText += testText.substring(lastIndex, m.index);
                     // 添加匹配的文本（高亮）
-                    highlightedText += `<span class="match" title="匹配项 ${idx+1}">${m.text}</span>`;
+                    highlightedText += `<span class="match" title="匹配项 ${idx + 1}">${m.text}</span>`;
                     lastIndex = m.index + m.text.length;
                 });
-                
+
                 // 添加剩余的文本
                 highlightedText += testText.substring(lastIndex);
-                
+
                 resultsDiv.innerHTML += `<div class="highlighted-text">${highlightedText}</div>`;
-                
+
                 // 显示每个匹配的详细信息
                 resultsDiv.innerHTML += '<h3>匹配详情：</h3>';
                 matches.forEach((m, idx) => {
                     let matchInfo = `<div class="match-info">
-                        <strong>匹配项 ${idx+1}:</strong> "${m.text}" 
+                        <strong>匹配项 ${idx + 1}:</strong> "${m.text}" 
                         <br>位置: ${m.index} 到 ${m.index + m.text.length - 1}
                         <br>长度: ${m.text.length} 个字符`;
-                    
+
                     // 如果有捕获组
                     if (m.groups && m.groups.length > 0) {
                         matchInfo += '<br>捕获组:';
                         m.groups.forEach((group, groupIdx) => {
                             if (group !== undefined) {
-                                matchInfo += `<br>  ${groupIdx+1}: "${group}"`;
+                                matchInfo += `<br>  ${groupIdx + 1}: "${group}"`;
                             }
                         });
                     }
-                    
+
                     matchInfo += '</div>';
                     resultsDiv.innerHTML += matchInfo;
                 });
-                
+
             } catch (e) {
                 resultsDiv.innerHTML = `<p class="error">错误：${e.message}</p>`;
             }
         });
     </script>
 </body>
+
 </html>
