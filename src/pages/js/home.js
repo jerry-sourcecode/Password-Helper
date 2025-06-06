@@ -377,6 +377,10 @@ function goHome(token) {
         maxScore = levelMap[level + 1];
     let scorePercent = Math.min(Math.round(score / maxScore * 1000) / 10, 100);
     let nowUserGroup = getCurrentUserGroup();
+    const signUpDayCount = new Date(Number(signUpTime));
+    signUpDayCount.setHours(0, 0, 0, 0);
+    const nowDayCount = new Date();
+    signUpDayCount.setHours(0, 0, 0, 0);
     main.innerHTML = `
     <div class="title">我的</div>
     <div class="accordion" id="mainAccordion">
@@ -434,7 +438,7 @@ function goHome(token) {
     <div class="card taskCard">
             <div class="card-body">
                 <h5 class="card-title">数据统计</h5>
-                <p class="card-text" style="text-indent: 2em">你注册的时间是：${getReadableTime(signUpTime)}，今天是你注册的第${Math.ceil((Number(Date.now().toString()) - Number(signUpTime)) / (1000 * 60 * 60 * 24))}天。</p>
+                <p class="card-text" style="text-indent: 2em">你注册的时间是：${getReadableTime(signUpTime)}，今天是你注册的第${Math.floor((nowDayCount.getTime() - signUpDayCount.getTime()) / (1000 * 60 * 60 * 24)) + 1}天。</p>
                 <p class="card-text" style="text-indent: 2em">你一共创建了${pwdList.length}个密码，其中有${pwdList.filter((_, idx) => checkSafety(idx) === "").length}个是很安全的。</p>
                 <p class="card-text" style="text-indent: 2em">你一共创建了${folderList.length}个文件夹，其中有${folderList.filter((v) => v.lock !== null).length}个是加密的。</p>
                 <p class="card-text" style="text-indent: 2em">你的回收站中还有${binItem.length}个项目。</p>
