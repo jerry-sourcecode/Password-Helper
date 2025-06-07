@@ -344,13 +344,13 @@ function updateNeedTODOTasks() {
         }
     }
 }
-function goHome(token) {
+/**
+ * 切换到“我的”页面，请不要通过此函数切换页面，而是通过{@linkcode update}
+ */
+function _goHome() {
     var _a, _b, _c, _d;
     // 获取最首要的两件（不足两件则可以选择1件或0件）待办事项（以在tasks全局数组中的索引为排序方法）
     updateNeedTODOTasks();
-    if (token !== TurnToPage.token) {
-        throw new Error("Token Error");
-    }
     let taskHTML = ``;
     for (let i = 0; i < Math.min(NEEDTODO.length, 2); i++) {
         const finPer = Math.round(NEEDTODO[i].doTimes / NEEDTODO[i].times() * 1000) / 10;

@@ -73,26 +73,6 @@ function getScroll(): { top: number, left: number } {
         left: main!.scrollLeft || main!.scrollLeft
     }
 }
-/**
- * 完全深拷贝一个对象
- * @param value 需要深拷贝的对象
- * @returns 新的对象
- */
-function deepCopy<T>(value: T): T {
-    if (value === null || typeof value !== "object") {
-        return value;
-    }
-    if (Array.isArray(value)) {
-        return value.map(item => deepCopy(item)) as unknown as T;
-    }
-    const copied = {} as T;
-    for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
-            copied[key] = deepCopy(value[key]);
-        }
-    }
-    return copied;
-}
 
 /**
  * 删除所有的悬浮工具提示

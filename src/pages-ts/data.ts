@@ -78,14 +78,14 @@ class Password { // 密码类
             <img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="编辑">
             <img class="icon" id="pwd${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
         </div>`
-        if (checkable) return `<div class="info" style="flex-direction: row;" id="pwd${id}" draggable="true">
+        if (checkable) return `<div class="info card" style="flex-direction: row;" id="pwd${id}" draggable="true">
             <div class="checkbox" id="pwd${id}-checkboxDiv"><input type="checkbox" id="pwd${id}-checkbox"></div>
             <div class="check-content">
                 ${this.getBaseHtml()}
                 ${tool}
             </div>
         </div>`;
-        else return `<div class="info" id="pwd${id}" draggable="true">
+        else return `<div class="info card" id="pwd${id}" draggable="true">
             ${this.getBaseHtml()}
             ${tool}
         </div>`;
@@ -337,13 +337,13 @@ class Folder {
             ${this.lock !== null && this.cachePwd === null ? `<img src="../pages/resources/lock.png" title="此文件夹已被加密！" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top">` : ""}
             ${this.lock !== null && this.cachePwd !== null ? `<img src="../pages/resources/unlock.png" title="此文件夹已解锁！点击以加密" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top" id="folder${id}-unlocked">` : ""}
         </div>`
-        if (checkable) return `<div class="info" style="flex-direction: row;" id="folder${id}" draggable="true">
+        if (checkable) return `<div class="card info" style="flex-direction: row;" id="folder${id}" draggable="true">
             <div class="checkbox" id="folder${id}-checkboxDiv"><input type="checkbox" id="folder${id}-checkbox"></div>
             <div class="check-content">
                 ${inner}
             </div>
         </div>`;
-        else return `<div class="info" id="folder${id}" draggable="true">
+        else return `<div class="card info" id="folder${id}" draggable="true">
             ${inner}
         </div>`;
     }

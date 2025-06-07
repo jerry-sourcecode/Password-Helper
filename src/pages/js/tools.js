@@ -80,26 +80,6 @@ function getScroll() {
     };
 }
 /**
- * 完全深拷贝一个对象
- * @param value 需要深拷贝的对象
- * @returns 新的对象
- */
-function deepCopy(value) {
-    if (value === null || typeof value !== "object") {
-        return value;
-    }
-    if (Array.isArray(value)) {
-        return value.map(item => deepCopy(item));
-    }
-    const copied = {};
-    for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
-            copied[key] = deepCopy(value[key]);
-        }
-    }
-    return copied;
-}
-/**
  * 删除所有的悬浮工具提示
  */
 function removeTips() {

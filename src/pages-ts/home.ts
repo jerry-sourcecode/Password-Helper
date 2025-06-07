@@ -12,7 +12,7 @@
  * @member id 任务ID，应保证独一无二
  * @member type 数据类型，在此类中始终为Type.Task
  */
-class Task{
+class Task {
     title: string;
     description: string;
     location: Folder | null;
@@ -20,9 +20,9 @@ class Task{
     id: string;
     times: number;
     type: Type;
-    constructor(title: string | Task, description: string = "", location: Folder | null = null, reward: number = 0, times: number = 1, id: string = (typeof title === "string" ? title : title.id)){
+    constructor(title: string | Task, description: string = "", location: Folder | null = null, reward: number = 0, times: number = 1, id: string = (typeof title === "string" ? title : title.id)) {
         this.type = Type.Task;
-        if (typeof title == "string"){
+        if (typeof title == "string") {
             this.title = title;
             this.description = description;
             this.location = location;
@@ -42,7 +42,7 @@ class Task{
      * 完成一次任务
      * @param id 任务ID
      */
-    static tryDone(id: string): void{
+    static tryDone(id: string): void {
         let index: number = -1;
         NEEDTODO.forEach((v, idx) => {
             if (v.id() == id) index = idx;
@@ -71,11 +71,11 @@ class Task{
         saveData();
         if (DONETasks[index].done()) {
             mkToast("任务", "任务完成", `<p>你已经成功完成了任务：${DONETasks[index].title()}</p>`, ["去看看"])
-            .then((res) => {
-                if (res == 0){
-                    update(Folder.home());
-                }
-            });
+                .then((res) => {
+                    if (res == 0) {
+                        update(Folder.home());
+                    }
+                });
         }
         updateNeedTODOTasks();
         return;
@@ -85,7 +85,7 @@ class Task{
      * @param doTimes 完成任务的次数
      * @returns 结果
      */
-    done(doTimes: number): boolean{
+    done(doTimes: number): boolean {
         return doTimes >= this.times;
     }
 }
@@ -100,14 +100,14 @@ class Task{
  * @member canLock 是否允许加二级锁
  * @member canUseSetting 是否允许使用设置功能
  */
-class Permission{
+class Permission {
     pwdNum: number;
     folderNum: number;
     canUseBin: boolean;
     canMove: boolean;
     canSearch: boolean;
     canLock: boolean;
-    constructor(pwdNum: number, folderNum: number, canUseBin: boolean, canMove: boolean, canSearch: boolean, canLock: boolean){
+    constructor(pwdNum: number, folderNum: number, canUseBin: boolean, canMove: boolean, canSearch: boolean, canLock: boolean) {
         this.pwdNum = pwdNum;
         this.folderNum = folderNum;
         this.canUseBin = canUseBin;
@@ -140,19 +140,19 @@ class Permission{
  * @member description 用户组介绍
  * @member needLevel 用户组所需等级
  */
-class UserGroup{
+class UserGroup {
     name: string;
     description: string;
     permission: Permission;
     needLevel: number;
-    constructor(name: string | UserGroup, description: string = "", needLevel: number = 0, permission: Permission = new Permission(0, 0, false, false, false, false)){
-        if (typeof name == "string"){
+    constructor(name: string | UserGroup, description: string = "", needLevel: number = 0, permission: Permission = new Permission(0, 0, false, false, false, false)) {
+        if (typeof name == "string") {
             this.name = name;
             this.description = description;
             this.needLevel = needLevel;
             this.permission = permission;
         }
-        else{
+        else {
             this.name = name.name;
             this.description = name.description
             this.needLevel = name.needLevel;
@@ -162,24 +162,24 @@ class UserGroup{
 }
 
 /**储存任务的加密形式 */
-type TaskMapCrypto = {task: string, doTimes: string, fulfilled: string};
+type TaskMapCrypto = { task: string, doTimes: string, fulfilled: string };
 /**
  * 任务记录类
  * @member task 任务在全局数组{@linkcode tasks}中的索引
  * @member doTimes 完成任务的次数
  * @member fulfilled 是否获取了奖励
  */
-class TaskMap{ // 任务记录
+class TaskMap { // 任务记录
     private task: number;
     doTimes: number;
     fulfilled: boolean;
-    constructor(task: number | TaskMap, doTimes?: number, fulfilled?: boolean){
-        if (typeof task == "number"){
+    constructor(task: number | TaskMap, doTimes?: number, fulfilled?: boolean) {
+        if (typeof task == "number") {
             this.task = task;
             this.doTimes = doTimes || 0;
             this.fulfilled = fulfilled || false;
         }
-        else{
+        else {
             this.task = task.task;
             this.doTimes = task.doTimes;
             this.fulfilled = task.fulfilled;
@@ -190,11 +190,11 @@ class TaskMap{ // 任务记录
      * @param key 密钥
      * @returns 加密结果
      */
-    enc(key: string): TaskMapCrypto{
-        return{
+    enc(key: string): TaskMapCrypto {
+        return {
             task: Cryp.encrypt(this.task.toString(), key),
             doTimes: Cryp.encrypt(this.doTimes.toString(), key),
-            fulfilled: Cryp.encrypt(this.fulfilled?"T":"F", key)
+            fulfilled: Cryp.encrypt(this.fulfilled ? "T" : "F", key)
         };
     }
     /**
@@ -203,7 +203,7 @@ class TaskMap{ // 任务记录
      * @param key 密钥
      * @returns 解密结果
      */
-    static dec(obj: TaskMapCrypto, key: string): TaskMap{
+    static dec(obj: TaskMapCrypto, key: string): TaskMap {
         return new TaskMap(
             parseInt(Cryp.decrypt(obj.task, key)),
             parseInt(Cryp.decrypt(obj.doTimes, key)),
@@ -214,43 +214,43 @@ class TaskMap{ // 任务记录
      * 是否完成任务
      * @returns 结果
      */
-    done(){
+    done() {
         return this.doTimes >= tasks[this.task].times
     }
     /**
      * @returns 任务标题
      */
-    title(): string{
+    title(): string {
         return tasks[this.task].title;
     }
     /**
      * @returns 任务描述
      */
-    description(): string{
+    description(): string {
         return tasks[this.task].description;
     }
     /**
      * @returns 完成任务需要的位置
      */
-    location(): Folder | null{
+    location(): Folder | null {
         return tasks[this.task].location;
     }
     /**
      * @returns 任务奖励
      */
-    reward(): number{
+    reward(): number {
         return tasks[this.task].reward;
     }
     /**
      * @returns 任务ID
      */
-    id(): string{
+    id(): string {
         return tasks[this.task].id;
     }
     /**
      * @returns 任务完成的需要次数
      */
-    times(): number{
+    times(): number {
         return tasks[this.task].times;
     }
 }
@@ -293,8 +293,8 @@ const userGroups: Array<UserGroup> = [
         )
     ),
     new UserGroup(
-        "初级用户", 
-        "获得更多的密码额度，解锁使用回收站的权限", 
+        "初级用户",
+        "获得更多的密码额度，解锁使用回收站的权限",
         2,
         new Permission(
             5, 0, true, false, false, false
@@ -354,9 +354,9 @@ const userGroups: Array<UserGroup> = [
  * 获取当前用户组
  * @returns 当前用户组
  */
-function getCurrentUserGroup(): UserGroup{
-    for(let i = 0; i < userGroups.length; i++){
-        if (userGroups[i].needLevel == level){
+function getCurrentUserGroup(): UserGroup {
+    for (let i = 0; i < userGroups.length; i++) {
+        if (userGroups[i].needLevel == level) {
             return userGroups[i];
         }
     }
@@ -366,9 +366,9 @@ function getCurrentUserGroup(): UserGroup{
  * 获取下一个用户组
  * @returns 下一个用户组，如果没有则返回null
  */
-function getNextUserGroup(): UserGroup | null{
-    for(let i = 0; i < userGroups.length; i++){
-        if (userGroups[i].needLevel == level + 1){
+function getNextUserGroup(): UserGroup | null {
+    for (let i = 0; i < userGroups.length; i++) {
+        if (userGroups[i].needLevel == level + 1) {
             return userGroups[i];
         }
     }
@@ -402,18 +402,18 @@ let isHasNewUserGroup: boolean = false;
 /**
  * 刷新待办事项
  */
-function updateNeedTODOTasks(): void{
+function updateNeedTODOTasks(): void {
     NEEDTODO = [];
-    for(let i = 0; i < DONETasks.length; i++){
-        if (DONETasks[i].done() === false || !DONETasks[i].fulfilled){
+    for (let i = 0; i < DONETasks.length; i++) {
+        if (DONETasks[i].done() === false || !DONETasks[i].fulfilled) {
             NEEDTODO.push(new TaskMap(DONETasks[i]));
         }
     }
-    if (NEEDTODO.length < 2){
-        for(let i = 0; i < tasks.length; i++){
+    if (NEEDTODO.length < 2) {
+        for (let i = 0; i < tasks.length; i++) {
             let flag = false;
-            for(let j = 0; j < DONETasks.length; j++){
-                if (tasks[i].id === DONETasks[j].id()){
+            for (let j = 0; j < DONETasks.length; j++) {
+                if (tasks[i].id === DONETasks[j].id()) {
                     flag = true;
                     break;
                 }
@@ -426,16 +426,16 @@ function updateNeedTODOTasks(): void{
     }
 }
 
-function goHome(token: Symbol): void {
+/**
+ * 切换到“我的”页面，请不要通过此函数切换页面，而是通过{@linkcode update}
+ */
+function _goHome(): void {
     // 获取最首要的两件（不足两件则可以选择1件或0件）待办事项（以在tasks全局数组中的索引为排序方法）
     updateNeedTODOTasks();
 
-    if (token !== TurnToPage.token) {
-        throw new Error("Token Error");
-    }
     let taskHTML = ``;
-    for (let i = 0; i < Math.min(NEEDTODO.length, 2); i++){
-        const finPer = Math.round(NEEDTODO[i].doTimes / NEEDTODO[i].times() * 1000)/10;
+    for (let i = 0; i < Math.min(NEEDTODO.length, 2); i++) {
+        const finPer = Math.round(NEEDTODO[i].doTimes / NEEDTODO[i].times() * 1000) / 10;
         taskHTML += `
         <div class="card taskCard">
             <div class="card-body">
@@ -445,11 +445,11 @@ function goHome(token: Symbol): void {
                 <div class="progress">
                     <div class="progress-bar" role="progressbar" style="width: ${finPer}%;" aria-valuenow="${finPer}" aria-valuemin="0" aria-valuemax="100">${finPer}%</div>
                 </div>
-                ${NEEDTODO[i].done()?
-                `<p class="btn btn-warning" id="task${i+1}-btn">领取奖励</p>`
+                ${NEEDTODO[i].done() ?
+                `<p class="btn btn-warning" id="task${i + 1}-btn">领取奖励</p>`
                 :
-                `<p class="btn ${NEEDTODO[i].location() === null?`btn-secondary`:`btn-primary`}" id="task${i+1}-btn">${NEEDTODO[i].location() === null?`待完成`:`去完成`}</p>`
-                }
+                `<p class="btn ${NEEDTODO[i].location() === null ? `btn-secondary` : `btn-primary`}" id="task${i + 1}-btn">${NEEDTODO[i].location() === null ? `待完成` : `去完成`}</p>`
+            }
             </div>
         </div>`
     }
@@ -457,7 +457,7 @@ function goHome(token: Symbol): void {
     if (level >= getMaxLevel()) maxScore = levelMap[getMaxLevel()];
     else maxScore = levelMap[level + 1];
 
-    let scorePercent = Math.min(Math.round(score / maxScore * 1000)/10, 100);
+    let scorePercent = Math.min(Math.round(score / maxScore * 1000) / 10, 100);
     let nowUserGroup = getCurrentUserGroup();
     const signUpDayCount = new Date(Number(signUpTime))
     signUpDayCount.setHours(0, 0, 0, 0);
@@ -487,12 +487,12 @@ function goHome(token: Symbol): void {
             <div id="collapseForUserGroup" class="accordion-collapse collapse" aria-labelledby="accordionHeadingForUserGroup" data-bs-parent="#mainAccordion">
                 <div class="accordion-body">
                     <p><strong>当前用户组</strong>：${nowUserGroup.name}</p>
-                    <p><strong>密码限额</strong>：${nowUserGroup.permission.pwdNum == -1?`无限制`:`${nowUserGroup.permission.pwdNum}个密码，已创建${pwdList.length}个`}</p>
-                    <p><strong>文件夹限额</strong>：${nowUserGroup.permission.folderNum == -1?`无限制`:`${nowUserGroup.permission.folderNum}个文件夹，已创建${folderList.length}个`}</p>
-                    <p><strong>回收站</strong>：${nowUserGroup.permission.canUseBin?`可以使用`:`禁止使用`}</p>
-                    <p><strong>移动文件</strong>：${nowUserGroup.permission.canMove?`可以使用`:`禁止使用`}</p>
-                    <p><strong>搜索文件</strong>：${nowUserGroup.permission.canSearch?`可以使用`:`禁止使用`}</p>
-                    <p><strong>二级锁</strong>：${nowUserGroup.permission.canLock?`可以使用`:`禁止使用`}</p>
+                    <p><strong>密码限额</strong>：${nowUserGroup.permission.pwdNum == -1 ? `无限制` : `${nowUserGroup.permission.pwdNum}个密码，已创建${pwdList.length}个`}</p>
+                    <p><strong>文件夹限额</strong>：${nowUserGroup.permission.folderNum == -1 ? `无限制` : `${nowUserGroup.permission.folderNum}个文件夹，已创建${folderList.length}个`}</p>
+                    <p><strong>回收站</strong>：${nowUserGroup.permission.canUseBin ? `可以使用` : `禁止使用`}</p>
+                    <p><strong>移动文件</strong>：${nowUserGroup.permission.canMove ? `可以使用` : `禁止使用`}</p>
+                    <p><strong>搜索文件</strong>：${nowUserGroup.permission.canSearch ? `可以使用` : `禁止使用`}</p>
+                    <p><strong>二级锁</strong>：${nowUserGroup.permission.canLock ? `可以使用` : `禁止使用`}</p>
                 </div>
             </div>
         </div>
@@ -502,26 +502,26 @@ function goHome(token: Symbol): void {
             <p class="card-text">当前等级：Level ${level}</p>
             <p class="card-text">当前用户组：${getCurrentUserGroup().name}</p>
             <p class="card-text">你获得的经验：<strong>${score}</strong>/<strong>${maxScore}</strong>pt</p>
-            ${level < getMaxLevel()?`
-                <p class="card-text">升级还需要：<strong>${Math.max(maxScore-score, 0)}</strong>pt</p>
+            ${level < getMaxLevel() ? `
+                <p class="card-text">升级还需要：<strong>${Math.max(maxScore - score, 0)}</strong>pt</p>
                 <p class="card-text">升级后的用户组：${getNextUserGroup()!.name}</p>
                 <p class="card-text">提升后的用户组效果：${getNextUserGroup()!.description}</p>
-            `:``}
+            `: ``}
             <div class="progress">
                 <div class="progress-bar" role="progressbar" style="width: ${scorePercent}%;" aria-valuenow="${scorePercent}" aria-valuemin="0" aria-valuemax="100">${scorePercent}%</div>
             </div>
-            ${level < getMaxLevel()?`${scorePercent >= 100?
+            ${level < getMaxLevel() ? `${scorePercent >= 100 ?
             `<p class="btn btn-warning" id="score-btn">领取奖励</p>`
             :
             `<p class="btn btn-secondary" id="score-btn">待完成</p>`
-            }`:`<p class="btn btn-secondary">已完成</p>`}
+            }` : `<p class="btn btn-secondary">已完成</p>`}
         </div>
     </div>
     ${taskHTML}
     <div class="card taskCard">
             <div class="card-body">
                 <h5 class="card-title">数据统计</h5>
-                <p class="card-text" style="text-indent: 2em">你注册的时间是：${getReadableTime(signUpTime)}，今天是你注册的第${Math.floor((nowDayCount.getTime() - signUpDayCount.getTime()) / (1000 * 60 * 60 * 24))+1}天。</p>
+                <p class="card-text" style="text-indent: 2em">你注册的时间是：${getReadableTime(signUpTime)}，今天是你注册的第${Math.floor((nowDayCount.getTime() - signUpDayCount.getTime()) / (1000 * 60 * 60 * 24)) + 1}天。</p>
                 <p class="card-text" style="text-indent: 2em">你一共创建了${pwdList.length}个密码，其中有${pwdList.filter((_, idx) => checkSafety(idx) === "").length}个是很安全的。</p>
                 <p class="card-text" style="text-indent: 2em">你一共创建了${folderList.length}个文件夹，其中有${folderList.filter((v) => v.lock !== null).length}个是加密的。</p>
                 <p class="card-text" style="text-indent: 2em">你的回收站中还有${binItem.length}个项目。</p>
@@ -530,7 +530,7 @@ function goHome(token: Symbol): void {
         </div>
     `;
     const newWarning = document.querySelector("#badgeNew");
-    if (isHasNewUserGroup){
+    if (isHasNewUserGroup) {
         newWarning?.classList.remove("invisible");
     } else {
         newWarning?.classList.add("invisible");
@@ -543,8 +543,8 @@ function goHome(token: Symbol): void {
         if (NEEDTODO[0].done()) {
             score += NEEDTODO[0].reward();
             mkDialog("领取成功", `你已经成功领取了<strong>${NEEDTODO[0].reward()}</strong>pt的经验。`);
-            for (let i = 0; i < DONETasks.length; i++){
-                if (DONETasks[i].id() === NEEDTODO[0].id()){
+            for (let i = 0; i < DONETasks.length; i++) {
+                if (DONETasks[i].id() === NEEDTODO[0].id()) {
                     DONETasks[i].fulfilled = true;
                     break;
                 }
@@ -558,8 +558,8 @@ function goHome(token: Symbol): void {
         if (NEEDTODO[1].done()) {
             score += NEEDTODO[1].reward();
             mkDialog("领取成功", `你已经成功领取了<strong>${NEEDTODO[1].reward()}</strong>pt的经验。`);
-            for (let i = 0; i < DONETasks.length; i++){
-                if (DONETasks[i].id() === NEEDTODO[1].id()){
+            for (let i = 0; i < DONETasks.length; i++) {
+                if (DONETasks[i].id() === NEEDTODO[1].id()) {
                     DONETasks[i].fulfilled = true;
                     break;
                 }
@@ -569,7 +569,7 @@ function goHome(token: Symbol): void {
         }
         if (NEEDTODO[1].location() !== null) update(NEEDTODO[1].location()!);
     })
-    if (scorePercent >= 100 && level < getMaxLevel()){
+    if (scorePercent >= 100 && level < getMaxLevel()) {
         document.querySelector("#score-btn")?.addEventListener("click", () => {
             level++;
             mkDialog("升级成功", `你已经成功升级到Level ${level}，进入了新的用户组。`);
