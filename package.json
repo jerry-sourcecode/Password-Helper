@@ -18,17 +18,15 @@
     "w": "tsc --watch",
     "start": "nodemon --exec electron .",
     "test": "electron .",
-    "build": "electron-packager ./ Password-Helper --platform=win32 --arch=x64 --out=./out --overwrite"
+    "build": "electron-packager ./ Password-Helper --platform=win32 --arch=x64 --out=./out --overwrite --ignore=\"/data$|/editor$|/TODO\\.md$|/\\.gitignore$|/src/pages-ts($|/)|/\\.vscode($|/)|/src/types($|/)\""
   },
   "devDependencies": {
-    "electron-packager": "^17.1.2",
-    "nodemon": "^3.1.9",
-    "typescript": "^5.7.3"
-  },
-  "dependencies": {
     "@popperjs/core": "^2.11.8",
     "@types/bootstrap-datepicker": "^1.10.0",
     "@types/jquery": "^3.5.32",
-    "electron": "^34.0.1"
+    "electron": "^34.0.1",
+    "electron-packager": "^17.1.2",
+    "nodemon": "^3.1.9",
+    "typescript": "^5.7.3"
   }
 }
