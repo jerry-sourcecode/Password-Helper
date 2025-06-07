@@ -11,7 +11,7 @@ class TurnToPage {
      * 展示“设置”页面
      */
     static showSetting() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
         // 显示设置页面
         main.innerHTML = `
         <div class="title">设置</div>
@@ -21,6 +21,13 @@ class TurnToPage {
                 <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
                 <div><label for="mainPwdTip">密钥提示：</label><input type="text" id="mainPwdTip" value="${mainSetting.mainPwdTip === undefined ? "" : mainSetting.mainPwdTip}"/></div>
                 <div><input type="checkbox" id="rememberPwd" ${mainPwd == "" ? "disabled" : `${isremember ? "checked" : ""}`}><label for="rememberPwd">记住密钥</label></div>
+            </div>
+            <p>密码生成设置</p>
+            <div class="settingFormItem">
+                <p style="text-indent: 2em">用户可以在这里管理随机生成密码中各种字符的权重，权重越大，随机的密码中就会更有可能含有更多的此类字符。如果权重为0，则此类字符不会出现。</p>
+                <div><label for="generateRdPwdSetting-Letter">字母在随机密码中的权重：</label><input type="number" id="generateRdPwdSetting-Letter" class="vaild" value="${mainSetting.generateRandomPwdSetting.weightOfLetter}" min="0" max="10"/></div>
+                <div><label for="generateRdPwdSetting-Number">数字在随机密码中的权重：</label><input type="number" id="generateRdPwdSetting-Number" class="vaild" value="${mainSetting.generateRandomPwdSetting.weightOfNum}" min="0" max="10"/></div>
+                <div><label for="generateRdPwdSetting-Punc">特殊字符在随机密码中的权重：</label><input type="number" id="generateRdPwdSetting-Punc" class="vaild" value="${mainSetting.generateRandomPwdSetting.weightOfPunc}" min="0" max="10"/></div>
             </div>
             <p>其他个性化设置</p>
             <div class="settingFormItem">
@@ -70,25 +77,34 @@ class TurnToPage {
             Task.tryDone("妈妈再也不用担心我密码泄露啦！");
             applyStyle();
         });
-        saveKey.addEventListener("change", () => {
+        saveKey.addEventListener("change", () => { applyStyle(); });
+        (_c = document.querySelector("#mainPwdTip")) === null || _c === void 0 ? void 0 : _c.addEventListener("input", () => { applyStyle(); });
+        (_d = document.querySelector("#autoCopy")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", () => { applyStyle(); });
+        (_e = document.querySelector("#easyAppend")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => { applyStyle(); });
+        (_f = document.querySelector("#pwdSortBy")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => { applyStyle(); });
+        (_g = document.querySelector("#folderSortBy")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", () => { applyStyle(); });
+        (_h = document.querySelector("#generateRdPwdSetting-Letter")) === null || _h === void 0 ? void 0 : _h.addEventListener("change", (e) => {
+            if (Number(e.target.value) < 0)
+                e.target.value = "0";
+            if (Number(e.target.value) > 10)
+                e.target.value = "10";
             applyStyle();
         });
-        (_c = document.querySelector("#mainPwdTip")) === null || _c === void 0 ? void 0 : _c.addEventListener("input", () => {
+        (_j = document.querySelector("#generateRdPwdSetting-Number")) === null || _j === void 0 ? void 0 : _j.addEventListener("change", (e) => {
+            if (Number(e.target.value) < 0)
+                e.target.value = "0";
+            if (Number(e.target.value) > 10)
+                e.target.value = "10";
             applyStyle();
         });
-        (_d = document.querySelector("#autoCopy")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", () => {
+        (_k = document.querySelector("#generateRdPwdSetting-Punc")) === null || _k === void 0 ? void 0 : _k.addEventListener("change", (e) => {
+            if (Number(e.target.value) < 0)
+                e.target.value = "0";
+            if (Number(e.target.value) > 10)
+                e.target.value = "10";
             applyStyle();
         });
-        (_e = document.querySelector("#easyAppend")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => {
-            applyStyle();
-        });
-        (_f = document.querySelector("#pwdSortBy")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => {
-            applyStyle();
-        });
-        (_g = document.querySelector("#folderSortBy")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", () => {
-            applyStyle();
-        });
-        (_h = document.querySelector("p#apply")) === null || _h === void 0 ? void 0 : _h.addEventListener("click", (e) => {
+        (_l = document.querySelector("p#apply")) === null || _l === void 0 ? void 0 : _l.addEventListener("click", (e) => {
             var _a, _b, _c;
             if ((_a = document.querySelector("p#apply")) === null || _a === void 0 ? void 0 : _a.classList.contains("btn-primary")) {
                 mainPwd = document.querySelector("#mainPwd").value;
@@ -96,6 +112,11 @@ class TurnToPage {
                 mainSetting.mainPwdTip = document.querySelector("#mainPwdTip").value;
                 mainSetting.autoCopy = document.querySelector("#autoCopy").checked;
                 mainSetting.easyAppend = document.querySelector("#easyAppend").checked;
+                mainSetting.generateRandomPwdSetting = {
+                    weightOfLetter: Number(document.querySelector("#generateRdPwdSetting-Letter").value),
+                    weightOfNum: Number(document.querySelector("#generateRdPwdSetting-Number").value),
+                    weightOfPunc: Number(document.querySelector("#generateRdPwdSetting-Punc").value)
+                };
                 switch (document.querySelector("#pwdSortBy").value) {
                     case "name":
                         mainSetting.pwdSortBy = SortBy.name;
@@ -129,13 +150,13 @@ class TurnToPage {
                 (_c = document.querySelector("p#apply")) === null || _c === void 0 ? void 0 : _c.classList.add("btn-secondary");
             }
         });
-        (_j = document.querySelector("div#exportUMC")) === null || _j === void 0 ? void 0 : _j.addEventListener("click", () => {
+        (_m = document.querySelector("div#exportUMC")) === null || _m === void 0 ? void 0 : _m.addEventListener("click", () => {
             let ans = window.msg.showSaveDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
             if (ans === undefined)
                 return;
             saveUMC(ans);
         });
-        (_k = document.querySelector("div#importUMC")) === null || _k === void 0 ? void 0 : _k.addEventListener("click", () => {
+        (_o = document.querySelector("div#importUMC")) === null || _o === void 0 ? void 0 : _o.addEventListener("click", () => {
             mkDialog("警告", "此操作会覆盖原有数据，你确定要继续吗？", ["确定", "取消"])
                 .then((res) => {
                 if (res == 1)
@@ -146,7 +167,7 @@ class TurnToPage {
                 readUMC(ans);
             });
         });
-        (_l = document.querySelector("#reset")) === null || _l === void 0 ? void 0 : _l.addEventListener("click", () => {
+        (_p = document.querySelector("#reset")) === null || _p === void 0 ? void 0 : _p.addEventListener("click", () => {
             mkDialog("警告", "此操作会清空所有数据并立即重启，你确定要继续吗？", ["确定", "取消"])
                 .then((res) => {
                 if (res == 0) {

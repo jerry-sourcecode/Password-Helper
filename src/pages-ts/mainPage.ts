@@ -5,11 +5,11 @@
  * 如果你不在{@link mainPage.ts}这个文件中，请使用{@linkcode update}函数
  * @private
  */
-class TurnToPage{
+class TurnToPage {
     /**
      * 展示“设置”页面
      */
-    private static showSetting() : void {
+    private static showSetting(): void {
         // 显示设置页面
         main!.innerHTML = `
         <div class="title">设置</div>
@@ -17,8 +17,15 @@ class TurnToPage{
             <p>安全设置</p>
             <div class="settingFormItem">
                 <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
-                <div><label for="mainPwdTip">密钥提示：</label><input type="text" id="mainPwdTip" value="${mainSetting.mainPwdTip === undefined ? "":mainSetting.mainPwdTip}"/></div>
+                <div><label for="mainPwdTip">密钥提示：</label><input type="text" id="mainPwdTip" value="${mainSetting.mainPwdTip === undefined ? "" : mainSetting.mainPwdTip}"/></div>
                 <div><input type="checkbox" id="rememberPwd" ${mainPwd == "" ? "disabled" : `${isremember ? "checked" : ""}`}><label for="rememberPwd">记住密钥</label></div>
+            </div>
+            <p>密码生成设置</p>
+            <div class="settingFormItem">
+                <p style="text-indent: 2em">用户可以在这里管理随机生成密码中各种字符的权重，权重越大，随机的密码中就会更有可能含有更多的此类字符。如果权重为0，则此类字符不会出现。</p>
+                <div><label for="generateRdPwdSetting-Letter">字母在随机密码中的权重：</label><input type="number" id="generateRdPwdSetting-Letter" class="vaild" value="${mainSetting.generateRandomPwdSetting.weightOfLetter}" min="0" max="10"/></div>
+                <div><label for="generateRdPwdSetting-Number">数字在随机密码中的权重：</label><input type="number" id="generateRdPwdSetting-Number" class="vaild" value="${mainSetting.generateRandomPwdSetting.weightOfNum}" min="0" max="10"/></div>
+                <div><label for="generateRdPwdSetting-Punc">特殊字符在随机密码中的权重：</label><input type="number" id="generateRdPwdSetting-Punc" class="vaild" value="${mainSetting.generateRandomPwdSetting.weightOfPunc}" min="0" max="10"/></div>
             </div>
             <p>其他个性化设置</p>
             <div class="settingFormItem">
@@ -26,18 +33,18 @@ class TurnToPage{
                 <div><input type="checkbox" id="easyAppend" ${mainSetting.easyAppend ? "checked" : ""}/><label for="easyAppend">添加密码时，使用快速而简洁的表单形式来代替创建引导形式。</label></div>
                 <div><label for="pwdSortBy">密码显示顺序设置：</label>
                     <select id="pwdSortBy">
-                        <option value="name" ${mainSetting.pwdSortBy === SortBy.name?"selected":""}>按照来源顺序</option>
-                        <option value="name_reserve" ${mainSetting.pwdSortBy === SortBy.name_reverse?"selected":""}>按照来源倒序</option>
-                        <option value="time_late" ${mainSetting.pwdSortBy === SortBy.time_late?"selected":""}>按照修改时间顺序</option>
-                        <option value="time_early" ${mainSetting.pwdSortBy === SortBy.time_early?"selected":""}>按照修改时间倒序</option>
+                        <option value="name" ${mainSetting.pwdSortBy === SortBy.name ? "selected" : ""}>按照来源顺序</option>
+                        <option value="name_reserve" ${mainSetting.pwdSortBy === SortBy.name_reverse ? "selected" : ""}>按照来源倒序</option>
+                        <option value="time_late" ${mainSetting.pwdSortBy === SortBy.time_late ? "selected" : ""}>按照修改时间顺序</option>
+                        <option value="time_early" ${mainSetting.pwdSortBy === SortBy.time_early ? "selected" : ""}>按照修改时间倒序</option>
                     </select>
                 </div>
                 <div><label for="folderSortBy">文件夹显示顺序设置：</label>
                     <select id="folderSortBy">
-                        <option value="name" ${mainSetting.folderSortBy === SortBy.name?"selected":""}>按照文件夹名顺序</option>
-                        <option value="name_reserve" ${mainSetting.folderSortBy === SortBy.name_reverse?"selected":""}>按照文件夹名倒序</option>
-                        <option value="time_late" ${mainSetting.folderSortBy === SortBy.time_late?"selected":""}>按照重命名时间顺序</option>
-                        <option value="time_early" ${mainSetting.folderSortBy === SortBy.time_early?"selected":""}>按照重命名时间倒序</option>
+                        <option value="name" ${mainSetting.folderSortBy === SortBy.name ? "selected" : ""}>按照文件夹名顺序</option>
+                        <option value="name_reserve" ${mainSetting.folderSortBy === SortBy.name_reverse ? "selected" : ""}>按照文件夹名倒序</option>
+                        <option value="time_late" ${mainSetting.folderSortBy === SortBy.time_late ? "selected" : ""}>按照重命名时间顺序</option>
+                        <option value="time_early" ${mainSetting.folderSortBy === SortBy.time_early ? "selected" : ""}>按照重命名时间倒序</option>
                     </select>
                 </div>
             </div>
@@ -64,27 +71,30 @@ class TurnToPage{
             document.querySelector("#apply")?.classList.add("btn-primary");
             document.querySelector("#apply")?.classList.remove("btn-secondary");
         }
-        
+
         document.querySelector("#mainPwd")?.addEventListener("input", () => {
             Task.tryDone("妈妈再也不用担心我密码泄露啦！")
             applyStyle();
         })
-        saveKey.addEventListener("change", () => {
+        saveKey.addEventListener("change", () => { applyStyle(); })
+        document.querySelector("#mainPwdTip")?.addEventListener("input", () => { applyStyle(); })
+        document.querySelector("#autoCopy")?.addEventListener("change", () => { applyStyle(); })
+        document.querySelector("#easyAppend")?.addEventListener("change", () => { applyStyle(); })
+        document.querySelector("#pwdSortBy")?.addEventListener("change", () => { applyStyle(); })
+        document.querySelector("#folderSortBy")?.addEventListener("change", () => { applyStyle(); })
+        document.querySelector("#generateRdPwdSetting-Letter")?.addEventListener("change", (e) => {
+            if (Number((e.target as HTMLInputElement).value) < 0) (e.target as HTMLInputElement).value = "0";
+            if (Number((e.target as HTMLInputElement).value) > 10) (e.target as HTMLInputElement).value = "10";
             applyStyle();
         })
-        document.querySelector("#mainPwdTip")?.addEventListener("input", () => {
+        document.querySelector("#generateRdPwdSetting-Number")?.addEventListener("change", (e) => {
+            if (Number((e.target as HTMLInputElement).value) < 0) (e.target as HTMLInputElement).value = "0";
+            if (Number((e.target as HTMLInputElement).value) > 10) (e.target as HTMLInputElement).value = "10";
             applyStyle();
         })
-        document.querySelector("#autoCopy")?.addEventListener("change", () => {
-            applyStyle();
-        })
-        document.querySelector("#easyAppend")?.addEventListener("change", () => {
-            applyStyle();
-        })
-        document.querySelector("#pwdSortBy")?.addEventListener("change", () => {
-            applyStyle();
-        })
-        document.querySelector("#folderSortBy")?.addEventListener("change", () => {
+        document.querySelector("#generateRdPwdSetting-Punc")?.addEventListener("change", (e) => {
+            if (Number((e.target as HTMLInputElement).value) < 0) (e.target as HTMLInputElement).value = "0";
+            if (Number((e.target as HTMLInputElement).value) > 10) (e.target as HTMLInputElement).value = "10";
             applyStyle();
         })
 
@@ -95,6 +105,11 @@ class TurnToPage{
                 mainSetting.mainPwdTip = (document.querySelector("#mainPwdTip") as HTMLInputElement).value;
                 mainSetting.autoCopy = (document.querySelector("#autoCopy") as HTMLInputElement).checked;
                 mainSetting.easyAppend = (document.querySelector("#easyAppend") as HTMLInputElement).checked;
+                mainSetting.generateRandomPwdSetting = {
+                    weightOfLetter: Number((document.querySelector("#generateRdPwdSetting-Letter") as HTMLInputElement).value),
+                    weightOfNum: Number((document.querySelector("#generateRdPwdSetting-Number") as HTMLInputElement).value),
+                    weightOfPunc: Number((document.querySelector("#generateRdPwdSetting-Punc") as HTMLInputElement).value)
+                }
                 switch ((document.querySelector("#pwdSortBy") as HTMLInputElement).value) {
                     case "name": mainSetting.pwdSortBy = SortBy.name; break;
                     case "name_reserve": mainSetting.pwdSortBy = SortBy.name_reverse; break;
@@ -120,21 +135,21 @@ class TurnToPage{
         });
         document.querySelector("div#importUMC")?.addEventListener("click", () => {
             mkDialog("警告", "此操作会覆盖原有数据，你确定要继续吗？", ["确定", "取消"])
-            .then((res) => {
-                if (res == 1) return;
-                let ans: string | undefined = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }])
-                if (ans === undefined) return;
-                readUMC(ans);
-            })
+                .then((res) => {
+                    if (res == 1) return;
+                    let ans: string | undefined = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }])
+                    if (ans === undefined) return;
+                    readUMC(ans);
+                })
         });
         document.querySelector("#reset")?.addEventListener("click", () => {
             mkDialog("警告", "此操作会清空所有数据并立即重启，你确定要继续吗？", ["确定", "取消"])
-            .then((res) => {
-                if (res == 0){
-                    window.fs.save("./data", "");
-                    location.reload();
-                }
-            })
+                .then((res) => {
+                    if (res == 0) {
+                        window.fs.save("./data", "");
+                        location.reload();
+                    }
+                })
         });
         main?.scrollTo(pagePos.setting)
     }
@@ -143,34 +158,34 @@ class TurnToPage{
      * 展示“回收站”页面
      * @param checkable 是否开启“选择模式”
      */
-    private static showBin(checkable: boolean = false) : void{
+    private static showBin(checkable: boolean = false): void {
         // 显示回收站的密码
-        let inner : string = `<div class="title">回收站</div>
+        let inner: string = `<div class="title">回收站</div>
         <div id="MainToolBar">
         ${checkable ?
-            `<p class="tool" id="checkable">取消选择</p>
+                `<p class="tool" id="checkable">取消选择</p>
             <p class="tool" id="check-all">全部选择</p>
             <p class="tool" id="check-invert">反向选择</p>
             <p class="tool" id="delete">删除</p>
             <p class="tool" id="recover">恢复</p>`
-        :
-            `<p class="tool" id="checkable">选择</p>`
-        }
+                :
+                `<p class="tool" id="checkable">选择</p>`
+            }
         </div>`;
         binItem.sort((a: Item, b: Item) => {
             return a.rmDate! > b.rmDate! ? -1 : 1;
         })
-        for (let i = 0; i < binItem.length; i++){
+        for (let i = 0; i < binItem.length; i++) {
             inner += binItem[i].getHtmlBin(i, checkable);
         }
-        if (binItem.length == 0){
+        if (binItem.length == 0) {
             inner += `<p>暂无删除密码</p>`;
         }
         main!.innerHTML = inner;
         document.querySelector("#checkable")?.addEventListener("click", () => {
             update(Folder.bin(), !checkable);
         });
-        if (checkable){
+        if (checkable) {
             document.querySelector("#check-all")?.addEventListener("click", () => {
                 binItem.forEach((item: Item, index: number) => {
                     (document.querySelector(`#bin${index}-checkbox`) as HTMLInputElement)!.checked = true;
@@ -188,28 +203,28 @@ class TurnToPage{
                 })
                 if (cnt == 0) return;
                 mkDialog("警告", "此操作不可撤销，你确定要永久删除吗？", ["确定", "取消"])
-                .then((res) => {
-                    if (res == 0){
-                        Task.tryDone("选择操作，轻松掌控！");
-                        let de: Array<number> = [];
-                        binItem.forEach((item: Item, index: number) => {
-                            if ((document.querySelector(`#bin${index}-checkbox`) as HTMLInputElement)!.checked) 
-                                de.push(index);
-                        })
-                        deletebinItem(de);
-                        init(Folder.bin());
-                    }
-                });
+                    .then((res) => {
+                        if (res == 0) {
+                            Task.tryDone("选择操作，轻松掌控！");
+                            let de: Array<number> = [];
+                            binItem.forEach((item: Item, index: number) => {
+                                if ((document.querySelector(`#bin${index}-checkbox`) as HTMLInputElement)!.checked)
+                                    de.push(index);
+                            })
+                            deletebinItem(de);
+                            init(Folder.bin());
+                        }
+                    });
             });
             document.querySelector("#recover")?.addEventListener("click", () => {
-                for(let i = binItem.length - 1; i >= 0; i--){
+                for (let i = binItem.length - 1; i >= 0; i--) {
                     if ((document.querySelector(`#bin${i}-checkbox`) as HTMLInputElement)!.checked) recoverPwd(i);
                 }
                 Task.tryDone("选择操作，轻松掌控！");
                 init(Folder.bin());
             });
         }
-        for(let i = 0; i < binItem.length; i++){
+        for (let i = 0; i < binItem.length; i++) {
             const recoverBtn = document.querySelector(`#bin${i}-recover`);
             recoverBtn!.addEventListener("click", (e) => {
                 e?.stopPropagation();
@@ -220,18 +235,18 @@ class TurnToPage{
             deleteBtn!.addEventListener("click", (e) => {
                 e?.stopPropagation();
                 mkDialog("警告", "此操作不可撤销，你确定要永久删除吗？", ["确定", "取消"])
-                .then((res) => {
-                    if (res == 0){
-                        deletebinItem(i);
-                        init(Folder.bin());
-                    }
-                })
+                    .then((res) => {
+                        if (res == 0) {
+                            deletebinItem(i);
+                            init(Folder.bin());
+                        }
+                    })
             });
             const info = document.querySelector(`#bin${i}`);
             info!.addEventListener("click", () => {
                 if (binItem[i].type == Type.Password) showPwd(<Array<Password>>binItem, i, Folder.bin());
             });
-            if (checkable){
+            if (checkable) {
                 const check = document.querySelector(`#bin${i}-checkboxDiv`);
                 const checkbox = document.querySelector(`#bin${i}-checkbox`) as HTMLInputElement;
                 check!.addEventListener("click", (e) => {
@@ -252,18 +267,18 @@ class TurnToPage{
     /**
      * 展示“搜索”页面
      */
-    private static showSearch(): void{
-    function getNowFormatDate(date: Date) {
-        let year = date.getFullYear(), //获取完整的年份(4位)
-            month = date.getMonth() + 1, //获取当前月份(0-11,0代表1月)
-            ddate = date.getDate() // 获取当前日(1-31)
-        let strmonth = month.toString(), strDate = ddate.toString(); // 将月份和日转换为字符串
-        if (month < 10) strmonth = `0${month}` // 如果月份是个位数，在前面补0
-        if (ddate < 10) strDate = `0${ddate}` // 如果日是个位数，在前面补0
-        
-        return `${year}-${strmonth}-${strDate}`
-    }
-    main!.innerHTML = `<div class="title">搜索</div>
+    private static showSearch(): void {
+        function getNowFormatDate(date: Date) {
+            let year = date.getFullYear(), //获取完整的年份(4位)
+                month = date.getMonth() + 1, //获取当前月份(0-11,0代表1月)
+                ddate = date.getDate() // 获取当前日(1-31)
+            let strmonth = month.toString(), strDate = ddate.toString(); // 将月份和日转换为字符串
+            if (month < 10) strmonth = `0${month}` // 如果月份是个位数，在前面补0
+            if (ddate < 10) strDate = `0${ddate}` // 如果日是个位数，在前面补0
+
+            return `${year}-${strmonth}-${strDate}`
+        }
+        main!.innerHTML = `<div class="title">搜索</div>
         <div class="form">
             <!-- 搜索表单 -->
             <div role="search" style="width: 100%; margin-bottom: 5px;">
@@ -303,9 +318,9 @@ class TurnToPage{
                         <div><input type="checkbox" id="searchFolder"/><label for="searchFolder">搜索文件夹</label></div>
                         <div>
                             <label>搜索时间范围：自</label>
-                            <input type="text" id="datepicker-start" class="form-control datepicker" placeholder="不填写则无限制" readonly value="${searchMemory.setting.startDate === null? "":getNowFormatDate(new Date(searchMemory.setting.startDate))}">
+                            <input type="text" id="datepicker-start" class="form-control datepicker" placeholder="不填写则无限制" readonly value="${searchMemory.setting.startDate === null ? "" : getNowFormatDate(new Date(searchMemory.setting.startDate))}">
                             <label>至</label>
-                            <input type="text" id="datepicker-end" class="form-control datepicker" placeholder="不填写则无限制" readonly value="${searchMemory.setting.endDate === null? "":getNowFormatDate(new Date(searchMemory.setting.endDate))}">
+                            <input type="text" id="datepicker-end" class="form-control datepicker" placeholder="不填写则无限制" readonly value="${searchMemory.setting.endDate === null ? "" : getNowFormatDate(new Date(searchMemory.setting.endDate))}">
                         </div>
                     </div>
                 </div>
@@ -316,31 +331,31 @@ class TurnToPage{
         jQuery('.datepicker').each(function () {
             var $input = jQuery(this);
             $input.datepicker({
-                defaultViewDate:'today',
+                defaultViewDate: 'today',
                 language: 'zh-CN',
                 clearBtn: true,
             });
         });
-        
-        $('#datepicker-start').datepicker().on('changeDate', function(){
+
+        $('#datepicker-start').datepicker().on('changeDate', function () {
             const startDate = $('#datepicker-start').datepicker('getDate');
             $('#datepicker-end').datepicker('setStartDate', startDate);
-            searchMemory.setting.startDate = startDate === null? null : startDate.getTime();
+            searchMemory.setting.startDate = startDate === null ? null : startDate.getTime();
         });
 
-        $("#datepicker-start").datepicker().on("clearDate", function() {
+        $("#datepicker-start").datepicker().on("clearDate", function () {
             $('#datepicker-end').datepicker('setStartDate', null);
             searchMemory.setting.startDate = null;
         });
 
-        $('#datepicker-end').datepicker().on('changeDate', function(){
+        $('#datepicker-end').datepicker().on('changeDate', function () {
             const endDate = $('#datepicker-end').datepicker('getDate') as Date;
             $('#datepicker-start').datepicker('setEndDate', endDate);
             endDate.setHours(23, 59, 59, 999); // 设置结束时间为当天的最后一刻
-            searchMemory.setting.endDate = endDate === null? null : endDate.getTime();
+            searchMemory.setting.endDate = endDate === null ? null : endDate.getTime();
         });
 
-        $("#datepicker-end").datepicker().on("clearDate", function() {
+        $("#datepicker-end").datepicker().on("clearDate", function () {
             $('#datepicker-start').datepicker('setEndDate', null);
             searchMemory.setting.endDate = null;
         });
@@ -356,7 +371,7 @@ class TurnToPage{
             searchFolder: document.querySelector("#searchFolder") as HTMLInputElement,
         };
         document.querySelector("#searchInput")!.addEventListener("keydown", (e) => {
-            if ((e as KeyboardEvent).key == "Enter" && !(e as KeyboardEvent).isComposing){
+            if ((e as KeyboardEvent).key == "Enter" && !(e as KeyboardEvent).isComposing) {
                 (e.target as HTMLInputElement)!.blur();
                 (document.querySelector("#searchBtn") as HTMLButtonElement).click();
             }
@@ -365,15 +380,15 @@ class TurnToPage{
             searchMemory.txt = (document.querySelector("#searchInput") as HTMLInputElement)!.value;
         })
 
-        document.querySelector("#isReg")?.addEventListener("change", () => {searchMemory.setting.isReg = searchSetting.isReg.checked;})
-        document.querySelector("#isCaseSensitive")?.addEventListener("change", () => {searchMemory.setting.isCaseSensitive = searchSetting.isCaseSensitive.checked;})
-        document.querySelector("#searchFrom")?.addEventListener("change", () => {searchMemory.setting.searchFrom = searchSetting.searchFrom.checked;})
-        document.querySelector("#searchUname")?.addEventListener("change", () => {searchMemory.setting.searchUname = searchSetting.searchUname.checked;})
-        document.querySelector("#searchPwd")?.addEventListener("change", () => {searchMemory.setting.searchPwd = searchSetting.searchPwd.checked;})
-        document.querySelector("#searchPhone")?.addEventListener("change", () => {searchMemory.setting.searchPhone = searchSetting.searchPhone.checked;})
-        document.querySelector("#searchEmail")?.addEventListener("change", () => {searchMemory.setting.searchEmail = searchSetting.searchEmail.checked;})
-        document.querySelector("#searchNote")?.addEventListener("change", () => {searchMemory.setting.searchNote = searchSetting.searchNote.checked;})
-        document.querySelector("#searchFolder")?.addEventListener("change", () => {searchMemory.setting.searchFolder = searchSetting.searchFolder.checked;})
+        document.querySelector("#isReg")?.addEventListener("change", () => { searchMemory.setting.isReg = searchSetting.isReg.checked; })
+        document.querySelector("#isCaseSensitive")?.addEventListener("change", () => { searchMemory.setting.isCaseSensitive = searchSetting.isCaseSensitive.checked; })
+        document.querySelector("#searchFrom")?.addEventListener("change", () => { searchMemory.setting.searchFrom = searchSetting.searchFrom.checked; })
+        document.querySelector("#searchUname")?.addEventListener("change", () => { searchMemory.setting.searchUname = searchSetting.searchUname.checked; })
+        document.querySelector("#searchPwd")?.addEventListener("change", () => { searchMemory.setting.searchPwd = searchSetting.searchPwd.checked; })
+        document.querySelector("#searchPhone")?.addEventListener("change", () => { searchMemory.setting.searchPhone = searchSetting.searchPhone.checked; })
+        document.querySelector("#searchEmail")?.addEventListener("change", () => { searchMemory.setting.searchEmail = searchSetting.searchEmail.checked; })
+        document.querySelector("#searchNote")?.addEventListener("change", () => { searchMemory.setting.searchNote = searchSetting.searchNote.checked; })
+        document.querySelector("#searchFolder")?.addEventListener("change", () => { searchMemory.setting.searchFolder = searchSetting.searchFolder.checked; })
 
         document.querySelector("#searchBtn")?.addEventListener("click", () => {
             searchMemory.lastSearchTxt = searchMemory.txt;
@@ -384,11 +399,11 @@ class TurnToPage{
              * @returns 匹配到的字符串，如果没有匹配到则返回null
              */
             function canFound(test: string, by: string): string | null {
-                if (!searchSetting.isCaseSensitive.checked){
+                if (!searchSetting.isCaseSensitive.checked) {
                     test = test.toLowerCase();
                     by = by.toLowerCase();
                 }
-                if (searchSetting.isReg.checked){
+                if (searchSetting.isReg.checked) {
                     if (new RegExp(by).exec(test) === null) return null;
                     return new RegExp(by).exec(test)![0];
                 } else {
@@ -396,8 +411,8 @@ class TurnToPage{
                     return null;
                 }
             }
-            function showPwdCard(list: Array<Password>, index: number): void{
-                function mkIt(str: string): void{
+            function showPwdCard(list: Array<Password>, index: number): void {
+                function mkIt(str: string): void {
                     result!.insertAdjacentHTML("beforeend", list[index].getCard(cnt, false, str));
                     document.querySelector(`#card${cnt}-path`)?.addEventListener("click", () => {
                         update(list[index].getParent());
@@ -409,8 +424,8 @@ class TurnToPage{
                 }
                 if (hasItemCard(list[index]) !== null) mkIt(hasItemCard(list[index])!);
             }
-            function showFolderCard(item: Folder, isBin: boolean = false): void{
-                function mkIt(k: string): void{
+            function showFolderCard(item: Folder, isBin: boolean = false): void {
+                function mkIt(k: string): void {
                     result!.insertAdjacentHTML("beforeend", item.getCard(cnt, isBin, k));
                     document.querySelector(`#card${cnt}-path`)?.addEventListener("click", () => {
                         update(item);
@@ -419,21 +434,20 @@ class TurnToPage{
                 }
                 if (hasItemCard(item)) mkIt(hasItemCard(item)!)
             }
-            function hasItemCard(item: Item): string | null{
+            function hasItemCard(item: Item): string | null {
                 if (item.isLocked()) return null;
-                if (item.rmDate !== null){
-                    if ((searchMemory.setting.startDate !== null && Number(item.rmDate) < searchMemory.setting.startDate) || 
-                        (searchMemory.setting.endDate !== null && Number(item.rmDate) > searchMemory.setting.endDate)){
+                if (item.rmDate !== null) {
+                    if ((searchMemory.setting.startDate !== null && Number(item.rmDate) < searchMemory.setting.startDate) ||
+                        (searchMemory.setting.endDate !== null && Number(item.rmDate) > searchMemory.setting.endDate)) {
                         return null;
                     }
                 } else {
-                    if ((searchMemory.setting.startDate !== null && Number(item.moDate) < searchMemory.setting.startDate) || 
-                        (searchMemory.setting.endDate !== null && Number(item.moDate) > searchMemory.setting.endDate)){
+                    if ((searchMemory.setting.startDate !== null && Number(item.moDate) < searchMemory.setting.startDate) ||
+                        (searchMemory.setting.endDate !== null && Number(item.moDate) > searchMemory.setting.endDate)) {
                         return null;
                     }
                 }
-                if (item.type == Type.Password)
-                {
+                if (item.type == Type.Password) {
                     item = item as Password;
                     if (canFound(item.from, input.value) && searchSetting.searchFrom.checked) return canFound(item.from, input.value);
                     else if (canFound(item.uname, input.value) && searchSetting.searchUname.checked) return canFound(item.uname, input.value);
@@ -450,13 +464,13 @@ class TurnToPage{
                 }
                 return null;
             }
-            
+
             const input = document.querySelector("#searchInput") as HTMLInputElement;
             const result = document.querySelector("#searchResult");
-            let cnt: number = 0, flag : boolean = false;
+            let cnt: number = 0, flag: boolean = false;
             result!.innerHTML = "";
             saveEditorData();
-            if (input.value == ""){
+            if (input.value == "") {
                 result!.innerHTML = `<div class="alert alert-danger" role="alert">
                     请输入搜索内容！
                 </div>`;
@@ -469,36 +483,36 @@ class TurnToPage{
             try {
                 // 检查是否有
                 flag = false;
-                for (let i = 0; i < pwdList.length; i++){
-                    if (hasItemCard(pwdList[i])){
+                for (let i = 0; i < pwdList.length; i++) {
+                    if (hasItemCard(pwdList[i])) {
                         flag = true;
                         break;
                     }
                 }
-                if (flag){
+                if (flag) {
                     result!.insertAdjacentHTML("beforeend", "<div><h5><strong>密码</strong></h5></div>");
-                    for(let i = 0; i < pwdList.length; i++){
+                    for (let i = 0; i < pwdList.length; i++) {
                         showPwdCard(pwdList, i);
                     }
                 }
 
                 flag = false;
-                for (let i = 0; i < folderList.length; i++){
-                    if (hasItemCard(folderList[i])){
+                for (let i = 0; i < folderList.length; i++) {
+                    if (hasItemCard(folderList[i])) {
                         flag = true;
                         break;
                     }
                 }
-                if (flag){
+                if (flag) {
                     result!.insertAdjacentHTML("beforeend", "<div><h5><strong>文件夹</strong></h5></div>");
-                    for(let i = 0; i < folderList.length; i++){
+                    for (let i = 0; i < folderList.length; i++) {
                         showFolderCard(folderList[i]);
                     }
                 }
 
                 flag = false;
-                for (let i = 0; i < binItem.length; i++){
-                    if (hasItemCard(binItem[i])){
+                for (let i = 0; i < binItem.length; i++) {
+                    if (hasItemCard(binItem[i])) {
                         flag = true;
                         break;
                     }
@@ -509,10 +523,10 @@ class TurnToPage{
                 </div>`;
                 return;
             }
-            if (flag){
+            if (flag) {
                 result!.insertAdjacentHTML("beforeend", "<div><h5><strong>回收站</strong></h5></div>");
-                for(let i = 0; i < binItem.length; i++){
-                    if (binItem[i].type == Type.Password){
+                for (let i = 0; i < binItem.length; i++) {
+                    if (binItem[i].type == Type.Password) {
                         showPwdCard(binItem as Array<Password>, i);
                     } else {
                         showFolderCard(binItem[i] as Folder, true);
@@ -520,7 +534,7 @@ class TurnToPage{
                 }
             }
 
-            if (cnt == 0){
+            if (cnt == 0) {
                 result!.innerHTML = `<div class="alert alert-danger" role="alert">
                     没有找到相关内容！
                 </div>`;
@@ -536,7 +550,7 @@ class TurnToPage{
         searchSetting.searchPhone.checked = searchMemory.setting.searchPhone;
         searchSetting.searchNote.checked = searchMemory.setting.searchNote;
         searchSetting.searchFolder.checked = searchMemory.setting.searchFolder;
-        if (searchMemory.lastSearchTxt !== "" && searchMemory.lastSearchTxt !== null){
+        if (searchMemory.lastSearchTxt !== "" && searchMemory.lastSearchTxt !== null) {
             (document.querySelector("#searchInput") as HTMLInputElement)!.value = searchMemory.lastSearchTxt;
             (document.querySelector("#searchBtn") as HTMLButtonElement).click();
         }
@@ -552,8 +566,8 @@ class TurnToPage{
      * 切换到“设置”页面。
      * @param token 访问token，请填写{@linkcode TurnToPage.Token}
      */
-    static setting(token: symbol): void{
-        if (token === TurnToPage.token){
+    static setting(token: symbol): void {
+        if (token === TurnToPage.token) {
             this.showSetting();
         }
         else {
@@ -565,8 +579,8 @@ class TurnToPage{
      * 切换到“回收站”页面。
      * @param token 访问token，请填写{@linkcode TurnToPage.Token}
      */
-    static bin(token: symbol, checkable: boolean = false): void{
-        if (token === TurnToPage.token){
+    static bin(token: symbol, checkable: boolean = false): void {
+        if (token === TurnToPage.token) {
             this.showBin(checkable);
         }
         else {
@@ -578,8 +592,8 @@ class TurnToPage{
      * 切换到“搜索”页面。
      * @param token 访问token，请填写{@linkcode TurnToPage.Token}
      */
-    static search(token: symbol): void{
-        if (token === TurnToPage.token){
+    static search(token: symbol): void {
+        if (token === TurnToPage.token) {
             this.showSearch();
         }
         else {
@@ -592,7 +606,7 @@ class TurnToPage{
  * @param dir 要切换到的文件夹
  * @param checkable 切换后是否开启“选择”模式
  */
-function update(dir: Folder, checkable: boolean = false) : void{
+function update(dir: Folder, checkable: boolean = false): void {
     removeTips();
 
     updatePos();
@@ -604,19 +618,19 @@ function update(dir: Folder, checkable: boolean = false) : void{
     document.querySelector("span#nav-home")!.classList.remove("active");
     document.querySelector("span#nav-mainPage")!.classList.remove("active");
     document.querySelector("span#nav-search")!.classList.remove("active");
-    if (dir.isSame(Folder.bin())){
+    if (dir.isSame(Folder.bin())) {
         document.querySelector("span#nav-bin")!.classList.add("active");
         TurnToPage.bin(TurnToPage.token, checkable);
         return;
-    } else if (dir.isSame(Folder.home())){
+    } else if (dir.isSame(Folder.home())) {
         document.querySelector("span#nav-home")!.classList.add("active");
         goHome(TurnToPage.token);
         return;
-    } else if (dir.isSame(Folder.setting())){
+    } else if (dir.isSame(Folder.setting())) {
         document.querySelector("span#nav-setting")!.classList.add("active");
         TurnToPage.setting(TurnToPage.token);
         return;
-    } else if (dir.isSame(Folder.search())){
+    } else if (dir.isSame(Folder.search())) {
         document.querySelector("span#nav-search")!.classList.add("active");
         TurnToPage.search(TurnToPage.token);
         return;
@@ -626,42 +640,42 @@ function update(dir: Folder, checkable: boolean = false) : void{
     }
     pagePos.mainDir = dir;
     let loca = dir.toReadableHTML(); // location
-    let inner : string = `<div class="title">密码列表</div>
-    ${dir.isSame(Folder.root())?"":`<div class="subtitle"><p>当前位置：</p>${loca.html}</div>`}
+    let inner: string = `<div class="title">密码列表</div>
+    ${dir.isSame(Folder.root()) ? "" : `<div class="subtitle"><p>当前位置：</p>${loca.html}</div>`}
     <div id="MainToolBar">
-    ${checkable?
-        `<p class="tool" id="checkable">取消选择</p>
+    ${checkable ?
+            `<p class="tool" id="checkable">取消选择</p>
         <p class="tool" id="check-all">全部选择</p>
         <p class="tool" id="check-invert">反向选择</p>
         <img src="../pages/resources/delete.png" title="删除" class="tool" data-bs-toggle="tooltip" data-bs-placement="top" id="delete">
         <img src="../pages/resources/copy.png" title="复制" data-bs-toggle="tooltip" data-bs-placement="top" class="tool" id="copy">`
-        :
-        `
-        <p class="${clipboard.size == 0? "invaildTool":"tool"}" id="paste">粘贴</p>
-        <p class="${clipboard.size == 0? "invaildTool":"tool"}" id="move">移动</p>
+            :
+            `
+        <p class="${clipboard.size == 0 ? "invaildTool" : "tool"}" id="paste">粘贴</p>
+        <p class="${clipboard.size == 0 ? "invaildTool" : "tool"}" id="move">移动</p>
         <p class="tool" id="checkable">选择</p>
         <img src="../pages/resources/newFolder.png" title="新建文件夹" class="tool" data-bs-toggle="tooltip" data-bs-placement="top" id="newFolder">
-        ${dir.isSame(Folder.root())?"":`
-        <img src="../pages/resources/up.png" title="上移到${dir.getParent().name == ":"?"主文件夹":dir.getParent().name}" data-bs-toggle="tooltip" data-bs-placement="top" class="tool" id="up">
+        ${dir.isSame(Folder.root()) ? "" : `
+        <img src="../pages/resources/up.png" title="上移到${dir.getParent().name == ":" ? "主文件夹" : dir.getParent().name}" data-bs-toggle="tooltip" data-bs-placement="top" class="tool" id="up">
         <img src="../pages/resources/lock.png" title="加密" class="tool" data-bs-toggle="tooltip" data-bs-placement="top" id="lock">
         `}`
-    }
+        }
     </div>
     `;
-    type pwdMapping = {item: Password, idx: number};
-    type folderMapping = {item: Folder, idx: number};
+    type pwdMapping = { item: Password, idx: number };
+    type folderMapping = { item: Folder, idx: number };
     let nowPwds: Array<pwdMapping> = [];
     let nowFolders: Array<folderMapping> = [];
-    let has : boolean = false;
-    for (let i = 0; i < folderList.length; i++){
+    let has: boolean = false;
+    for (let i = 0; i < folderList.length; i++) {
         if (dir.isInclude(folderList[i])) {
-            nowFolders.push({item: folderList[i], idx: i});
+            nowFolders.push({ item: folderList[i], idx: i });
             has = true;
         }
     }
-    for (let i = 0; i < pwdList.length; i++){
+    for (let i = 0; i < pwdList.length; i++) {
         if (dir.isInclude(pwdList[i])) {
-            nowPwds.push({item: pwdList[i], idx: i});
+            nowPwds.push({ item: pwdList[i], idx: i });
             has = true;
         }
     }
@@ -695,7 +709,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
     nowPwds.forEach((value: pwdMapping, idx: number) => {
         inner += value.item.getHtml(idx, checkable);
     });
-    if (!has){
+    if (!has) {
         inner += `<p>暂无密码</p>`;
     }
     inner += `
@@ -709,15 +723,15 @@ function update(dir: Folder, checkable: boolean = false) : void{
     document.querySelector("#checkable")?.addEventListener("click", () => {
         update(dir, !checkable);
     });
-    if (!dir.isSame(Folder.root())){
+    if (!dir.isSame(Folder.root())) {
         const parent = document.querySelector("div#dragParentCard") as HTMLDivElement;
         parent!.addEventListener("drop", (e) => {
             if (folderIsEditing) return;
             e.preventDefault();
-            const index : string = (e as DragEvent)?.dataTransfer?.getData("text/plain") as string;
+            const index: string = (e as DragEvent)?.dataTransfer?.getData("text/plain") as string;
             const num: number = parseInt(index.substring(1));
             parent!.style.display = "none";
-            if (index[0] == "p"){
+            if (index[0] == "p") {
                 moveItem(Type.Password, num, dir.getParent());
             } else {
                 moveItem(Type.Folder, num, dir.getParent());
@@ -729,14 +743,14 @@ function update(dir: Folder, checkable: boolean = false) : void{
             if (folderIsEditing) return;
             e.preventDefault();
         });
-        for(let i = 0; i < loca.num; i++){
+        for (let i = 0; i < loca.num; i++) {
             document.querySelector(`#dirItem${i}`)?.addEventListener("click", (e) => {
                 Task.tryDone("快速穿梭");
                 update(Folder.fromString((e.target as HTMLDivElement).dataset.location!));
             })
         }
     }
-    if (checkable){
+    if (checkable) {
         document.querySelector("#check-all")?.addEventListener("click", () => {
             nowFolders.forEach((value: folderMapping, index: number) => {
                 (document.querySelector(`#folder${index}-checkbox`) as HTMLInputElement)!.checked = true;
@@ -765,7 +779,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 }
             })
             nowPwds.forEach((value: pwdMapping, index: number) => {
-                if ((document.querySelector(`#pwd${index}-checkbox`) as HTMLInputElement)!.checked){
+                if ((document.querySelector(`#pwd${index}-checkbox`) as HTMLInputElement)!.checked) {
                     try {
                         deleteItem(Type.Password, value.idx, dir, false);
                     } catch (error) {
@@ -781,11 +795,11 @@ function update(dir: Folder, checkable: boolean = false) : void{
         copy?.addEventListener("click", () => {
             clipboard.clear();
             nowFolders.forEach((value: folderMapping, index: number) => {
-                if ((document.querySelector(`#folder${index}-checkbox`) as HTMLInputElement)!.checked) clipboard.add({type: Type.Folder, index: nowFolders[index].idx})
+                if ((document.querySelector(`#folder${index}-checkbox`) as HTMLInputElement)!.checked) clipboard.add({ type: Type.Folder, index: nowFolders[index].idx })
             })
             nowPwds.forEach((value: pwdMapping, index: number) => {
-                if ((document.querySelector(`#pwd${index}-checkbox`) as HTMLInputElement)!.checked){
-                    clipboard.add({type: Type.Password, index: nowPwds[index].idx})
+                if ((document.querySelector(`#pwd${index}-checkbox`) as HTMLInputElement)!.checked) {
+                    clipboard.add({ type: Type.Password, index: nowPwds[index].idx })
                 }
             })
             copy!.src = "../pages/resources/copy_done.png";
@@ -800,7 +814,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 mkDialog("权限不足", "当前用户组没有权限进行移动操作。");
                 return;
             }
-            for(let i of clipboard){
+            for (let i of clipboard) {
                 moveItem(i.type, i.index, dir, true);
             }
             Task.tryDone("文件搬运大法");
@@ -811,7 +825,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 mkDialog("权限不足", "当前用户组没有权限进行移动操作。");
                 return;
             }
-            for(let i of clipboard){
+            for (let i of clipboard) {
                 moveItem(i.type, i.index, dir);
             }
             Task.tryDone("文件搬运大法");
@@ -824,8 +838,8 @@ function update(dir: Folder, checkable: boolean = false) : void{
                 return;
             }
             let nowIndex: number = -1;
-            for(let i = 0; i < folderList.length; i++){
-                if (folderList[i].isSame(dir)){
+            for (let i = 0; i < folderList.length; i++) {
+                if (folderList[i].isSame(dir)) {
                     nowIndex = i;
                     break;
                 }
@@ -833,60 +847,60 @@ function update(dir: Folder, checkable: boolean = false) : void{
             let choice: Array<string> = ["确定", "取消"];
             if (folderList[nowIndex].lock !== null) choice.push("取消二级锁");
             mkDialog(
-                "设置二级锁", 
-                "输入新的二级锁密码：", 
-                choice, 
+                "设置二级锁",
+                "输入新的二级锁密码：",
+                choice,
                 {
-                    isStatic: true, 
-                    otherHTML: `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入新密码"></div>`, 
-                    otherAction: () => {(document.querySelector("#lockInput") as HTMLInputElement).focus();},
+                    isStatic: true,
+                    otherHTML: `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入新密码"></div>`,
+                    otherAction: () => { (document.querySelector("#lockInput") as HTMLInputElement).focus(); },
                     defaultOption: 0
                 }
             )
-            .then((res) => {
-                    if (res == 0){
+                .then((res) => {
+                    if (res == 0) {
                         const input = document.querySelector("#lockInput") as HTMLInputElement;
-                        if (input.value == ""){
-                            mkDialog("设置失败！", "密码不能为空。", ["确定"], {defaultOption: 0});
+                        if (input.value == "") {
+                            mkDialog("设置失败！", "密码不能为空。", ["确定"], { defaultOption: 0 });
                             return;
                         }
                         folderList[nowIndex].lock = Cryp.pbkdf2(Cryp.pbkdf2(input.value));
                         folderList[nowIndex].cachePwd = input.value;
                         saveData();
                         Task.tryDone("双重加密，双重保护");
-                        mkToast("设置成功！", "","<p>二级锁已设置成功。</p>");
-                    } else if (res == 2){
+                        mkToast("设置成功！", "", "<p>二级锁已设置成功。</p>");
+                    } else if (res == 2) {
                         folderList[nowIndex].lock = null;
                         folderList[nowIndex].cachePwd = null;
                         saveData();
-                        mkToast("取消成功！", "","<p>二级锁已取消。</p>");
+                        mkToast("取消成功！", "", "<p>二级锁已取消。</p>");
                     }
                 }
-            )
+                )
         });
     }
     document.querySelector("#newFolder")?.addEventListener("click", () => {
-        let k : Set<number> = new Set()
-        for (let i = 0; i < folderList.length; i++){
-            if (dir.isInclude(folderList[i])){
-                if(folderList[i].name == "新建文件夹") k.add(0);
-                if (folderList[i].name.length >= 5 && folderList[i].name.slice(0, 5) == "新建文件夹"){
+        let k: Set<number> = new Set()
+        for (let i = 0; i < folderList.length; i++) {
+            if (dir.isInclude(folderList[i])) {
+                if (folderList[i].name == "新建文件夹") k.add(0);
+                if (folderList[i].name.length >= 5 && folderList[i].name.slice(0, 5) == "新建文件夹") {
                     let can: boolean = true;
-                    for(let j = 5; j < folderList[i].name.length; j++){
-                        if (isNaN(Number(folderList[i].name[j]))){
+                    for (let j = 5; j < folderList[i].name.length; j++) {
+                        if (isNaN(Number(folderList[i].name[j]))) {
                             can = false;
                             break;
                         }
                     }
-                    if (can){
+                    if (can) {
                         k.add(Number(folderList[i].name.slice(5)));
                     }
                 }
             }
         }
         let lowerBound = 0;
-        while(true){
-            if (!k.has(lowerBound)){
+        while (true) {
+            if (!k.has(lowerBound)) {
                 break;
             }
             lowerBound++;
@@ -898,7 +912,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
     addBtn?.addEventListener("click", () => {
         addPwd(dir);
     });
-    for(let i = 0; i < nowPwds.length; i++){
+    for (let i = 0; i < nowPwds.length; i++) {
         const editBtn = document.querySelector(`#pwd${i}-edit`);
         editBtn!.addEventListener("click", (e) => {
             e?.stopPropagation();
@@ -916,9 +930,9 @@ function update(dir: Folder, checkable: boolean = false) : void{
         const info = document.querySelector(`#pwd${i}`);
         info!.addEventListener("click", () => {
             if (folderIsEditing) return;
-            if (mainSetting.autoCopy){
+            if (mainSetting.autoCopy) {
                 copyToClipboard(pwdList[nowPwds[i].idx].pwd);
-                mkToast("成功复制！", "","<p>密码已复制到剪贴板。<br>如果想要查看详情，请在设置中设置。</p>");
+                mkToast("成功复制！", "", "<p>密码已复制到剪贴板。<br>如果想要查看详情，请在设置中设置。</p>");
                 return;
             }
             showPwd(pwdList, nowPwds[i].idx, dir);
@@ -931,7 +945,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
         info!.addEventListener("dragend", () => {
             (document.querySelector("div#dragParentCard") as HTMLElement)!.style.display = "none";
         });
-        if (checkable){
+        if (checkable) {
             const check = document.querySelector(`#pwd${i}-checkboxDiv`) as HTMLDivElement;
             const checkBox = document.querySelector(`#pwd${i}-checkbox`) as HTMLInputElement;
             check!.addEventListener("click", (e) => {
@@ -943,7 +957,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
             })
         }
     }
-    for(let i = 0; i < nowFolders.length; i++){
+    for (let i = 0; i < nowFolders.length; i++) {
         const feditBtn = document.querySelector(`#folder${i}-edit`);
         feditBtn!.addEventListener("click", (e) => {
             removeTips();
@@ -955,32 +969,32 @@ function update(dir: Folder, checkable: boolean = false) : void{
             input.focus();
             input.select();
             input.addEventListener("keydown", (e) => {
-                if (e.key == "Enter" && !e.isComposing){
+                if (e.key == "Enter" && !e.isComposing) {
                     input.blur();
                 }
             })
             input!.addEventListener("blur", () => {
-                let newFolder : Folder = new Folder(nowFolders[i].item);
+                let newFolder: Folder = new Folder(nowFolders[i].item);
                 newFolder.name = input!.value;
                 folderIsEditing = false;
-                if (nowFolders.findIndex(v => (v.item.isSame(newFolder))) != -1 && !newFolder.isSame(nowFolders[i].item)){
+                if (nowFolders.findIndex(v => (v.item.isSame(newFolder))) != -1 && !newFolder.isSame(nowFolders[i].item)) {
                     mkDialog("重命名失败！", "文件夹名已存在。");
                     init(dir);
                     return;
                 }
-                for(let j = 0; j < newFolder.name.length; j++){
-                    if (newFolder.name[j] == "/"){
+                for (let j = 0; j < newFolder.name.length; j++) {
+                    if (newFolder.name[j] == "/") {
                         mkDialog("重命名失败！", "文件夹名不能包含“/”。");
                         init(dir);
                         return;
                     }
                 }
-                for(let j = 0; j < pwdList.length; j++){
+                for (let j = 0; j < pwdList.length; j++) {
                     if (nowFolders[i].item.isInclude(pwdList[j])) {
                         pwdList[j].setParent(newFolder);
                     }
                 }
-                for(let j = 0; j < folderList.length; j++){
+                for (let j = 0; j < folderList.length; j++) {
                     if (nowFolders[i].item.isInclude(folderList[j])) {
                         folderList[j].setParent(newFolder);
                     }
@@ -1002,8 +1016,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
             }
             init(dir);
         });
-        if (nowFolders[i].item.lock !== null && nowFolders[i].item.cachePwd !== null)
-        {
+        if (nowFolders[i].item.lock !== null && nowFolders[i].item.cachePwd !== null) {
             const fUnlocked = document.querySelector(`#folder${i}-unlocked`);
             fUnlocked!.addEventListener("click", (e) => {
                 e?.stopPropagation();
@@ -1015,46 +1028,46 @@ function update(dir: Folder, checkable: boolean = false) : void{
         const folder = document.querySelector(`#folder${i}`);
         folder!.addEventListener("click", () => {
             if (folderIsEditing) return;
-            if (nowFolders[i].item.lock !== null && nowFolders[i].item.cachePwd === null){
+            if (nowFolders[i].item.lock !== null && nowFolders[i].item.cachePwd === null) {
                 mkDialog(
-                    "二级锁", 
-                    "请输入二级锁密码：", 
-                    ["确定", "取消"], 
+                    "二级锁",
+                    "请输入二级锁密码：",
+                    ["确定", "取消"],
                     {
-                        isStatic: true, 
-                        otherHTML: `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入密码"></div>`, 
-                        otherAction: () => {(document.querySelector("#lockInput") as HTMLInputElement).focus();},
+                        isStatic: true,
+                        otherHTML: `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入密码"></div>`,
+                        otherAction: () => { (document.querySelector("#lockInput") as HTMLInputElement).focus(); },
                         defaultOption: 0
                     }
                 )
-                .then((res) => {
-                    if (res == 0){
-                        const input = document.querySelector("#lockInput") as HTMLInputElement;
-                        if (input.value == ""){
-                            mkDialog("解锁失败", "密码不能为空！", ["确定"], {defaultOption: 0});
-                            return;
-                        }
-                        if (nowFolders[i].item.lock != Cryp.pbkdf2(Cryp.pbkdf2(input.value))){
-                            mkDialog("解锁失败", "密码错误！", ["确定"], {defaultOption: 0});
-                            return;
-                        }
-                        Task.tryDone("新世界");
-                        folderList[nowFolders[i].idx].cachePwd = input.value;
-                        // 对文件夹下的文件进行解锁
-                        for(let j = 0; j < pwdList.length; j++){
-                            if (pwdList[j].isin(nowFolders[i].item)){
-                                pwdList[j] = decrypt(pwdList[j], Cryp.pbkdf2(input.value), ["dir"]) as Password;
+                    .then((res) => {
+                        if (res == 0) {
+                            const input = document.querySelector("#lockInput") as HTMLInputElement;
+                            if (input.value == "") {
+                                mkDialog("解锁失败", "密码不能为空！", ["确定"], { defaultOption: 0 });
+                                return;
                             }
-                        }
-                        for(let j = 0; j < folderList.length; j++){
-                            if (folderList[j].isin(nowFolders[i].item)){
-                                folderList[j] = decrypt(folderList[j], Cryp.pbkdf2(input.value), ["parent"]) as Folder;
+                            if (nowFolders[i].item.lock != Cryp.pbkdf2(Cryp.pbkdf2(input.value))) {
+                                mkDialog("解锁失败", "密码错误！", ["确定"], { defaultOption: 0 });
+                                return;
                             }
+                            Task.tryDone("新世界");
+                            folderList[nowFolders[i].idx].cachePwd = input.value;
+                            // 对文件夹下的文件进行解锁
+                            for (let j = 0; j < pwdList.length; j++) {
+                                if (pwdList[j].isin(nowFolders[i].item)) {
+                                    pwdList[j] = decrypt(pwdList[j], Cryp.pbkdf2(input.value), ["dir"]) as Password;
+                                }
+                            }
+                            for (let j = 0; j < folderList.length; j++) {
+                                if (folderList[j].isin(nowFolders[i].item)) {
+                                    folderList[j] = decrypt(folderList[j], Cryp.pbkdf2(input.value), ["parent"]) as Folder;
+                                }
+                            }
+                            update(nowFolders[i].item);
+                            mkToast("解锁成功！", "", "<p>文件夹已解锁。</p>");
                         }
-                        update(nowFolders[i].item);
-                        mkToast("解锁成功！", "","<p>文件夹已解锁。</p>");
-                    }
-                })
+                    })
                 return;
             }
             else {
@@ -1077,13 +1090,13 @@ function update(dir: Folder, checkable: boolean = false) : void{
         folder!.addEventListener("drop", (e) => {
             if (folderIsEditing) return;
             e.preventDefault();
-            const index : string = (e as DragEvent)?.dataTransfer?.getData("text/plain") as string;
+            const index: string = (e as DragEvent)?.dataTransfer?.getData("text/plain") as string;
             if (parseInt(index.substring(1)) == nowFolders[i].idx && index[0] == "f") return;
-            function move(info: string){
+            function move(info: string) {
                 let id: number = parseInt(info.substring(1))
-                if (info[0] == "p"){
+                if (info[0] == "p") {
                     moveItem(Type.Password, id, nowFolders[i].item);
-                } else if (info[0] == "f"){
+                } else if (info[0] == "f") {
                     moveItem(Type.Folder, id, nowFolders[i].item);
                 }
             }
@@ -1091,7 +1104,7 @@ function update(dir: Folder, checkable: boolean = false) : void{
             Task.tryDone("幻影显形");
             init(dir, checkable);
         });
-        if (checkable){
+        if (checkable) {
             const check = document.querySelector(`#folder${i}-checkboxDiv`) as HTMLDivElement;
             const checkBox = document.querySelector(`#folder${i}-checkbox`) as HTMLInputElement;
             check!.addEventListener("click", (e) => {

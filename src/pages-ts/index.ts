@@ -6,7 +6,7 @@
 /**
  * @class 加密函数静态库
  */
-class Cryp{
+class Cryp {
     /**
      * AES加密函数
      * @param data 加密的文字
@@ -14,7 +14,7 @@ class Cryp{
      * @returns 加密结果
      * @memberof Cryp
      */
-    static encrypt(data: string, key: string): string{
+    static encrypt(data: string, key: string): string {
         let k = CryptoJS.AES.encrypt(data, key).toString(CryptoJS.format.OpenSSL);
         return k;
     }
@@ -38,18 +38,18 @@ class Cryp{
      * @returns 加密后的数据
      * @memberof Cryp
      */
-    static pbkdf2(data: string, salt: string = ""): string{
+    static pbkdf2(data: string, salt: string = ""): string {
         return CryptoJS.PBKDF2(data, salt, {
-                    keySize: 256 / 32,
-                    iterations: 10,
-                    hasher: CryptoJS.algo.SHA256
-                }).toString(CryptoJS.enc.Hex);
+            keySize: 256 / 32,
+            iterations: 10,
+            hasher: CryptoJS.algo.SHA256
+        }).toString(CryptoJS.enc.Hex);
     }
 }
 
 const whitelistAttributes = ["type", "cachePwd"];
 
-function encrypt(data: Item | Task, key: string, except: string[] = []): Item | Task{ // 加密
+function encrypt(data: Item | Task, key: string, except: string[] = []): Item | Task { // 加密
     let enc: Item | Task;
     if (data.type == Type.Password) enc = new Password(data as Password);
     else if (data.type == Type.Folder) {
@@ -59,15 +59,15 @@ function encrypt(data: Item | Task, key: string, except: string[] = []): Item | 
     else enc = new Task(data as Task);
     let keyList: Array<keyof (Item | Task)> = <Array<keyof (Item | Task)>>Object.keys(data);
     keyList.sort();
-    for (let v of keyList){
+    for (let v of keyList) {
         if (whitelistAttributes.indexOf(v) !== -1 || except.indexOf(v) !== -1) continue;
-        if (data[v] === null){
+        if (data[v] === null) {
             (enc as any)[v] = null
-        } else if (typeof data[v] === "string"){
+        } else if (typeof data[v] === "string") {
             (enc as any)[v] = Cryp.encrypt(data[v], key)
-        } else if (typeof data[v] === "number"){
+        } else if (typeof data[v] === "number") {
             (enc as any)[v] = Cryp.encrypt((<number>data[v]).toString(), key)
-        } else if (typeof data[v] === "object" && (<Folder>data[v]).type == Type.Folder){
+        } else if (typeof data[v] === "object" && (<Folder>data[v]).type == Type.Folder) {
             (enc as any)[v] = new Folder(<Folder>encrypt(data[v], key, except));
         } else {
             console.error("未知类型");
@@ -75,22 +75,22 @@ function encrypt(data: Item | Task, key: string, except: string[] = []): Item | 
     }
     return enc;
 }
-function decrypt(data:Item | Task, key: string, except: string[] = []): Item | Task{ // 解密
+function decrypt(data: Item | Task, key: string, except: string[] = []): Item | Task { // 解密
     let dec: Item | Task;
     if (data.type == Type.Password) dec = new Password(data as Password);
     else if (data.type == Type.Folder) dec = new Folder(data as Folder);
     else dec = new Task(data as Task);
     let keyList: Array<keyof (Item | Task)> = <Array<keyof (Item | Task)>>Object.keys(data);
     keyList.sort();
-    for (let v of keyList){
+    for (let v of keyList) {
         if (whitelistAttributes.indexOf(v) !== -1 || except.indexOf(v) !== -1) continue;
-        if (data[v] === null){
+        if (data[v] === null) {
             (dec as any)[v] = null
-        } else if (typeof data[v] === "string"){
+        } else if (typeof data[v] === "string") {
             (dec as any)[v] = Cryp.decrypt(data[v], key)
-        } else if (typeof data[v] === "number"){
+        } else if (typeof data[v] === "number") {
             (dec as any)[v] = Cryp.decrypt((<number>data[v]).toString(), key)
-        } else if (typeof data[v] === "object" && (<Folder>data[v]).type == Type.Folder){
+        } else if (typeof data[v] === "object" && (<Folder>data[v]).type == Type.Folder) {
             (dec as any)[v] = new Folder(<Folder>decrypt(data[v], key, except));
         } else {
             console.error("未知类型");
@@ -104,19 +104,19 @@ let addBtn = document.querySelector("#addPwd");
 /** main界面 */
 const main = document.querySelector("#contentDiv");
 /** 密码列表 */
-let pwdList : Array<Password> = [];
+let pwdList: Array<Password> = [];
 /** 回收站的密码列表 */
-let binItem : Array<Item> = [];
+let binItem: Array<Item> = [];
 /** 文件夹列表 */
-let folderList : Array<Folder> = [];
+let folderList: Array<Folder> = [];
 /** 主密码 */
-let mainPwd : string = "";
+let mainPwd: string = "";
 /** 是否记住密码 */
-let isremember : boolean = false;
+let isremember: boolean = false;
 /** 是否正在编辑文件夹 */
-let folderIsEditing : boolean = false;
+let folderIsEditing: boolean = false;
 /** 当前所处路径 */
-let currentFolder : Folder = Folder.root();
+let currentFolder: Folder = Folder.root();
 /** 当前复制的密码/文件夹 */
 let clipboard: Set<clipboardItem> = new Set();
 /** 设置对象 */
@@ -132,7 +132,7 @@ let NEEDTODO: Array<TaskMap> = [];
 /** 搜索设置的记忆 */
 let searchMemory: {
     /** 当前搜索框中的文本内容，随着用户的输入实时更新 */
-    txt: string, 
+    txt: string,
     /** 上一次搜索的文字，如果没有上一次则为null */
     lastSearchTxt: string | null,
     /** 搜索设置 */
@@ -150,7 +150,7 @@ let searchMemory: {
         endDate: number | null, // 搜索结束时间
     };
 } = {
-    txt: "", 
+    txt: "",
     lastSearchTxt: null,
     setting: {
         isReg: false,
@@ -167,7 +167,7 @@ let searchMemory: {
     }
 };
 /** 页面滚动位置的记忆 */
-type PagePosition = {top: number, left: number};
+type PagePosition = { top: number, left: number };
 let pagePos: {
     home: PagePosition,
     main: PagePosition,
@@ -176,12 +176,12 @@ let pagePos: {
     bin: PagePosition,
     search: PagePosition,
 } = {
-    home: {top: 0, left: 0},
-    main: {top: 0, left: 0},
+    home: { top: 0, left: 0 },
+    main: { top: 0, left: 0 },
     mainDir: Folder.root(),
-    setting: {top: 0, left: 0},
-    bin: {top: 0, left: 0},
-    search: {top: 0, left: 0},
+    setting: { top: 0, left: 0 },
+    bin: { top: 0, left: 0 },
+    search: { top: 0, left: 0 },
 };
 /** 注册时间 */
 let signUpTime: string = Date.now().toString();
@@ -192,7 +192,7 @@ let signUpTime: string = Date.now().toString();
  * @param time 时间
  * @returns 可读的时间格式
  */
-function getReadableTime(time: Date | string): string{
+function getReadableTime(time: Date | string): string {
     if (typeof time === "string") time = new Date(Number(time));
     let minite = time.getMinutes(), strminite: string = minite.toString();
     if (minite < 10) strminite = "0" + minite;
@@ -207,9 +207,9 @@ function getReadableTime(time: Date | string): string{
  * @param exceptIndex 排除的索引
  * @returns 是否存在
  */
-function hasDir(path: string, name: string, exceptIndex: Array<number> = []): boolean{
-    for(let i = 0; i < folderList.length; i++){
-        if (folderList[i].name == name && folderList[i].getParent().stringify() == path && exceptIndex.indexOf(i) == -1){
+function hasDir(path: string, name: string, exceptIndex: Array<number> = []): boolean {
+    for (let i = 0; i < folderList.length; i++) {
+        if (folderList[i].name == name && folderList[i].getParent().stringify() == path && exceptIndex.indexOf(i) == -1) {
             return true;
         }
     }
@@ -220,10 +220,10 @@ function hasDir(path: string, name: string, exceptIndex: Array<number> = []): bo
  * @param dir 文件夹路径
  * @param noCheck 是否检查用户组
  */
-function mkdir(dir: Folder, noCheck: boolean = false): boolean{ // 创建文件夹
+function mkdir(dir: Folder, noCheck: boolean = false): boolean { // 创建文件夹
     if (dir.isSystemFolder()) return true;
     let parent = dir.getParent();
-    if (folderList.findIndex(v => v.isSame(dir)) != -1 || dir.isSame(Folder.root())){
+    if (folderList.findIndex(v => v.isSame(dir)) != -1 || dir.isSame(Folder.root())) {
         return true; // 文件夹已存在
     }
     // 检查用户组
@@ -231,7 +231,7 @@ function mkdir(dir: Folder, noCheck: boolean = false): boolean{ // 创建文件�
         mkDialog("权限不足", "你没有权限添加更多文件夹。当前允许添加的文件夹数量为" + getCurrentUserGroup().permission.folderNum + "。");
         return false;
     }
-    if (folderList.findIndex(v => v.isSame(parent)) == -1 && !parent.isSystemFolder()){
+    if (folderList.findIndex(v => v.isSame(parent)) == -1 && !parent.isSystemFolder()) {
         mkdir(parent);
     }
     folderList.push(dir);
@@ -241,21 +241,21 @@ function mkdir(dir: Folder, noCheck: boolean = false): boolean{ // 创建文件�
 /**
  * 获取当前页面的滚动位置
  */
-function updatePos(): void{
-    if (currentFolder.isSame(Folder.bin())){
+function updatePos(): void {
+    if (currentFolder.isSame(Folder.bin())) {
         pagePos.bin = getScroll();
-    } else if (currentFolder.isSame(Folder.home())){
+    } else if (currentFolder.isSame(Folder.home())) {
         pagePos.home = getScroll();
-    } else if (currentFolder.isSame(Folder.setting())){
+    } else if (currentFolder.isSame(Folder.setting())) {
         pagePos.setting = getScroll();
-    } else if (currentFolder.isSame(Folder.search())){
+    } else if (currentFolder.isSame(Folder.search())) {
         pagePos.search = getScroll();
-    } else if (currentFolder.isin(Folder.root())){
+    } else if (currentFolder.isin(Folder.root())) {
         pagePos.main = getScroll();
     }
 }
 
-function init(dir: Folder, checkable: boolean = false): void{
+function init(dir: Folder, checkable: boolean = false): void {
     saveData();
     update(dir, checkable);
 }
@@ -266,7 +266,7 @@ function init(dir: Folder, checkable: boolean = false): void{
  * @param dir_to 目标文件夹
  * @param isCopy 是否保留源文件
  */
-function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = false) : void {
+function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = false): void {
     // 判断用户组
     if (!getCurrentUserGroup().permission.canMove) {
         mkDialog("权限不足", "你没有权限移动文件。");
@@ -288,7 +288,7 @@ function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = f
             mkDialog("移动失败！", `目标文件夹“${dir_to.name}”已加密，请解密后重试。`);
             return;
         }
-        if (hasDir(dir_to.stringify(), folderList[index].name)){
+        if (hasDir(dir_to.stringify(), folderList[index].name)) {
             mkDialog("移动失败！", `“${folderList[index].name}”已存在。`);
             return;
         }
@@ -323,8 +323,8 @@ function moveItem(type: Type, index: number, dir_to: Folder, isCopy: boolean = f
  * @param isAppend 是否是添加密码
  * @param index 被修改的密码的索引
  */
-function doneMkPwd(isAppend: boolean = false, index: number = -1): void{
-    if (isAppend){
+function doneMkPwd(isAppend: boolean = false, index: number = -1): void {
+    if (isAppend) {
         Task.tryDone("初出茅庐");
         Task.tryDone("好事成双");
     } else {
@@ -340,14 +340,14 @@ function doneMkPwd(isAppend: boolean = false, index: number = -1): void{
  * @param dir 从什么文件夹来到的这个页面
  * @param isAppend 表示是否是添加密码，为true时，取消将会删除该密码，并返回main界面
  */
-function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : boolean = false) : void{
-    if(!isAppend){
+function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend: boolean = false): void {
+    if (!isAppend) {
         updatePos();
         currentFolder = Folder.change();
     }
     removeTips();
-    let inner : string = `
-    <div class="title">${isAppend?`添加密码`:`编辑密码`}</div>
+    let inner: string = `
+    <div class="title">${isAppend ? `添加密码` : `编辑密码`}</div>
     <div class="form">
     <div class="formItem"><label for="from">来源<span style="color:red;">*</span>：</label><input type="text" id="from" class="${by[index].from == "" ? "invaild" : "vaild"}" value="${by[index].from}" /><span class="check"></span></div>
     <div class="formItem"><label for="uname">用户名<span style="color:red;">*</span>：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
@@ -362,11 +362,11 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
     <div class="action" id="cancel"><p>取消</p></div>
     `
     main!.innerHTML = inner;
-    let require : Array<string> = ["#from", "#pwd", "#uname"];
-    for (let i = 0; i < require.length; i++){
+    let require: Array<string> = ["#from", "#pwd", "#uname"];
+    for (let i = 0; i < require.length; i++) {
         const it = document.querySelector(require[i]) as HTMLInputElement;
-        it?.addEventListener("input", () =>{
-            if (it.value == ""){
+        it?.addEventListener("input", () => {
+            if (it.value == "") {
                 it.classList.add("invaild");
                 it.classList.remove("vaild");
             } else {
@@ -388,7 +388,7 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
         let email = (document.querySelector("#email") as HTMLInputElement).value;
         let phone = (document.querySelector("#phone") as HTMLInputElement).value;
         let note = (document.querySelector("#note") as HTMLTextAreaElement).value;
-        if (name == "" || uname == "" || pwd == ""){
+        if (name == "" || uname == "" || pwd == "") {
             mkDialog("提交失败！", "来源、用户名和密码不能为空。");
             return;
         }
@@ -398,7 +398,7 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
         init(dir);
     });
     document.querySelector("#cancel")?.addEventListener("click", () => {
-        if (isAppend){
+        if (isAppend) {
             by.splice(index, 1);
         }
         update(dir);
@@ -412,19 +412,19 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend : b
  * @param _save 此选项请保持默认，不应被填写
  * @error 可能会因为权限问题而导致报错
  */
-function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean = true) : void{
-    if ((type == Type.Folder && folderList[index].isLocked()) || (type == Type.Password && pwdList[index].isLocked())){
+function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean = true): void {
+    if ((type == Type.Folder && folderList[index].isLocked()) || (type == Type.Password && pwdList[index].isLocked())) {
         throw new Error("Can't delete item. The item is locked.");
     }
     if (type == Type.Password) {
         Task.tryDone("密码清理，双倍给力！");
-        clipboard.delete({type: Type.Password, index: index});
+        clipboard.delete({ type: Type.Password, index: index });
         pwdList[index].setParent(Folder.fromString(Folder.bin().stringify() + pwdList[index].getParent().stringify().slice(2)));
         pwdList[index].rmDate = Date.now().toString();
         binItem.unshift(new Password(pwdList[index]));
         pwdList.splice(index, 1);
     } else {
-        clipboard.delete({type: Type.Folder, index: index});
+        clipboard.delete({ type: Type.Folder, index: index });
         pwdList.forEach((item, i) => {
             if (folderList[index].isInclude(item)) {
                 deleteItem(Type.Password, i, dir_from, false);
@@ -440,7 +440,7 @@ function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean 
         binItem.unshift(new Folder(folderList[index]));
         folderList.splice(index, 1);
     }
-    if (_save){
+    if (_save) {
         init(dir_from)
     }
 }
@@ -448,9 +448,9 @@ function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean 
  * 彻底删除回收站的密码
  * @param index 密码在列表中的索引
  */
-function deletebinItem(index: number | Array<number>) : void{
-    if (Array.isArray(index)){
-        for(let i of index){
+function deletebinItem(index: number | Array<number>): void {
+    if (Array.isArray(index)) {
+        for (let i of index) {
             if (binItem[i].type == Type.Password) {
                 Task.tryDone("密码清除？不留痕迹！");
                 break;
@@ -470,18 +470,18 @@ function deletebinItem(index: number | Array<number>) : void{
  * 恢复回收站的密码
  * @param index 密码在列表中的索引
  */
-function recoverPwd(index: number) : void{
+function recoverPwd(index: number): void {
     let binItemCopy = [];
-    for(let i = 0; i < binItem.length; i++){
+    for (let i = 0; i < binItem.length; i++) {
         if (binItem[i].type == Type.Password) binItemCopy.push(new Password(binItem[i] as Password));
         else binItemCopy.push(new Folder(binItem[i] as Folder));
     }
     let pwdListCopy = [];
-    for(let i = 0; i < pwdList.length; i++){
+    for (let i = 0; i < pwdList.length; i++) {
         pwdListCopy.push(new Password(pwdList[i] as Password));
     }
     let folderListCopy = [];
-    for(let i = 0; i < folderList.length; i++){
+    for (let i = 0; i < folderList.length; i++) {
         folderListCopy.push(new Folder(folderList[i] as Folder));
     }
     if (binItem[index].type == Type.Password) {
@@ -490,14 +490,14 @@ function recoverPwd(index: number) : void{
         binItem[index].setParent(Folder.fromString(Folder.root().stringify() + binItem[index].getParent().stringify().slice(2)));
         mkdir((<Password>binItem[index]).getParent(), true);
         pwdList.push(binItem[index] as Password);
-        if (!getCurrentUserGroup().permission.canAddPwd(pwdList.length-1)) {
+        if (!getCurrentUserGroup().permission.canAddPwd(pwdList.length - 1)) {
             mkDialog("权限不足", "你没有权限添加更多密码。当前允许添加的密码数量为" + getCurrentUserGroup().permission.pwdNum + "。");
             binItem = binItemCopy;
             pwdList = pwdListCopy;
             folderList = folderListCopy;
             return;
         }
-        if (!getCurrentUserGroup().permission.canAddFolder(folderList.length-1)) {
+        if (!getCurrentUserGroup().permission.canAddFolder(folderList.length - 1)) {
             mkDialog("权限不足", "你没有权限添加更多文件夹。当前允许添加的文件夹数量为" + getCurrentUserGroup().permission.folderNum + "。");
             binItem = binItemCopy;
             pwdList = pwdListCopy;
@@ -509,7 +509,7 @@ function recoverPwd(index: number) : void{
     else {
         let x: string = binItem[index].moDate;
         binItem[index].rmDate = null;
-        binItem[index] = Folder.fromString(Folder.root().stringify() + (binItem[index] as Folder).stringify().slice(2)); 
+        binItem[index] = Folder.fromString(Folder.root().stringify() + (binItem[index] as Folder).stringify().slice(2));
         binItem[index].moDate = x;
         mkdir(binItem[index].getParent(), true);
         let has: boolean = false;
@@ -519,7 +519,7 @@ function recoverPwd(index: number) : void{
             }
         });
         if (!has) mkdir(binItem[index], true);
-        if (!getCurrentUserGroup().permission.canAddFolder(folderList.length-1)) {
+        if (!getCurrentUserGroup().permission.canAddFolder(folderList.length - 1)) {
             mkDialog("权限不足", "你没有权限添加更多文件夹。当前允许添加的文件夹数量为" + getCurrentUserGroup().permission.folderNum + "。");
             folderList = folderListCopy;
             binItem = binItemCopy;
@@ -535,14 +535,14 @@ function recoverPwd(index: number) : void{
  * @param _step 当前步骤，在外部调用下不应被填写
  * @param _result 当前密码对象，在外部调用下不应被填写
  */
-function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password("", "", "", "", "", "", dir)) : void{
+function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password("", "", "", "", "", "", dir)): void {
     if (!getCurrentUserGroup().permission.canAddPwd(pwdList.length)) {
         mkDialog("权限不足", "你没有权限添加更多密码。当前允许添加的密码数量为" + getCurrentUserGroup().permission.pwdNum + "。");
         return;
     }
     updatePos();
     currentFolder = Folder.append();
-    if (mainSetting.easyAppend){
+    if (mainSetting.easyAppend) {
         pwdList.push(new Password("", "", "", "", "", "", dir));
         changePwd(pwdList, pwdList.length - 1, dir, true);
         return;
@@ -613,7 +613,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
         <div class="action" id="cancel"><p>取消</p></div>
         `
     }
-    if (_step != 3 && _step != 4){
+    if (_step != 3 && _step != 4) {
         document.getElementById("input")!.addEventListener("input", (e) => {
             if (_step == 0) {
                 _result.from = (document.getElementById("input") as HTMLInputElement)!.value;
@@ -625,7 +625,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
                 _result.pwd = (document.getElementById("input") as HTMLInputElement)!.value;
             }
             let tgt: HTMLInputElement = e.target as HTMLInputElement;
-            if (tgt.value == ""){
+            if (tgt.value == "") {
                 tgt.classList.add("invaild");
                 tgt.classList.remove("vaild");
             } else {
@@ -638,7 +638,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
     if (_step == 4) document.querySelector("#input")?.addEventListener("input", () => {
         _result.note = (document.getElementById("input") as HTMLTextAreaElement)!.value;
     })
-    if (_step == 3){
+    if (_step == 3) {
         document.getElementById("input_email")!.addEventListener("input", () => {
             _result.email = (document.getElementById("input_email") as HTMLInputElement)!.value;
         })
@@ -676,34 +676,34 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
  * @param index 密码的索引
  * @returns HTML代码，安全性提示，如果很安全则返回空字符串
  */
-function checkSafety(index: number) : string{
-    let list : Array<number> = [], safety: string = "";
-    for(let i = 0; i < pwdList.length; i++){
-        if (pwdList[i].pwd == pwdList[index].pwd && i != index){
+function checkSafety(index: number): string {
+    let list: Array<number> = [], safety: string = "";
+    for (let i = 0; i < pwdList.length; i++) {
+        if (pwdList[i].pwd == pwdList[index].pwd && i != index) {
             list.push(i);
         }
     }
-    if (list.length == 1){
+    if (list.length == 1) {
         safety += `<p style="color: orange">此密码与${pwdList[list[0]].from}的密码是重复的。</p>`;
-    } else if (list.length == 2){
+    } else if (list.length == 2) {
         safety += `<p style="color: orange">此密码与${pwdList[list[0]].from}和${pwdList[list[1]].from}的密码是重复的。</p>`;
-    } else if (list.length > 2){
+    } else if (list.length > 2) {
         safety += `<p style="color: red">此密码与${pwdList[list[0]].from}、${pwdList[list[1]].from}等${list.length}个来源的密码是重复的。</p>`;
     }
-    let isR : boolean = false;
-    for(let i = 0; i < simplePwd.length; i++){
-        if (pwdList[index].pwd == simplePwd[i]){
+    let isR: boolean = false;
+    for (let i = 0; i < simplePwd.length; i++) {
+        if (pwdList[index].pwd == simplePwd[i]) {
             safety += `<p style="color: red">此密码很容易暴露。</p>`;
             isR = true;
         }
     }
-    if (!isR) for(let i = 0; i < lessSimplePwd.length; i++){
-        if (pwdList[index].pwd == lessSimplePwd[i]){
+    if (!isR) for (let i = 0; i < lessSimplePwd.length; i++) {
+        if (pwdList[index].pwd == lessSimplePwd[i]) {
             safety += `<p style="color: orange">此密码比较容易暴露。</p>`;
             isR = true;
         }
     }
-    if (!isR){
+    if (!isR) {
         if (!isNaN(Number(pwdList[index].pwd)))
             safety += `<p style="color: orange">此密码只包含数字，比较容易暴露。</p>`;
         if (pwdList[index].pwd.length <= 3)
@@ -717,10 +717,10 @@ function checkSafety(index: number) : string{
  * @param index 目标密码在by中的索引
  * @param from 从哪个页面跳转过来的，如果是从回收站跳转过来的，返回时会返回到回收站页面，否则返回到主页面，需要填写Page枚举
  */
-function showPwd(by: Array<Password>, index: number, from : Folder) : void{
+function showPwd(by: Array<Password>, index: number, from: Folder): void {
     updatePos();
     currentFolder = Folder.show();
-    let inner : string = `
+    let inner: string = `
     <div class="form">
     <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
     <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${by[index].uname}" readonly /><img class="icon" src="./resources/copy.png" id="unameCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
@@ -730,14 +730,14 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
     <div class="formItem_Copy"><label for="email">邮箱：</label><input type="text" id="email" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="emailCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
     <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
     <div class="formItem_Copy"><p>修改时间：${getReadableTime(by[index].moDate)}</p></div>
-    ${from.isSame(Folder.bin())? `<div class="formItem_Copy"><p>删除时间：${getReadableTime(by[index].rmDate!)}</p></div>` : ""}
+    ${from.isSame(Folder.bin()) ? `<div class="formItem_Copy"><p>删除时间：${getReadableTime(by[index].rmDate!)}</p></div>` : ""}
     <div class="formItem"><label for="note">备注：</label><br><textarea id="note" readonly>${by[index].note}</textarea></div>
     </div>
     <div class="action" id="back"><p>返回</p></div>
     `
     main!.innerHTML = inner;
     updateTooltip();
-    const safety : HTMLDivElement = document.querySelector("#safety")!;
+    const safety: HTMLDivElement = document.querySelector("#safety")!;
     Task.tryDone("例行检查");
     if (from != Folder.bin()) {
         safety.innerHTML = checkSafety(index);
@@ -755,10 +755,10 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
         };
     });
     document.querySelector("#fromCopy")?.addEventListener("click", () => {
-        if (document.querySelector("#from")?.getAttribute("copyed") == "true"){
+        if (document.querySelector("#from")?.getAttribute("copyed") == "true") {
             return;
         }
-        if (copyToClipboard(pwdList[index].from)){
+        if (copyToClipboard(pwdList[index].from)) {
             document.querySelector("#fromCopy")?.setAttribute("src", "./resources/copy_done.png");
             document.querySelector("#from")?.setAttribute("copyed", "true");
             setTimeout(() => {
@@ -768,10 +768,10 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
         }
     });
     document.querySelector("#unameCopy")?.addEventListener("click", () => {
-        if (document.querySelector("#uname")?.getAttribute("copyed") == "true"){
+        if (document.querySelector("#uname")?.getAttribute("copyed") == "true") {
             return;
         }
-        if (copyToClipboard(pwdList[index].uname)){
+        if (copyToClipboard(pwdList[index].uname)) {
             document.querySelector("#unameCopy")?.setAttribute("src", "./resources/copy_done.png");
             document.querySelector("#uname")?.setAttribute("copyed", "true");
             setTimeout(() => {
@@ -781,10 +781,10 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
         }
     });
     document.querySelector("#pwdCopy")?.addEventListener("click", () => {
-        if (document.querySelector("#pwd")?.getAttribute("copyed") == "true"){
+        if (document.querySelector("#pwd")?.getAttribute("copyed") == "true") {
             return;
         }
-        if (copyToClipboard(pwdList[index].pwd)){
+        if (copyToClipboard(pwdList[index].pwd)) {
             document.querySelector("#pwdCopy")?.setAttribute("src", "./resources/copy_done.png");
             document.querySelector("#pwd")?.setAttribute("copyed", "true");
             setTimeout(() => {
@@ -794,10 +794,10 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
         }
     });
     document.querySelector("#emailCopy")?.addEventListener("click", () => {
-        if (document.querySelector("#email")?.getAttribute("copyed") == "true"){
+        if (document.querySelector("#email")?.getAttribute("copyed") == "true") {
             return;
         }
-        if (copyToClipboard(pwdList[index].email)){
+        if (copyToClipboard(pwdList[index].email)) {
             document.querySelector("#emailCopy")?.setAttribute("src", "./resources/copy_done.png");
             document.querySelector("#email")?.setAttribute("copyed", "true");
             setTimeout(() => {
@@ -807,10 +807,10 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
         }
     })
     document.querySelector("#phoneCopy")?.addEventListener("click", () => {
-        if (document.querySelector("#phone")?.getAttribute("copyed") == "true"){
+        if (document.querySelector("#phone")?.getAttribute("copyed") == "true") {
             return;
         }
-        if (copyToClipboard(pwdList[index].phone)){
+        if (copyToClipboard(pwdList[index].phone)) {
             document.querySelector("#phoneCopy")?.setAttribute("src", "./resources/copy_done.png");
             document.querySelector("#phone")?.setAttribute("copyed", "true");
             setTimeout(() => {
@@ -820,7 +820,7 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
         }
     })
     document.querySelector("#back")?.addEventListener("click", () => {
-        if (from == Folder.bin()){
+        if (from == Folder.bin()) {
             update(Folder.bin());
         } else {
             update(from);
@@ -831,7 +831,7 @@ function showPwd(by: Array<Password>, index: number, from : Folder) : void{
 /**
  * 主函数
  */
-function fmain(){
+function fmain() {
     document.querySelector("span#nav-mainPage")!.addEventListener("click", () => {
         update(pagePos.mainDir);
     });
@@ -849,10 +849,10 @@ function fmain(){
         if (getCurrentUserGroup().permission.canSearch) update(Folder.search());
         else mkDialog("权限不足", "你没有权限使用搜索功能。");
     })
-    
+
     window.fs.read("./editor").then((data) => {
         if (data == "") throw new Error("editor is null");
-        data = data.replace(/\s/g,'')
+        data = data.replace(/\s/g, '')
         let obj = JSON.parse(data);
         if (obj.version != "e1.0") console.log("编辑器数据版本已过期！");
         searchMemory = obj.search;
@@ -862,21 +862,21 @@ function fmain(){
 
     window.fs.read("./data").then((data) => {
         if (data == "") throw new Error("data is null");
-        data = data.replace(/\s/g,'')
+        data = data.replace(/\s/g, '')
         let obj = JSON.parse(data);
 
-        const supportVersion = ["1.2", "1.3", "1.4"]
+        const supportVersion = ["1.2", "1.3", "1.4", "1.4.1"]
         if (supportVersion.indexOf(obj.version) === -1) mkDialog("数据无效", `不支持数据版本${obj.version}！`);
 
         mainSetting = obj.mainSetting;
         const salt = obj.salt;
-        if (obj.isPwdNull){
+        if (obj.isPwdNull) {
             UMC.decrypt(obj, Cryp.pbkdf2("", salt));
         } else {
-            if (obj.memory !== null && obj.memory !== undefined){
+            if (obj.memory !== null && obj.memory !== undefined) {
                 let m = obj.memory;
                 let dpwd = Cryp.pbkdf2(m, salt);
-                if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
+                if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd) {
                     isremember = true;
                     mainPwd = m;
                     UMC.decrypt(obj, dpwd);
@@ -899,7 +899,7 @@ function fmain(){
                 document.querySelector("#Yes")?.addEventListener("click", () => {
                     let m = (document.querySelector("#mainPwd") as HTMLInputElement).value;
                     let dpwd = Cryp.pbkdf2(m, salt);
-                    if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd){
+                    if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd) {
                         isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
                         mainPwd = m;
                         (<HTMLDivElement>document.querySelector("#navBar")).style.display = "flex";

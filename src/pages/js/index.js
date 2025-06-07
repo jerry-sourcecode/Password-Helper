@@ -896,7 +896,7 @@ function fmain() {
             throw new Error("data is null");
         data = data.replace(/\s/g, '');
         let obj = JSON.parse(data);
-        const supportVersion = ["1.2", "1.3", "1.4"];
+        const supportVersion = ["1.2", "1.3", "1.4", "1.4.1"];
         if (supportVersion.indexOf(obj.version) === -1)
             mkDialog("数据无效", `不支持数据版本${obj.version}！`);
         mainSetting = obj.mainSetting;

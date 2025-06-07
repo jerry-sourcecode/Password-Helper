@@ -14,13 +14,33 @@ function random(a, b) {
 /**
  * 生成随机字符串
  * @param length 字符串长度
- * @returns 随机字符串
+ * @returns 根据 {@linkcode mainSetting.generateRandomPwdSetting} 随机字符串
  */
 function randstr(length) {
+    function getChar(str) {
+        return str[random(0, str.length)];
+    }
     let res = "";
-    let chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?";
+    // 不会有0oO1iIlLq9g
+    let letter = "abcdefhjkmnprstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ";
+    let num = "2345678";
+    let punc = `%-}#][:<.>!\\'+,("&/;?@=\${)*_`;
+    let typeOfChar = 'L'.repeat(mainSetting.generateRandomPwdSetting.weightOfLetter);
+    typeOfChar += 'N'.repeat(mainSetting.generateRandomPwdSetting.weightOfNum);
+    typeOfChar += 'P'.repeat(mainSetting.generateRandomPwdSetting.weightOfPunc);
     for (let i = 0; i < length; i++) {
-        res += chars[random(0, chars.length)];
+        let tgt = getChar(typeOfChar);
+        switch (tgt) {
+            case 'L':
+                res += getChar(letter);
+                break;
+            case 'N':
+                res += getChar(num);
+                break;
+            case 'P':
+                res += getChar(punc);
+                break;
+        }
     }
     return res;
 }

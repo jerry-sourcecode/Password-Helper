@@ -573,13 +573,15 @@ class Folder {
                 tgtHtml += `<li class="breadcrumb-item"><p class="action" data-location="${ans.slice(0, lans[i].index)}" id="dirItem${i}">${lans[i].text}</p></li>`;
             }
         }
-        return { html: `
+        return {
+            html: `
         <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
             <ol class="breadcrumb">
                 ${tgtHtml}
             </ol>
         </nav>
-        `, num: lans.length };
+        `, num: lans.length
+        };
     }
     /**
      * 可读的文本
@@ -653,6 +655,12 @@ class MainSetting {
         this.folderSortBy = SortBy.name;
         /**主密码提示 */
         this.mainPwdTip = "";
+        /**密码随机生成器设置 */
+        this.generateRandomPwdSetting = {
+            weightOfLetter: 5,
+            weightOfNum: 3,
+            weightOfPunc: 1
+        };
     }
 }
 /**
@@ -718,7 +726,7 @@ function getData(ismemory = isremember) {
     let encSignUpTime = Cryp.encrypt(signUpTime, enc);
     // 数据保存
     return JSON.stringify({
-        version: "1.4",
+        version: "1.4.1",
         pwd: pwdListUpdated,
         folder: folderListUpdated,
         bin: binItemUpdated,
