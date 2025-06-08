@@ -143,7 +143,7 @@ div.form {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
-  width: 40em;
+  width: 40vw;
 }
 div.form input[type="checkbox"] {
   margin-right: 10px;

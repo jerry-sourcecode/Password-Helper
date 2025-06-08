@@ -890,69 +890,7 @@ function fmain() {
         searchMemory.lastSearchTxt = null;
         searchMemory.txt = "";
     });
-    window.fs.read("./data").then((data) => {
-        var _a;
-        if (data == "")
-            throw new Error("data is null");
-        data = data.replace(/\s/g, '');
-        let obj = JSON.parse(data);
-        const supportVersion = ["1.2", "1.3", "1.4", "1.4.1"];
-        if (supportVersion.indexOf(obj.version) === -1)
-            mkDialog("数据无效", `不支持数据版本${obj.version}！`);
-        mainSetting = obj.mainSetting;
-        const salt = obj.salt;
-        if (obj.isPwdNull) {
-            UMC.decrypt(obj, Cryp.pbkdf2("", salt));
-        }
-        else {
-            if (obj.memory !== null && obj.memory !== undefined) {
-                let m = obj.memory;
-                let dpwd = Cryp.pbkdf2(m, salt);
-                if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd) {
-                    isremember = true;
-                    mainPwd = m;
-                    UMC.decrypt(obj, dpwd);
-                }
-                else {
-                    isremember = false;
-                }
-            }
-            if (!isremember) {
-                main.innerHTML = `
-                <div class="title">请输入访问密钥</div>
-                <div class="form">
-                <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild"/></div>
-                ${mainSetting.mainPwdTip === "" ? `` : `<div><p>密码提示：${mainSetting.mainPwdTip}</p></div>`}
-                <div><input type="checkbox" id="rememberPwd"} style="margin-right: 10px;"/><label for="rememberPwd">记住密钥</label></div>
-                </div>
-                <div class="action" id="Yes"><p>确定</p></div>
-                <div id="error"></div>
-                `;
-                document.querySelector("#navBar").style.display = "none";
-                (_a = document.querySelector("#Yes")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
-                    let m = document.querySelector("#mainPwd").value;
-                    let dpwd = Cryp.pbkdf2(m, salt);
-                    if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd) {
-                        isremember = document.querySelector("#rememberPwd").checked;
-                        mainPwd = m;
-                        document.querySelector("#navBar").style.display = "flex";
-                        UMC.decrypt(obj, dpwd);
-                        saveData();
-                    }
-                    else {
-                        document.querySelector("#error").innerHTML = `
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <strong>密钥错误！</strong>你需要检查你的密钥。
-                        </div>`;
-                        let alert = new bootstrap.Alert(document.querySelector(".alert"));
-                        setTimeout(() => {
-                            alert.close();
-                        }, 1000);
-                    }
-                });
-            }
-        }
-    }).catch((err) => {
+    window.fs.read("./data").then((data) => { UMC.parse(data); }).catch((err) => {
         console.log(err);
         saveData();
         document.querySelector("#nav-home").click();
