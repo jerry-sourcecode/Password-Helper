@@ -1,5 +1,15 @@
 "use strict";
 class UMC {
+    static getName(data) {
+        if (data == "")
+            throw new Error("data is null");
+        data = data.replace(/\s/g, '');
+        let obj = JSON.parse(data);
+        if (obj.name) {
+            return obj.name;
+        }
+        return "untitled";
+    }
     /**
      * 将给定的加密字符串解密为一个明文对象，并将其应用
      * @param data 处理前的字符串
@@ -14,6 +24,8 @@ class UMC {
         if (supportVersion.indexOf(obj.version) === -1)
             mkDialog("数据无效", `不支持数据版本${obj.version}！`);
         mainSetting = obj.mainSetting;
+        repoName = obj.name;
+        document.title = `Password Helper - ${repoName}`;
         const salt = obj.salt;
         if (obj.isPwdNull) {
             UMC.decrypt(obj, Cryp.pbkdf2("", salt));
@@ -32,7 +44,7 @@ class UMC {
                 }
             }
             if (!isremember) {
-                main.innerHTML = `
+                content.innerHTML = `
                 <div class="title">请输入访问密钥</div>
                 <div class="form">
                 <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild"/></div>

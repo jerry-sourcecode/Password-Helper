@@ -69,8 +69,8 @@ function copyToClipboard(str: string): boolean {
  */
 function getScroll(): { top: number, left: number } {
     return {
-        top: main!.scrollTop || main!.scrollTop,
-        left: main!.scrollLeft || main!.scrollLeft
+        top: content!.scrollTop || content!.scrollTop,
+        left: content!.scrollLeft || content!.scrollLeft
     }
 }
 

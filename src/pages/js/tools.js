@@ -75,8 +75,8 @@ function copyToClipboard(str) {
  */
 function getScroll() {
     return {
-        top: main.scrollTop || main.scrollTop,
-        left: main.scrollLeft || main.scrollLeft
+        top: content.scrollTop || content.scrollTop,
+        left: content.scrollLeft || content.scrollLeft
     };
 }
 /**

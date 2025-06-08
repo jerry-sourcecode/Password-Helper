@@ -115,9 +115,12 @@ function decrypt(data, key, except = []) {
 /** 添加密码按钮 */
 let addBtn = document.querySelector("#addPwd");
 /** main界面 */
-const main = document.querySelector("#contentDiv");
+const content = document.querySelector("#contentDiv");
+const main = document.querySelector("#mainDiv");
 /** 密码列表 */
 let pwdList = [];
+/**密码库名称 */
+let repoName = "untitled";
 /** 回收站的密码列表 */
 let binItem = [];
 /** 文件夹列表 */
@@ -170,6 +173,10 @@ let pagePos = {
 };
 /** 注册时间 */
 let signUpTime = Date.now().toString();
+/**被记录的UMC文件地址 */
+let umcFilePaths = [];
+/**当前UMC文件地址 */
+let curPath = "";
 // 一些工具函数
 /**
  * 得到可读的时间格式
@@ -357,7 +364,7 @@ function changePwd(by, index, dir, isAppend = false) {
     <div class="action" id="submit"><p>提交</p></div>
     <div class="action" id="cancel"><p>取消</p></div>
     `;
-    main.innerHTML = inner;
+    content.innerHTML = inner;
     let require = ["#from", "#pwd", "#uname"];
     for (let i = 0; i < require.length; i++) {
         const it = document.querySelector(require[i]);
@@ -552,7 +559,7 @@ function addPwd(dir, _step = 0, _result = new Password("", "", "", "", "", "", d
     }
     // 添加密码
     if (_step == 0) {
-        main.innerHTML = `
+        content.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
         <div class="formItem"><label for="input">来源<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.from}" /><span class="check"></span></div>
@@ -563,7 +570,7 @@ function addPwd(dir, _step = 0, _result = new Password("", "", "", "", "", "", d
         <div class="action" id="cancel"><p>取消</p></div>`;
     }
     else if (_step == 1) {
-        main.innerHTML = `
+        content.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
         <div class="formItem"><label for="input">用户名<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.uname}"/><span class="check"></span></div>
@@ -575,7 +582,7 @@ function addPwd(dir, _step = 0, _result = new Password("", "", "", "", "", "", d
         <div class="action" id="cancel"><p>取消</p></div>`;
     }
     else if (_step == 2) {
-        main.innerHTML = `
+        content.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
         <div class="formItem"><label for="input">密码<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.pwd}"/><span class="check"></span></div>
@@ -593,7 +600,7 @@ function addPwd(dir, _step = 0, _result = new Password("", "", "", "", "", "", d
         });
     }
     else if (_step == 3) {
-        main.innerHTML = `
+        content.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
         <div class="formItem"><label for="input_email">邮箱：</label><input type="text" id="input_email" value="${_result.email}"></div>
@@ -606,7 +613,7 @@ function addPwd(dir, _step = 0, _result = new Password("", "", "", "", "", "", d
         `;
     }
     else if (_step == 4) {
-        main.innerHTML = `
+        content.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
         <div class="formItem"><label for="input">备注：</label><br><textarea id="input" placeholder="可以在这里输入一些想说的话。">${_result.note}</textarea></div>
@@ -749,7 +756,7 @@ function showPwd(by, index, from) {
     </div>
     <div class="action" id="back"><p>返回</p></div>
     `;
-    main.innerHTML = inner;
+    content.innerHTML = inner;
     updateTooltip();
     const safety = document.querySelector("#safety");
     Task.tryDone("例行检查");
@@ -879,7 +886,9 @@ function fmain() {
         else
             mkDialog("权限不足", "你没有权限使用搜索功能。");
     });
-    window.fs.read("./editor").then((data) => {
+    window.fs.read("./editor")
+        .then((data) => {
+        var _a, _b;
         if (data == "")
             throw new Error("editor is null");
         data = data.replace(/\s/g, '');
@@ -889,11 +898,48 @@ function fmain() {
         searchMemory = obj.search;
         searchMemory.lastSearchTxt = null;
         searchMemory.txt = "";
-    });
-    window.fs.read("./data").then((data) => { UMC.parse(data); }).catch((err) => {
-        console.log(err);
-        saveData();
-        document.querySelector("#nav-home").click();
+        umcFilePaths = obj.umcFilePaths;
+        for (let i = umcFilePaths.length - 1; i >= 0; i--) {
+            if (!window.fs.hasFile(umcFilePaths[i]))
+                umcFilePaths.splice(i, 1);
+        }
+        if (umcFilePaths.length != 0) {
+            let v = umcFilePaths[umcFilePaths.length - 1];
+            curPath = v;
+            window.fs.read(v).then((data) => { UMC.parse(data); });
+        }
+        else {
+            main.innerHTML = `
+                <div class="title" style="margin: 7px; margin-top: 40px">选择密码库</div>
+                <p>在缓存中没有找到可用的密码库，它们可能被删除、移动或重命名了，你现在可以：</p>
+                <div id="newUMC"><p class="action">点此新建一个密码库</p></div>
+                <div id="importUMC"><p class="action">点此导入密码库</p></div>
+                `;
+            (_a = document.querySelector("div#newUMC")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+                let filepath = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码库文件", extensions: ['umc'] }]);
+                if (filepath !== undefined) {
+                    umcFilePaths.push(filepath);
+                    curPath = filepath;
+                    saveData();
+                    saveEditorData();
+                    location.reload();
+                }
+            });
+            (_b = document.querySelector("div#importUMC")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
+                let filepath = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码库文件", extensions: ['umc'] }]);
+                if (filepath !== undefined) {
+                    umcFilePaths.push(filepath);
+                    curPath = filepath;
+                    saveEditorData();
+                    location.reload();
+                }
+            });
+        }
+    })
+        .catch((err) => {
+        console.error("No file .editor");
+        saveEditorData();
+        location.reload();
     });
 }
 fmain();

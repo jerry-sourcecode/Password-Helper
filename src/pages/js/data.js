@@ -670,13 +670,14 @@ class MainSetting {
 function saveData() {
     // 数据保存
     let data = getData();
-    window.fs.save("./data", data);
+    window.fs.save(curPath, data);
 }
 function saveEditorData() {
     // 数据保存
     let data = {
         version: "e1.0",
-        search: searchMemory
+        search: searchMemory,
+        umcFilePaths: umcFilePaths
     };
     window.fs.save("./editor", JSON.stringify(data));
 }
@@ -727,6 +728,7 @@ function getData(ismemory = isremember) {
     // 数据保存
     return JSON.stringify({
         version: "1.4.1",
+        name: repoName,
         pwd: pwdListUpdated,
         folder: folderListUpdated,
         bin: binItemUpdated,

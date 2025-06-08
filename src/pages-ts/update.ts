@@ -112,7 +112,7 @@ function update(dir: Folder, checkable: boolean = false): void {
     inner += `
     <div class="action" id="addPwd"><p>添加密码</p></div>
     `;
-    main!.innerHTML = inner;
+    content!.innerHTML = inner;
     updateTooltip();
     document.querySelector("#up")?.addEventListener("click", () => {
         update(dir.getParent());
@@ -513,5 +513,5 @@ function update(dir: Folder, checkable: boolean = false): void {
             });
         }
     }
-    main?.scrollTo(pagePos.main)
+    content?.scrollTo(pagePos.main)
 }

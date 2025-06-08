@@ -2,23 +2,23 @@
 function _showSetting() {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
     // 显示设置页面
-    main.innerHTML = `
+    content.innerHTML = `
     <div class="title">设置</div>
     <div class="form">
-        <p>安全设置</p>
+        <p class="subtitle">安全设置</p>
         <div class="settingFormItem">
             <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild" value="${mainPwd}"/></div>
             <div><label for="mainPwdTip">密钥提示：</label><input type="text" id="mainPwdTip" value="${mainSetting.mainPwdTip === undefined ? "" : mainSetting.mainPwdTip}"/></div>
             <div class="form-check"><input class="form-check-input" type="checkbox" id="rememberPwd" ${mainPwd == "" ? "disabled" : `${isremember ? "checked" : ""}`}><label for="rememberPwd" class="form-check-label">记住密钥</label></div>
         </div>
-        <p>密码生成设置</p>
+        <p class="subtitle">密码生成设置</p>
         <div class="settingFormItem">
             <p style="text-indent: 2em">用户可以在这里管理随机生成密码中各种字符的权重，权重越大，随机的密码中就会更有可能含有更多的此类字符。如果权重为0，则此类字符不会出现。</p>
             <div><label for="generateRdPwdSetting-Letter">字母在随机密码中的权重：</label><input type="number" id="generateRdPwdSetting-Letter" class="vaild" value="${mainSetting.generateRandomPwdSetting.weightOfLetter}" min="0" max="10"/></div>
             <div><label for="generateRdPwdSetting-Number">数字在随机密码中的权重：</label><input type="number" id="generateRdPwdSetting-Number" class="vaild" value="${mainSetting.generateRandomPwdSetting.weightOfNum}" min="0" max="10"/></div>
             <div><label for="generateRdPwdSetting-Punc">特殊字符在随机密码中的权重：</label><input type="number" id="generateRdPwdSetting-Punc" class="vaild" value="${mainSetting.generateRandomPwdSetting.weightOfPunc}" min="0" max="10"/></div>
         </div>
-        <p>其他个性化设置</p>
+        <p class="subtitle">其他个性化设置</p>
         <div class="settingFormItem">
             <div class="form-check"><input class="form-check-input" type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label  class="form-check-label" for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label></div>
             <div class="form-check"><input class="form-check-input" type="checkbox" id="easyAppend" ${mainSetting.easyAppend ? "checked" : ""}/><label  class="form-check-label" for="easyAppend">添加密码时，使用快速而简洁的表单形式来代替创建引导形式。</label></div>
@@ -39,15 +39,21 @@ function _showSetting() {
                 </select>
             </div>
         </div>
-        <p>导出设置</p>
+        <p class="subtitle">仓库设置</p>
         <div class="settingFormItem" style="text-indent: 2em">
-            <p>导出的数据是一个加密的文件，你可以将它导出到本地，然后在另一台设备上导入。你可以使用数据来快速且安全的转移你的数据。</p>
-            <p>请注意，导出的数据是强制加密的，你需要输入你的访问密钥才能导入，即使你选中了“记住密码”。</p>
-            <p style="color: red;">请注意：导入文件将会覆盖掉原有数据，无法恢复。</p>
-            <div id="exportUMC"><p class="action">点此导出数据</p></div>
-            <div id="importUMC"><p class="action">点此导入数据</p></div>
+            <p>你可以导入一个新的密码库，可以随时方便的切换密码库，原来的密码库不会丢失。</p>
+            <p>当前仓库路径：${curPath}</p>
+            <div><label for="folderSortBy">仓库切换：</label>
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="repoSwitchBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                        ${repoName}
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="repoSwitchBtn" id="repoSwitchUl">
+                    </ul>
+            </div>
+            <div id="importUMC"><p class="action">点此导入密码库</p></div>
+            <div id="newUMC"><p class="action">点此新建密码库</p></div>
         </div>
-        <div id="reset"><p class="action">点此重置</p></div>
+        <div id="reset"><p class="action">点此注销密码库</p><span>，注销会清除在程序上的记录，但不会删除本地库文件。</span></div>
         <p class="btn btn-secondary" id="apply" style="margin-left: auto;">应用</p>
     </div>
     `;
@@ -57,6 +63,21 @@ function _showSetting() {
         if (saveKey.disabled)
             saveKey.checked = false;
     });
+    const repoSwitchUl = document.querySelector("#repoSwitchUl");
+    let inner = "";
+    for (let i = 0; i < umcFilePaths.length; i++) {
+        if (umcFilePaths[i] === curPath) {
+            inner += `<li><span class="dropdown-item active">${repoName}</span></li>`;
+            continue;
+        }
+        let n = window.fs.readSync(umcFilePaths[i]);
+        if (n !== undefined)
+            inner += `<li><span class="dropdown-item">${UMC.getName(n)}</span></li>`;
+    }
+    if (inner == "") {
+        inner = `<li><a class="dropdown-item disabled">暂无其他可用仓库</a></li>`;
+    }
+    repoSwitchUl.innerHTML = inner;
     let applyStyle = () => {
         var _a, _b;
         (_a = document.querySelector("#apply")) === null || _a === void 0 ? void 0 : _a.classList.add("btn-primary");
@@ -139,33 +160,35 @@ function _showSetting() {
             (_c = document.querySelector("p#apply")) === null || _c === void 0 ? void 0 : _c.classList.add("btn-secondary");
         }
     });
-    (_m = document.querySelector("div#exportUMC")) === null || _m === void 0 ? void 0 : _m.addEventListener("click", () => {
-        let ans = window.msg.showSaveDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
-        if (ans === undefined)
-            return;
-        saveUMC(ans);
+    (_m = document.querySelector("div#newUMC")) === null || _m === void 0 ? void 0 : _m.addEventListener("click", () => {
+        let filepath = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码库文件", extensions: ['umc'] }]);
+        if (filepath !== undefined) {
+            umcFilePaths.push(filepath);
+            curPath = filepath;
+            saveData();
+            saveEditorData();
+            window.process.startNewProcess();
+        }
     });
     (_o = document.querySelector("div#importUMC")) === null || _o === void 0 ? void 0 : _o.addEventListener("click", () => {
-        mkDialog("警告", "此操作会覆盖原有数据，你确定要继续吗？", ["确定", "取消"])
-            .then((res) => {
-            if (res == 1)
+        let filepath = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码库文件", extensions: ['umc'] }]);
+        if (filepath !== undefined) {
+            if (umcFilePaths.indexOf(filepath) !== -1) {
+                mkDialog("打开失败", "密码库已经存在。");
                 return;
-            let ans = window.msg.showOpenDialogSync("选择导出地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]);
-            if (ans === undefined)
-                return;
-            readUMC(ans);
-        });
+            }
+            umcFilePaths.push(filepath);
+            curPath = filepath;
+            saveEditorData();
+            window.process.startNewProcess();
+        }
     });
     (_p = document.querySelector("#reset")) === null || _p === void 0 ? void 0 : _p.addEventListener("click", () => {
-        mkDialog("警告", "此操作会清空所有数据并立即重启，你确定要继续吗？", ["确定", "取消"])
-            .then((res) => {
-            if (res == 0) {
-                window.fs.save("./data", "");
-                location.reload();
-            }
-        });
+        umcFilePaths.splice(umcFilePaths.length - 1, 1);
+        saveEditorData();
+        location.reload();
     });
-    main === null || main === void 0 ? void 0 : main.scrollTo(pagePos.setting);
+    content === null || content === void 0 ? void 0 : content.scrollTo(pagePos.setting);
 }
 function _showBin(checkable = false) {
     var _a, _b, _c, _d, _e, _f;
@@ -190,7 +213,7 @@ function _showBin(checkable = false) {
     if (binItem.length == 0) {
         inner += `<p>暂无删除密码</p>`;
     }
-    main.innerHTML = inner;
+    content.innerHTML = inner;
     (_a = document.querySelector("#checkable")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
         update(Folder.bin(), !checkable);
     });
@@ -274,7 +297,7 @@ function _showBin(checkable = false) {
     (_f = document.querySelector("#back")) === null || _f === void 0 ? void 0 : _f.addEventListener("click", () => {
         update(Folder.root());
     });
-    main === null || main === void 0 ? void 0 : main.scrollTo(pagePos.bin);
+    content === null || content === void 0 ? void 0 : content.scrollTo(pagePos.bin);
 }
 function _showSearch() {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
@@ -289,7 +312,7 @@ function _showSearch() {
             strDate = `0${ddate}`; // 如果日是个位数，在前面补0
         return `${year}-${strmonth}-${strDate}`;
     }
-    main.innerHTML = `<div class="title">搜索</div>
+    content.innerHTML = `<div class="title">搜索</div>
     <div class="form">
         <!-- 搜索表单 -->
         <div role="search" style="width: 100%; margin-bottom: 5px;">
@@ -571,6 +594,6 @@ function _showSearch() {
         document.querySelector("#searchBtn").click();
     }
     document.querySelector("#searchInput").value = searchMemory.txt;
-    main === null || main === void 0 ? void 0 : main.scrollTo(pagePos.search);
+    content === null || content === void 0 ? void 0 : content.scrollTo(pagePos.search);
     return;
 }

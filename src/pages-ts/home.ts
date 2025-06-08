@@ -463,7 +463,7 @@ function _goHome(): void {
     signUpDayCount.setHours(0, 0, 0, 0);
     const nowDayCount = new Date()
     signUpDayCount.setHours(0, 0, 0, 0);
-    main!.innerHTML = `
+    content!.innerHTML = `
     <div class="title">我的</div>
     <div class="accordion" id="mainAccordion">
         <div class="accordion-item" id="backstory">
@@ -577,5 +577,5 @@ function _goHome(): void {
             init(Folder.home());
         })
     }
-    main?.scrollTo(pagePos.home)
+    content?.scrollTo(pagePos.home)
 }
