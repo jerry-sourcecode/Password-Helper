@@ -873,7 +873,6 @@ function fmain() {
     window.fs.read("./editor")
         .then((data) => {
             if (data == "") throw new Error("editor is null");
-            data = data.replace(/\s/g, '')
             let obj = JSON.parse(data);
             if (obj.version != "e1.0") console.log("编辑器数据版本已过期！");
             searchMemory = obj.search;

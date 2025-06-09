@@ -15,7 +15,6 @@ class UMC {
      */
     static parse(data: string) {
         if (data == "") throw new Error("data is null");
-        data = data.replace(/\s/g, '')
         let obj = JSON.parse(data);
 
         const supportVersion = ["1.2", "1.3", "1.4", "1.4.1"]
@@ -160,5 +159,6 @@ class UMC {
             weightOfNum: 3,
             weightOfPunc: 1
         }
+        repoName = "untitled";
     }
 };
