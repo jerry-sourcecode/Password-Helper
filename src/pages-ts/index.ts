@@ -106,7 +106,7 @@ const content = document.querySelector("#contentDiv");
 const main = document.querySelector("#mainDiv");
 /** 密码列表 */
 let pwdList: Array<Password> = [];
-/**密码库名称 */
+/**密码仓库名称 */
 let repoName = "untitled";
 /** 回收站的密码列表 */
 let binItem: Array<Item> = [];
@@ -891,13 +891,13 @@ function fmain() {
                 window.fs.read(v).then((data) => { UMC.parse(data) });
             } else {
                 main!.innerHTML = `
-                <div class="title" style="margin: 7px; margin-top: 40px">选择密码库</div>
-                <p>在缓存中没有找到可用的密码库，它们可能被删除、移动或重命名了，你现在可以：</p>
-                <div id="newUMC"><p class="action">点此新建一个密码库</p></div>
-                <div id="importUMC"><p class="action">点此导入密码库</p></div>
+                <div class="title" style="margin: 7px; margin-top: 40px">选择密码仓库</div>
+                <p>在缓存中没有找到可用的密码仓库，它们可能被删除、移动或重命名了，你现在可以：</p>
+                <div id="newUMC"><p class="action">点此新建一个密码仓库</p></div>
+                <div id="importUMC"><p class="action">点此导入密码仓库</p></div>
                 `
                 document.querySelector("div#newUMC")?.addEventListener("click", () => {
-                    let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码库文件", extensions: ['umc'] }]);
+                    let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码仓库文件", extensions: ['umc'] }]);
                     if (filepath !== undefined) {
                         umcFilePaths.push(filepath);
                         curPath = filepath;
@@ -907,7 +907,7 @@ function fmain() {
                     }
                 })
                 document.querySelector("div#importUMC")?.addEventListener("click", () => {
-                    let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码库文件", extensions: ['umc'] }]);
+                    let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码仓库文件", extensions: ['umc'] }]);
                     if (filepath !== undefined) {
                         umcFilePaths.push(filepath);
                         curPath = filepath;

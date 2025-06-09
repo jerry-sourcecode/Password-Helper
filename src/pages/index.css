@@ -6,6 +6,7 @@
 	padding: 0;
 	overflow: hidden;
 }
+
 p,
 span,
 label {
@@ -15,9 +16,11 @@ label {
 	font-size: 18px;
 	cursor: pointer;
 }
+
 label {
 	display: inline;
 }
+
 textarea {
 	height: 33vh;
 	width: 33vw;
@@ -27,19 +30,24 @@ textarea {
 	cursor: text;
 	overflow-y: scroll;
 }
+
 input[type="text"],
 input[type="password"] {
 	width: 25vw;
 }
+
 ul {
 	list-style-type: none;
 }
+
 body {
-	background-color: rgb(184, 183, 183); /*浅色模式为white*/
+	background-color: rgb(184, 183, 183);
+	/*浅色模式为white*/
 	display: flex;
 	justify-content: center;
 	height: 100%;
 }
+
 ol.breadcrumb {
 	margin-bottom: 0;
 }
@@ -52,6 +60,7 @@ div.background {
 	bottom: 0;
 	z-index: -1;
 }
+
 div.content {
 	display: flex;
 	align-items: center;
@@ -112,30 +121,36 @@ div.action {
 	cursor: pointer;
 	margin: 10px;
 }
+
 div.action.invaildAction {
 	background-color: #8c8c8c;
 }
+
 div.action * {
 	font-size: 16px;
 	margin: 0;
 }
+
 div.action:hover:not(.invaildAction) {
 	font-weight: bold;
 }
+
 div.action:hover:not(.invaildAction) * {
 	cursor: pointer;
 	user-select: none;
 }
+
 div.action:active:not(.invaildAction) {
 	box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.3);
 }
 
-input.invaild + span.check::after {
+input.invaild+span.check::after {
 	content: "✖";
 	color: red;
 	padding-left: 5px;
 }
-input.vaild + span.check::after {
+
+input.vaild+span.check::after {
 	content: "✓";
 	color: green;
 	padding-left: 5px;
@@ -147,12 +162,15 @@ div.form {
 	flex-direction: column;
 	width: 40vw;
 }
+
 div.form input[type="checkbox"] {
 	margin-right: 10px;
 }
+
 div.formItem {
 	margin: 5px;
 }
+
 div.formItem_Copy {
 	display: flex;
 	align-items: center;
@@ -168,21 +186,26 @@ div.info {
 	border: 3px solid;
 	width: 43vw;
 }
+
 div.info * {
 	margin: 3px;
 	overflow-wrap: anywhere;
 	font-size: 16px;
 }
+
 div.info:active:not(:has(.icon:active, div.checkbox:active)) {
 	box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.3);
 }
+
 div.info:active img.icon:active {
 	box-shadow: none;
 }
+
 div.info:hover:not(:has(.icon:hover)) {
 	cursor: pointer;
 	background-color: rgba(214, 217, 220, 0.918);
 }
+
 div.tool {
 	display: flex;
 	flex-direction: row-reverse;
@@ -190,9 +213,11 @@ div.tool {
 	align-items: center;
 	width: 39vw;
 }
+
 div.tool .icon.attrib {
 	margin-right: auto;
 }
+
 p.icon {
 	height: 25px;
 	margin: 4px;
@@ -201,12 +226,15 @@ p.icon {
 	color: blue;
 	display: inline-block;
 }
+
 p.icon:hover {
 	font-weight: bold;
 }
+
 p.icon:not(:hover) {
 	font-weight: normal;
 }
+
 img.icon {
 	width: 25px;
 	height: 25px;
@@ -214,6 +242,7 @@ img.icon {
 	user-select: none;
 	cursor: pointer;
 }
+
 img.FolderIcon {
 	width: 25px;
 	height: 25px;
@@ -221,6 +250,7 @@ img.FolderIcon {
 	user-select: none;
 	cursor: pointer;
 }
+
 div.checkbox {
 	border-right: 3px solid;
 	display: flex;
@@ -229,19 +259,23 @@ div.checkbox {
 	width: 3vw;
 	height: 100%;
 }
+
 div.checkbox:active {
 	box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.3);
 }
+
 div.check-content {
 	display: flex;
 	align-items: center;
 	flex-direction: column;
 	width: 39vw;
 }
+
 div#MainToolBar {
 	margin-left: auto;
 	margin-right: 3.3vw;
 }
+
 img.tool {
 	width: 30px;
 	height: 30px;
@@ -250,6 +284,7 @@ img.tool {
 	cursor: pointer;
 	vertical-align: baseline;
 }
+
 p.tool {
 	height: 30px;
 	margin: 4px;
@@ -258,6 +293,7 @@ p.tool {
 	color: blue;
 	display: inline-block;
 }
+
 p.invaildTool {
 	height: 30px;
 	margin: 4px;
@@ -266,19 +302,24 @@ p.invaildTool {
 	color: gray;
 	display: inline-block;
 }
+
 p.tool:hover {
 	font-weight: bold;
 }
+
 div.settingFormItem {
 	margin: 20px;
 	margin-top: 3px;
 }
+
 div.settingFormItem label {
 	display: inline;
 }
+
 div.formItem label {
 	display: inline;
 }
+
 div.formItem_Copy label {
 	display: inline;
 }
@@ -287,6 +328,7 @@ p.action:hover {
 	text-decoration: underline;
 	cursor: pointer;
 }
+
 p.action {
 	font-weight: bold;
 	display: inline;
@@ -296,6 +338,7 @@ div.accordion {
 	width: 40vw;
 	margin: 10px;
 }
+
 div.accordion p {
 	text-indent: 2em;
 	margin: 7px;
@@ -308,6 +351,7 @@ div.taskCard {
 div.taskCard h5 {
 	font-weight: bold;
 }
+
 div.taskCard .btn {
 	margin-top: 8px;
 }
@@ -316,6 +360,7 @@ div.toast p {
 	font-size: 16px;
 	margin-bottom: 5px;
 }
+
 div.toast strong,
 div.toast small {
 	user-select: none;
@@ -326,11 +371,13 @@ div.card,
 div.toast {
 	margin-bottom: 10px;
 }
+
 input.datepicker {
 	display: inline-block;
 	margin: 3px;
 	width: 10vw;
 }
+
 span.highlight {
 	background-color: #d7ba7d;
 	border-radius: 3px;

@@ -39,7 +39,7 @@ function _showSetting(): void {
         </div>
         <p class="subtitle">仓库设置</p>
         <div class="settingFormItem" style="text-indent: 2em">
-            <p>你可以导入一个新的密码库，可以随时方便的切换密码库，原来的密码库不会丢失。</p>
+            <p>你可以导入一个新的密码仓库，可以随时方便的切换密码仓库，原来的密码仓库不会丢失。</p>
             <p>当前仓库路径：${curPath}</p>
             <div>
                 <label for="folderSortBy">仓库切换：</label>
@@ -50,10 +50,10 @@ function _showSetting(): void {
                 </ul>
                 <img class="icon" id="rf-repo" style="margin-right: 8px;" src="./resources/refresh.png" data-bs-toggle="tooltip" data-bs-placement="top" title="刷新仓库">
             </div>
-            <div><p class="action" id="importUMC">点此导入密码库</p></div>
-            <div><p class="action" id="newUMC">点此新建密码库</p></div>
+            <div><p class="action" id="importUMC">点此导入密码仓库</p></div>
+            <div><p class="action" id="newUMC">点此新建密码仓库</p></div>
         </div>
-        <div><p class="action" id="reset">点此注销密码库</p><span>，注销会清除在程序上的记录，但不会删除本地库文件。</span></div>
+        <div><p class="action" id="reset">点此注销密码仓库</p><span>，注销会清除在程序上的记录，但不会删除本地库文件。</span></div>
         <p class="btn btn-secondary" id="apply" style="margin-left: auto;">应用</p>
     </div>
     `;
@@ -99,8 +99,13 @@ function _showSetting(): void {
 
     rfRepo();
 
-    document.querySelector("#rf-repo")?.addEventListener("click", () => {
+    document.querySelector("#rf-repo")?.addEventListener("click", (e) => {
+        if ((e.target as HTMLImageElement).src == "./resources/tick.png") return;
         rfRepo();
+        (e.target as HTMLImageElement).src = "./resources/tick.png";
+        setTimeout(() => {
+            (e.target as HTMLImageElement).src = "./resources/refresh.png";
+        }, 1000);
     })
 
     let applyStyle = () => {
@@ -165,7 +170,7 @@ function _showSetting(): void {
     })
 
     document.querySelector("p#newUMC")?.addEventListener("click", () => {
-        let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码库文件", extensions: ['umc'] }]);
+        let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码仓库文件", extensions: ['umc'] }]);
         if (filepath !== undefined) {
             umcFilePaths.push(filepath);
             let curPathCache = curPath;
@@ -181,10 +186,10 @@ function _showSetting(): void {
         }
     })
     document.querySelector("p#importUMC")?.addEventListener("click", () => {
-        let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码库文件", extensions: ['umc'] }]);
+        let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码仓库文件", extensions: ['umc'] }]);
         if (filepath !== undefined) {
             if (umcFilePaths.indexOf(filepath) !== -1) {
-                mkDialog("打开失败", "密码库已经存在。");
+                mkDialog("打开失败", "密码仓库已经存在。");
                 return;
             }
             umcFilePaths.push(filepath);
