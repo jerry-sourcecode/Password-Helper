@@ -57,19 +57,17 @@ function setIpc(win) {
 		fs.writeFileSync(targetPath, data);
 		event.returnValue = true;
 	});
-	ipcMain.handle("read-file", (event, targetPath) => {
-		targetPath = completePath(targetPath);
-		try {
-			k = new Promise((resolve, resject) => {
-				resolve(fs.readFileSync(targetPath, "utf-8"));
-			});
-		} catch (e) {
-			k = new Promise((resolve, resject) => {
-				resject(e);
-			});
-		}
-		return k;
-	});
+	if (!ipcMain._readFileHandlerRegistered) {
+		ipcMain.handle("read-file", (event, targetPath) => {
+			targetPath = completePath(targetPath);
+			try {
+				return fs.readFileSync(targetPath, "utf-8");
+			} catch (e) {
+				throw e;
+			}
+		});
+		ipcMain._readFileHandlerRegistered = true;
+	}
 	ipcMain.on("msg", (event, title, type, msg, choice) => {
 		event.returnValue = dialog.showMessageBoxSync(win, {
 			type: type,
@@ -120,8 +118,11 @@ function setIpc(win) {
 			else event.returnValue = true;
 		});
 	});
-	ipcMain.on("start-new-process", (e) => {
-		createWindow("Password Helper", "./src/pages/index.html");
+	ipcMain.on("start-new-process", (e, path) => {
+		createWindow("Password Helper", "./src/pages/index.html", () => {}, {
+			isURL: false,
+			argu: [`--repoPath=${path}`],
+		});
 	});
 	ipcMain.on("complete-path", (event, filepath) => {
 		event.returnValue = completePath(filepath);
@@ -133,16 +134,16 @@ function setIpc(win) {
  * @param {string} title 窗口名
  * @param {string} loadFile 载入文件的相对路径
  * @param {Function} callbacks 回调函数，在创造窗口前执行，有参数win，表示创造出的窗口对象
- * @param {{ isURL: boolean; }} [options={ isURL: false }] 可选参数，其中，isURL为是时，loadfile可以填写一个URL
+ * @param {{ isURL: boolean; argu: Array<string>}} [options={ isURL: false }] 可选参数，其中，isURL为是时，loadfile可以填写一个URL
  * @returns 一个 BrowserWindow 对象，创造出的窗口对象
+ * @example createWindow("Hello World", "index.html", (win) => {alert("done!")})
+ * // 这段代码创建了一个窗口名称为"Hello World"，使用"index.html"进行创建，在窗口完成前，会调用alert显示
  */
 function createWindow(
 	title,
 	loadFile,
-	callbacks = (win) => {
-		return;
-	},
-	options = { isURL: false }
+	callbacks = (win) => {},
+	options = { isURL: false, argu: [] }
 ) {
 	const isDebug = true;
 	const win = new BrowserWindow({
@@ -153,10 +154,23 @@ function createWindow(
 			preload: path.join(__dirname, "./preload.js"),
 			sandbox: false,
 			devTools: isDebug,
+			contextIsolation: true,
+			additionalArguments: options.argu,
 		},
 		title: title,
 	});
 
+	win.webContents.on(
+		"did-fail-load",
+		(event, errorCode, errorDescription, validatedURL) => {
+			console.error(
+				"页面加载失败:",
+				errorCode,
+				errorDescription,
+				validatedURL
+			);
+		}
+	);
 	if (!isDebug) {
 		win.webContents.on("before-input-event", (event, input) => {
 			if (
@@ -183,14 +197,26 @@ function createWindow(
 				win.webContents.openDevTools();
 				event.preventDefault();
 			}
+			if (
+				(input.control || input.meta) &&
+				input.key.toLowerCase() === "r"
+			) {
+				event.preventDefault();
+				win.webContents.reload();
+			}
 		});
 	}
 	callbacks(win);
 
 	win.show();
 
-	if (!options.isURL) win.loadFile(loadFile);
-	else win.loadURL(loadFile);
+	// 加载URL或文件
+	if (options.isURL) {
+		win.loadURL(loadFile);
+	} else {
+		win.loadFile(path.join(projectRoot, "./src/pages/index.html"));
+	}
+
 	return win;
 }
 

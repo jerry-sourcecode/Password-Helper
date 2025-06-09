@@ -1,6 +1,6 @@
 "use strict";
 function _showSetting() {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
     // 显示设置页面
     content.innerHTML = `
     <div class="title">设置</div>
@@ -43,12 +43,14 @@ function _showSetting() {
         <div class="settingFormItem" style="text-indent: 2em">
             <p>你可以导入一个新的密码库，可以随时方便的切换密码库，原来的密码库不会丢失。</p>
             <p>当前仓库路径：${curPath}</p>
-            <div><label for="folderSortBy">仓库切换：</label>
+            <div>
+                <label for="folderSortBy">仓库切换：</label>
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="repoSwitchBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                        ${repoName}
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="repoSwitchBtn" id="repoSwitchUl">
-                    </ul>
+                    ${repoName}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="repoSwitchBtn" id="repoSwitchUl">
+                </ul>
+                <img class="icon" id="rf-repo" style="margin-right: 8px;" src="./resources/refresh.png" data-bs-toggle="tooltip" data-bs-placement="top" title="刷新仓库">
             </div>
             <div id="importUMC"><p class="action">点此导入密码库</p></div>
             <div id="newUMC"><p class="action">点此新建密码库</p></div>
@@ -57,64 +59,75 @@ function _showSetting() {
         <p class="btn btn-secondary" id="apply" style="margin-left: auto;">应用</p>
     </div>
     `;
+    updateTooltip();
     const saveKey = document.querySelector("#rememberPwd");
     (_a = document.querySelector("#mainPwd")) === null || _a === void 0 ? void 0 : _a.addEventListener("input", (e) => {
         saveKey.disabled = e.target.value == "";
         if (saveKey.disabled)
             saveKey.checked = false;
     });
-    const repoSwitchUl = document.querySelector("#repoSwitchUl");
-    let inner = "";
-    for (let i = 0; i < umcFilePaths.length; i++) {
-        if (umcFilePaths[i] === curPath) {
-            inner += `<li><span class="dropdown-item active">${repoName}</span></li>`;
-            continue;
+    function rfRepo() {
+        const repoSwitchUl = document.querySelector("#repoSwitchUl");
+        let inner = "";
+        for (let i = 0; i < umcFilePaths.length; i++) {
+            if (umcFilePaths[i] === curPath) {
+                inner += `<li><span class="dropdown-item active" data-path="${umcFilePaths[i]}" id="repoSwitchLi">${repoName}</span></li>`;
+                continue;
+            }
+            let n = window.fs.readSync(umcFilePaths[i]);
+            if (n !== undefined)
+                inner += `<li><span class="dropdown-item" data-path="${umcFilePaths[i]}" id="repoSwitchLi">${UMC.getName(n)}</span></li>`;
         }
-        let n = window.fs.readSync(umcFilePaths[i]);
-        if (n !== undefined)
-            inner += `<li><span class="dropdown-item">${UMC.getName(n)}</span></li>`;
+        repoSwitchUl.innerHTML = inner;
+        document.querySelectorAll("#repoSwitchLi").forEach((v) => {
+            v.addEventListener("click", () => {
+                let path = v.dataset.path;
+                if (path !== curPath)
+                    window.process.startNewProcess(path);
+            });
+        });
     }
-    if (inner == "") {
-        inner = `<li><a class="dropdown-item disabled">暂无其他可用仓库</a></li>`;
-    }
-    repoSwitchUl.innerHTML = inner;
+    rfRepo();
+    (_b = document.querySelector("#rf-repo")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
+        rfRepo();
+    });
     let applyStyle = () => {
         var _a, _b;
         (_a = document.querySelector("#apply")) === null || _a === void 0 ? void 0 : _a.classList.add("btn-primary");
         (_b = document.querySelector("#apply")) === null || _b === void 0 ? void 0 : _b.classList.remove("btn-secondary");
     };
-    (_b = document.querySelector("#mainPwd")) === null || _b === void 0 ? void 0 : _b.addEventListener("input", () => {
+    (_c = document.querySelector("#mainPwd")) === null || _c === void 0 ? void 0 : _c.addEventListener("input", () => {
         Task.tryDone("妈妈再也不用担心我密码泄露啦！");
         applyStyle();
     });
     saveKey.addEventListener("change", () => { applyStyle(); });
-    (_c = document.querySelector("#mainPwdTip")) === null || _c === void 0 ? void 0 : _c.addEventListener("input", () => { applyStyle(); });
-    (_d = document.querySelector("#autoCopy")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", () => { applyStyle(); });
-    (_e = document.querySelector("#easyAppend")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => { applyStyle(); });
-    (_f = document.querySelector("#pwdSortBy")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => { applyStyle(); });
-    (_g = document.querySelector("#folderSortBy")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", () => { applyStyle(); });
-    (_h = document.querySelector("#generateRdPwdSetting-Letter")) === null || _h === void 0 ? void 0 : _h.addEventListener("change", (e) => {
+    (_d = document.querySelector("#mainPwdTip")) === null || _d === void 0 ? void 0 : _d.addEventListener("input", () => { applyStyle(); });
+    (_e = document.querySelector("#autoCopy")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", () => { applyStyle(); });
+    (_f = document.querySelector("#easyAppend")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", () => { applyStyle(); });
+    (_g = document.querySelector("#pwdSortBy")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", () => { applyStyle(); });
+    (_h = document.querySelector("#folderSortBy")) === null || _h === void 0 ? void 0 : _h.addEventListener("change", () => { applyStyle(); });
+    (_j = document.querySelector("#generateRdPwdSetting-Letter")) === null || _j === void 0 ? void 0 : _j.addEventListener("change", (e) => {
         if (Number(e.target.value) < 0)
             e.target.value = "0";
         if (Number(e.target.value) > 10)
             e.target.value = "10";
         applyStyle();
     });
-    (_j = document.querySelector("#generateRdPwdSetting-Number")) === null || _j === void 0 ? void 0 : _j.addEventListener("change", (e) => {
+    (_k = document.querySelector("#generateRdPwdSetting-Number")) === null || _k === void 0 ? void 0 : _k.addEventListener("change", (e) => {
         if (Number(e.target.value) < 0)
             e.target.value = "0";
         if (Number(e.target.value) > 10)
             e.target.value = "10";
         applyStyle();
     });
-    (_k = document.querySelector("#generateRdPwdSetting-Punc")) === null || _k === void 0 ? void 0 : _k.addEventListener("change", (e) => {
+    (_l = document.querySelector("#generateRdPwdSetting-Punc")) === null || _l === void 0 ? void 0 : _l.addEventListener("change", (e) => {
         if (Number(e.target.value) < 0)
             e.target.value = "0";
         if (Number(e.target.value) > 10)
             e.target.value = "10";
         applyStyle();
     });
-    (_l = document.querySelector("p#apply")) === null || _l === void 0 ? void 0 : _l.addEventListener("click", (e) => {
+    (_m = document.querySelector("p#apply")) === null || _m === void 0 ? void 0 : _m.addEventListener("click", (e) => {
         var _a, _b, _c;
         if ((_a = document.querySelector("p#apply")) === null || _a === void 0 ? void 0 : _a.classList.contains("btn-primary")) {
             mainPwd = document.querySelector("#mainPwd").value;
@@ -160,7 +173,7 @@ function _showSetting() {
             (_c = document.querySelector("p#apply")) === null || _c === void 0 ? void 0 : _c.classList.add("btn-secondary");
         }
     });
-    (_m = document.querySelector("div#newUMC")) === null || _m === void 0 ? void 0 : _m.addEventListener("click", () => {
+    (_o = document.querySelector("div#newUMC")) === null || _o === void 0 ? void 0 : _o.addEventListener("click", () => {
         let filepath = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码库文件", extensions: ['umc'] }]);
         if (filepath !== undefined) {
             umcFilePaths.push(filepath);
@@ -168,9 +181,10 @@ function _showSetting() {
             saveData();
             saveEditorData();
             window.process.startNewProcess();
+            rfRepo();
         }
     });
-    (_o = document.querySelector("div#importUMC")) === null || _o === void 0 ? void 0 : _o.addEventListener("click", () => {
+    (_p = document.querySelector("div#importUMC")) === null || _p === void 0 ? void 0 : _p.addEventListener("click", () => {
         let filepath = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码库文件", extensions: ['umc'] }]);
         if (filepath !== undefined) {
             if (umcFilePaths.indexOf(filepath) !== -1) {
@@ -181,9 +195,10 @@ function _showSetting() {
             curPath = filepath;
             saveEditorData();
             window.process.startNewProcess();
+            rfRepo();
         }
     });
-    (_p = document.querySelector("#reset")) === null || _p === void 0 ? void 0 : _p.addEventListener("click", () => {
+    (_q = document.querySelector("#reset")) === null || _q === void 0 ? void 0 : _q.addEventListener("click", () => {
         umcFilePaths.splice(umcFilePaths.length - 1, 1);
         saveEditorData();
         location.reload();

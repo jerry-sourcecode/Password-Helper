@@ -59,7 +59,8 @@ interface process {
     /**
      * 创造一个新窗口，并且开启一个新的程序
      */
-    startNewProcess: () => void;
+    startNewProcess: (path?: string) => void;
+    getArgs: () => Array<string>;
 }
 
 declare global {

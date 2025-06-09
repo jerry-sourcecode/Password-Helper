@@ -465,6 +465,16 @@ function _goHome(): void {
     signUpDayCount.setHours(0, 0, 0, 0);
     content!.innerHTML = `
     <div class="title">我的</div>
+    <div class="card taskCard">
+        <div class="card-body">
+            <p class="card-text">
+                仓库名称：
+                <span id="repo-name-show">${repoName}</span>
+                <input type="test" value="${repoName}" style="display: none" id="repo-name-input" />
+                <img class="icon" id="edit-repo-name" style="margin-left: 10px; margin-bottom:7px" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="修改仓库名称">
+            </p>
+        </div>
+    </div>
     <div class="accordion" id="mainAccordion">
         <div class="accordion-item" id="backstory">
             <h2 class="accordion-header" id="accordionHeadingForBackstory">
@@ -529,6 +539,32 @@ function _goHome(): void {
             </div>
         </div>
     `;
+    updateTooltip();
+    document.querySelector("#edit-repo-name")?.addEventListener("click", (e) => {
+        const show = document.querySelector("#repo-name-show") as HTMLElement;
+        const input = document.querySelector("#repo-name-input") as HTMLInputElement;
+        if (show.style.display != "none") {
+            show.style.display = "none";
+            input.style.display = "inline";
+            (e.target as HTMLElement).style.display = "none";
+            input.value = repoName;
+            input.focus();
+            input.select();
+            input.addEventListener("keydown", (e) => {
+                if (e.key == "Enter" && !e.isComposing) {
+                    input.blur();
+                }
+            })
+            input.addEventListener("blur", () => {
+                input.style.display = "none";
+                show.style.display = "inline";
+                repoName = input.value;
+                show.innerHTML = repoName;
+                (e.target as HTMLElement).style.display = "inline";
+                saveData();
+            })
+        }
+    })
     const newWarning = document.querySelector("#badgeNew");
     if (isHasNewUserGroup) {
         newWarning?.classList.remove("invisible");

@@ -336,6 +336,17 @@ function doneMkPwd(isAppend = false, index = -1) {
         Task.tryDone("安全密码养成记");
 }
 /**
+ * 读取主进程提供的参数
+ * @returns 参数对象
+ */
+function getInitDataSync() {
+    const arg = window.process.getArgs().find(arg => arg.startsWith('--repoPath='));
+    if (arg) {
+        return { path: arg.replace('--repoPath=', '') };
+    }
+    return {};
+}
+/**
  * 渲染编辑密码界面，并更改密码
  * @param by 密码列表
  * @param index 密码列表中目标项的索引
@@ -905,6 +916,9 @@ function fmain() {
         }
         if (umcFilePaths.length != 0) {
             let v = umcFilePaths[umcFilePaths.length - 1];
+            const params = getInitDataSync();
+            if ('path' in params)
+                v = params.path;
             curPath = v;
             window.fs.read(v).then((data) => { UMC.parse(data); });
         }

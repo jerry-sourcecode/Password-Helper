@@ -41,12 +41,14 @@ function _showSetting(): void {
         <div class="settingFormItem" style="text-indent: 2em">
             <p>你可以导入一个新的密码库，可以随时方便的切换密码库，原来的密码库不会丢失。</p>
             <p>当前仓库路径：${curPath}</p>
-            <div><label for="folderSortBy">仓库切换：</label>
+            <div>
+                <label for="folderSortBy">仓库切换：</label>
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="repoSwitchBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                        ${repoName}
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="repoSwitchBtn" id="repoSwitchUl">
-                    </ul>
+                    ${repoName}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="repoSwitchBtn" id="repoSwitchUl">
+                </ul>
+                <img class="icon" id="rf-repo" style="margin-right: 8px;" src="./resources/refresh.png" data-bs-toggle="tooltip" data-bs-placement="top" title="刷新仓库">
             </div>
             <div id="importUMC"><p class="action">点此导入密码库</p></div>
             <div id="newUMC"><p class="action">点此新建密码库</p></div>
@@ -55,26 +57,40 @@ function _showSetting(): void {
         <p class="btn btn-secondary" id="apply" style="margin-left: auto;">应用</p>
     </div>
     `;
+    updateTooltip();
+
     const saveKey = document.querySelector("#rememberPwd") as HTMLInputElement;
     document.querySelector("#mainPwd")?.addEventListener("input", (e) => {
         saveKey.disabled = (<HTMLInputElement>e.target).value == "";
         if (saveKey.disabled) saveKey.checked = false;
     });
 
-    const repoSwitchUl = document.querySelector("#repoSwitchUl");
-    let inner = "";
-    for (let i = 0; i < umcFilePaths.length; i++) {
-        if (umcFilePaths[i] === curPath) {
-            inner += `<li><span class="dropdown-item active">${repoName}</span></li>`
-            continue;
+    function rfRepo() {
+        const repoSwitchUl = document.querySelector("#repoSwitchUl");
+        let inner = "";
+        for (let i = 0; i < umcFilePaths.length; i++) {
+            if (umcFilePaths[i] === curPath) {
+                inner += `<li><span class="dropdown-item active" data-path="${umcFilePaths[i]}" id="repoSwitchLi">${repoName}</span></li>`
+                continue;
+            }
+            let n = window.fs.readSync(umcFilePaths[i])
+            if (n !== undefined) inner += `<li><span class="dropdown-item" data-path="${umcFilePaths[i]}" id="repoSwitchLi">${UMC.getName(n)}</span></li>`;
         }
-        let n = window.fs.readSync(umcFilePaths[i])
-        if (n !== undefined) inner += `<li><span class="dropdown-item">${UMC.getName(n)}</span></li>`;
+        repoSwitchUl!.innerHTML = inner;
+
+        document.querySelectorAll("#repoSwitchLi").forEach((v) => {
+            v.addEventListener("click", () => {
+                let path: string = (v as HTMLElement).dataset.path as string;
+                if (path !== curPath) window.process.startNewProcess(path);
+            })
+        })
     }
-    if (inner == "") {
-        inner = `<li><a class="dropdown-item disabled">暂无其他可用仓库</a></li>`
-    }
-    repoSwitchUl!.innerHTML = inner;
+
+    rfRepo();
+
+    document.querySelector("#rf-repo")?.addEventListener("click", () => {
+        rfRepo();
+    })
 
     let applyStyle = () => {
         document.querySelector("#apply")?.classList.add("btn-primary");
@@ -145,6 +161,7 @@ function _showSetting(): void {
             saveData();
             saveEditorData();
             window.process.startNewProcess();
+            rfRepo()
         }
     })
     document.querySelector("div#importUMC")?.addEventListener("click", () => {
@@ -158,6 +175,7 @@ function _showSetting(): void {
             curPath = filepath;
             saveEditorData();
             window.process.startNewProcess();
+            rfRepo();
         }
     })
     document.querySelector("#reset")?.addEventListener("click", () => {

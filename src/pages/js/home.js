@@ -348,7 +348,7 @@ function updateNeedTODOTasks() {
  * 切换到“我的”页面，请不要通过此函数切换页面，而是通过{@linkcode update}
  */
 function _goHome() {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     // 获取最首要的两件（不足两件则可以选择1件或0件）待办事项（以在tasks全局数组中的索引为排序方法）
     updateNeedTODOTasks();
     let taskHTML = ``;
@@ -383,6 +383,16 @@ function _goHome() {
     signUpDayCount.setHours(0, 0, 0, 0);
     content.innerHTML = `
     <div class="title">我的</div>
+    <div class="card taskCard">
+        <div class="card-body">
+            <p class="card-text">
+                仓库名称：
+                <span id="repo-name-show">${repoName}</span>
+                <input type="test" value="${repoName}" style="display: none" id="repo-name-input" />
+                <img class="icon" id="edit-repo-name" style="margin-left: 10px; margin-bottom:7px" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="修改仓库名称">
+            </p>
+        </div>
+    </div>
     <div class="accordion" id="mainAccordion">
         <div class="accordion-item" id="backstory">
             <h2 class="accordion-header" id="accordionHeadingForBackstory">
@@ -446,6 +456,32 @@ function _goHome() {
             </div>
         </div>
     `;
+    updateTooltip();
+    (_a = document.querySelector("#edit-repo-name")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", (e) => {
+        const show = document.querySelector("#repo-name-show");
+        const input = document.querySelector("#repo-name-input");
+        if (show.style.display != "none") {
+            show.style.display = "none";
+            input.style.display = "inline";
+            e.target.style.display = "none";
+            input.value = repoName;
+            input.focus();
+            input.select();
+            input.addEventListener("keydown", (e) => {
+                if (e.key == "Enter" && !e.isComposing) {
+                    input.blur();
+                }
+            });
+            input.addEventListener("blur", () => {
+                input.style.display = "none";
+                show.style.display = "inline";
+                repoName = input.value;
+                show.innerHTML = repoName;
+                e.target.style.display = "inline";
+                saveData();
+            });
+        }
+    });
     const newWarning = document.querySelector("#badgeNew");
     if (isHasNewUserGroup) {
         newWarning === null || newWarning === void 0 ? void 0 : newWarning.classList.remove("invisible");
@@ -453,12 +489,12 @@ function _goHome() {
     else {
         newWarning === null || newWarning === void 0 ? void 0 : newWarning.classList.add("invisible");
     }
-    (_a = document.querySelector("#userGroup")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+    (_b = document.querySelector("#userGroup")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
         newWarning === null || newWarning === void 0 ? void 0 : newWarning.classList.add("invisible");
         isHasNewUserGroup = false;
     });
     if (NEEDTODO.length > 0)
-        (_b = document.querySelector("#task1-btn")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
+        (_c = document.querySelector("#task1-btn")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
             if (NEEDTODO[0].done()) {
                 score += NEEDTODO[0].reward();
                 mkDialog("领取成功", `你已经成功领取了<strong>${NEEDTODO[0].reward()}</strong>pt的经验。`);
@@ -475,7 +511,7 @@ function _goHome() {
                 update(NEEDTODO[0].location());
         });
     if (NEEDTODO.length > 1)
-        (_c = document.querySelector("#task2-btn")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
+        (_d = document.querySelector("#task2-btn")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
             if (NEEDTODO[1].done()) {
                 score += NEEDTODO[1].reward();
                 mkDialog("领取成功", `你已经成功领取了<strong>${NEEDTODO[1].reward()}</strong>pt的经验。`);
@@ -492,7 +528,7 @@ function _goHome() {
                 update(NEEDTODO[1].location());
         });
     if (scorePercent >= 100 && level < getMaxLevel()) {
-        (_d = document.querySelector("#score-btn")) === null || _d === void 0 ? void 0 : _d.addEventListener("click", () => {
+        (_e = document.querySelector("#score-btn")) === null || _e === void 0 ? void 0 : _e.addEventListener("click", () => {
             level++;
             mkDialog("升级成功", `你已经成功升级到Level ${level}，进入了新的用户组。`);
             isHasNewUserGroup = true;

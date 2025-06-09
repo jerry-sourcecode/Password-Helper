@@ -1,3 +1,4 @@
+const { log } = require("console");
 const { contextBridge, ipcRenderer } = require("electron");
 const filesystem = require("fs");
 
@@ -33,5 +34,9 @@ contextBridge.exposeInMainWorld("msg", {
 });
 
 contextBridge.exposeInMainWorld("process", {
-	startNewProcess: () => ipcRenderer.send("start-new-process"),
+	startNewProcess: (path = undefined) =>
+		ipcRenderer.send("start-new-process", path),
+	getArgs: () => {
+		return process.argv;
+	},
 });
