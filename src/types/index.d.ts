@@ -55,7 +55,7 @@ interface msg {
     showSaveDialogSync: (title: string, msg: string, filters: Electron.FileFilter[]) => string | undefined;
 }
 
-interface process {
+interface electronAPI {
     /**
      * 创造一个新窗口，并且开启一个新的程序
      */
@@ -67,6 +67,6 @@ declare global {
     interface Window {
         fs: fs;
         msg: msg;
-        process: process
+        electronAPI: electronAPI
     }
 }

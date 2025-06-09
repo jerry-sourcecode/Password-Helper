@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld("msg", {
 		ipcRenderer.sendSync("save-msg", title, msg, filters),
 });
 
-contextBridge.exposeInMainWorld("process", {
+contextBridge.exposeInMainWorld("electronAPI", {
 	startNewProcess: (path = undefined) =>
 		ipcRenderer.send("start-new-process", path),
 	getArgs: () => {

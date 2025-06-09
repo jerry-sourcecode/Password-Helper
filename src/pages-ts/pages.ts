@@ -81,7 +81,7 @@ function _showSetting(): void {
         document.querySelectorAll("#repoSwitchLi").forEach((v) => {
             v.addEventListener("click", () => {
                 let path: string = (v as HTMLElement).dataset.path as string;
-                if (path !== curPath) window.process.startNewProcess(path);
+                if (path !== curPath) window.electronAPI.startNewProcess(path);
             })
         })
     }
@@ -160,7 +160,7 @@ function _showSetting(): void {
             curPath = filepath;
             saveData();
             saveEditorData();
-            window.process.startNewProcess();
+            window.electronAPI.startNewProcess();
             rfRepo()
         }
     })
@@ -174,7 +174,7 @@ function _showSetting(): void {
             umcFilePaths.push(filepath);
             curPath = filepath;
             saveEditorData();
-            window.process.startNewProcess();
+            window.electronAPI.startNewProcess();
             rfRepo();
         }
     })

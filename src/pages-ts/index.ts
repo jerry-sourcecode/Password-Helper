@@ -347,7 +347,7 @@ function doneMkPwd(isAppend: boolean = false, index: number = -1): void {
  * @returns 参数对象
  */
 function getInitDataSync(): { path?: string } {
-    const arg = window.process.getArgs().find(arg => arg.startsWith('--repoPath='));
+    const arg = window.electronAPI.getArgs().find(arg => arg.startsWith('--repoPath='));
     if (arg) {
         return { path: arg.replace('--repoPath=', '') };
     }
