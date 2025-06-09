@@ -1,4 +1,11 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
+const {
+	app,
+	BrowserWindow,
+	ipcMain,
+	dialog,
+	Menu,
+	webContents,
+} = require("electron");
 const path = require("path");
 const fs = require("fs");
 
@@ -119,9 +126,11 @@ function setIpc(win) {
 		});
 	});
 	ipcMain.on("start-new-process", (e, path) => {
+		let arg = [];
+		if (path !== undefined) arg.push(`--repoPath=${path}`);
 		createWindow("Password Helper", "./src/pages/index.html", () => {}, {
 			isURL: false,
-			argu: [`--repoPath=${path}`],
+			argu: arg,
 		});
 	});
 	ipcMain.on("complete-path", (event, filepath) => {

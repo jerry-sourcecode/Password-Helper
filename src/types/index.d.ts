@@ -60,6 +60,10 @@ interface electronAPI {
      * 创造一个新窗口，并且开启一个新的程序
      */
     startNewProcess: (path?: string) => void;
+    /**
+     * 获取启动窗口时附带的参数
+     * @returns 获取的参数数组
+     */
     getArgs: () => Array<string>;
 }
 

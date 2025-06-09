@@ -50,10 +50,10 @@ function _showSetting(): void {
                 </ul>
                 <img class="icon" id="rf-repo" style="margin-right: 8px;" src="./resources/refresh.png" data-bs-toggle="tooltip" data-bs-placement="top" title="刷新仓库">
             </div>
-            <div id="importUMC"><p class="action">点此导入密码库</p></div>
-            <div id="newUMC"><p class="action">点此新建密码库</p></div>
+            <div><p class="action" id="importUMC">点此导入密码库</p></div>
+            <div><p class="action" id="newUMC">点此新建密码库</p></div>
         </div>
-        <div id="reset"><p class="action">点此注销密码库</p><span>，注销会清除在程序上的记录，但不会删除本地库文件。</span></div>
+        <div><p class="action" id="reset">点此注销密码库</p><span>，注销会清除在程序上的记录，但不会删除本地库文件。</span></div>
         <p class="btn btn-secondary" id="apply" style="margin-left: auto;">应用</p>
     </div>
     `;
@@ -66,22 +66,33 @@ function _showSetting(): void {
     });
 
     function rfRepo() {
+        for (let i = umcFilePaths.length - 1; i >= 0; i--) {
+            if (!window.fs.hasFile(umcFilePaths[i])) umcFilePaths.splice(i, 1);
+        }
         const repoSwitchUl = document.querySelector("#repoSwitchUl");
+        if (!repoSwitchUl) return;
         let inner = "";
         for (let i = 0; i < umcFilePaths.length; i++) {
             if (umcFilePaths[i] === curPath) {
-                inner += `<li><span class="dropdown-item active" data-path="${umcFilePaths[i]}" id="repoSwitchLi">${repoName}</span></li>`
+                inner += `<li><span class="dropdown-item active" data-path="${umcFilePaths[i]}" data-name="${repoName}" id="repoSwitchLi">${repoName}</span></li>`
                 continue;
             }
             let n = window.fs.readSync(umcFilePaths[i])
-            if (n !== undefined) inner += `<li><span class="dropdown-item" data-path="${umcFilePaths[i]}" id="repoSwitchLi">${UMC.getName(n)}</span></li>`;
+            if (n !== undefined) inner += `<li><span class="dropdown-item" data-path="${umcFilePaths[i]}" data-name="${UMC.getName(n)}" id="repoSwitchLi">${UMC.getName(n)}</span></li>`;
         }
         repoSwitchUl!.innerHTML = inner;
 
         document.querySelectorAll("#repoSwitchLi").forEach((v) => {
             v.addEventListener("click", () => {
                 let path: string = (v as HTMLElement).dataset.path as string;
-                if (path !== curPath) window.electronAPI.startNewProcess(path);
+                if (path !== curPath) {
+                    if (window.fs.hasFile(path)) {
+                        window.electronAPI.startNewProcess(path);
+                    } else {
+                        mkDialog("打开失败", `<p>仓库不存在！他可能被移动、删除或重命名了。</p><p>原仓库名称：${(v as HTMLElement).dataset.name}</p><p>原仓库地址：${path}</p>`)
+                        rfRepo();
+                    }
+                }
             })
         })
     }
@@ -153,18 +164,23 @@ function _showSetting(): void {
         }
     })
 
-    document.querySelector("div#newUMC")?.addEventListener("click", () => {
+    document.querySelector("p#newUMC")?.addEventListener("click", () => {
         let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码库文件", extensions: ['umc'] }]);
         if (filepath !== undefined) {
             umcFilePaths.push(filepath);
+            let curPathCache = curPath;
+            let repoNameCache = repoName;
             curPath = filepath;
+            repoName = "untitled";
             saveData();
             saveEditorData();
             window.electronAPI.startNewProcess();
+            curPath = curPathCache;
+            repoName = repoNameCache;
             rfRepo()
         }
     })
-    document.querySelector("div#importUMC")?.addEventListener("click", () => {
+    document.querySelector("p#importUMC")?.addEventListener("click", () => {
         let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码库文件", extensions: ['umc'] }]);
         if (filepath !== undefined) {
             if (umcFilePaths.indexOf(filepath) !== -1) {
