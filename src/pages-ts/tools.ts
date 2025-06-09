@@ -69,29 +69,9 @@ function copyToClipboard(str: string): boolean {
  */
 function getScroll(): { top: number, left: number } {
     return {
-        top: main!.scrollTop || main!.scrollTop,
-        left: main!.scrollLeft || main!.scrollLeft
+        top: content!.scrollTop || content!.scrollTop,
+        left: content!.scrollLeft || content!.scrollLeft
     }
-}
-/**
- * 完全深拷贝一个对象
- * @param value 需要深拷贝的对象
- * @returns 新的对象
- */
-function deepCopy<T>(value: T): T {
-    if (value === null || typeof value !== "object") {
-        return value;
-    }
-    if (Array.isArray(value)) {
-        return value.map(item => deepCopy(item)) as unknown as T;
-    }
-    const copied = {} as T;
-    for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
-            copied[key] = deepCopy(value[key]);
-        }
-    }
-    return copied;
 }
 
 /**

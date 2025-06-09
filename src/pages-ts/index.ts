@@ -102,9 +102,12 @@ function decrypt(data: Item | Task, key: string, except: string[] = []): Item | 
 /** 添加密码按钮 */
 let addBtn = document.querySelector("#addPwd");
 /** main界面 */
-const main = document.querySelector("#contentDiv");
+const content = document.querySelector("#contentDiv");
+const main = document.querySelector("#mainDiv");
 /** 密码列表 */
 let pwdList: Array<Password> = [];
+/**密码仓库名称 */
+let repoName = "untitled";
 /** 回收站的密码列表 */
 let binItem: Array<Item> = [];
 /** 文件夹列表 */
@@ -185,6 +188,12 @@ let pagePos: {
 };
 /** 注册时间 */
 let signUpTime: string = Date.now().toString();
+/**被记录的UMC文件地址 */
+let umcFilePaths: Array<string> = [];
+/**当前UMC文件地址 */
+let curPath: string = "";
+
+type RepoMap = { name: string, path: string }
 
 // 一些工具函数
 /**
@@ -334,6 +343,17 @@ function doneMkPwd(isAppend: boolean = false, index: number = -1): void {
         Task.tryDone("安全密码养成记");
 }
 /**
+ * 读取主进程提供的参数
+ * @returns 参数对象
+ */
+function getInitDataSync(): { path?: string } {
+    const arg = window.electronAPI.getArgs().find(arg => arg.startsWith('--repoPath='));
+    if (arg) {
+        return { path: arg.replace('--repoPath=', '') };
+    }
+    return {};
+}
+/**
  * 渲染编辑密码界面，并更改密码
  * @param by 密码列表
  * @param index 密码列表中目标项的索引
@@ -361,7 +381,7 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend: bo
     <div class="action" id="submit"><p>提交</p></div>
     <div class="action" id="cancel"><p>取消</p></div>
     `
-    main!.innerHTML = inner;
+    content!.innerHTML = inner;
     let require: Array<string> = ["#from", "#pwd", "#uname"];
     for (let i = 0; i < require.length; i++) {
         const it = document.querySelector(require[i]) as HTMLInputElement;
@@ -549,7 +569,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
     }
     // 添加密码
     if (_step == 0) {
-        main!.innerHTML = `
+        content!.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
         <div class="formItem"><label for="input">来源<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.from}" /><span class="check"></span></div>
@@ -560,7 +580,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
         <div class="action" id="cancel"><p>取消</p></div>`
     }
     else if (_step == 1) {
-        main!.innerHTML = `
+        content!.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
         <div class="formItem"><label for="input">用户名<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.uname}"/><span class="check"></span></div>
@@ -572,7 +592,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
         <div class="action" id="cancel"><p>取消</p></div>`
     }
     else if (_step == 2) {
-        main!.innerHTML = `
+        content!.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
         <div class="formItem"><label for="input">密码<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.pwd}"/><span class="check"></span></div>
@@ -589,7 +609,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
             (document.querySelector("input") as HTMLInputElement)!.dispatchEvent(new Event("input"));
         })
     } else if (_step == 3) {
-        main!.innerHTML = `
+        content!.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
         <div class="formItem"><label for="input_email">邮箱：</label><input type="text" id="input_email" value="${_result.email}"></div>
@@ -602,7 +622,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
         `
     }
     else if (_step == 4) {
-        main!.innerHTML = `
+        content!.innerHTML = `
         <div class="title">添加密码</div>
         <div class="form">
         <div class="formItem"><label for="input">备注：</label><br><textarea id="input" placeholder="可以在这里输入一些想说的话。">${_result.note}</textarea></div>
@@ -735,7 +755,7 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
     </div>
     <div class="action" id="back"><p>返回</p></div>
     `
-    main!.innerHTML = inner;
+    content!.innerHTML = inner;
     updateTooltip();
     const safety: HTMLDivElement = document.querySelector("#safety")!;
     Task.tryDone("例行检查");
@@ -850,79 +870,59 @@ function fmain() {
         else mkDialog("权限不足", "你没有权限使用搜索功能。");
     })
 
-    window.fs.read("./editor").then((data) => {
-        if (data == "") throw new Error("editor is null");
-        data = data.replace(/\s/g, '')
-        let obj = JSON.parse(data);
-        if (obj.version != "e1.0") console.log("编辑器数据版本已过期！");
-        searchMemory = obj.search;
-        searchMemory.lastSearchTxt = null;
-        searchMemory.txt = "";
-    })
+    window.fs.read("./editor")
+        .then((data) => {
+            if (data == "") throw new Error("editor is null");
+            let obj = JSON.parse(data);
+            if (obj.version != "e1.0") console.log("编辑器数据版本已过期！");
+            searchMemory = obj.search;
+            searchMemory.lastSearchTxt = null;
+            searchMemory.txt = "";
 
-    window.fs.read("./data").then((data) => {
-        if (data == "") throw new Error("data is null");
-        data = data.replace(/\s/g, '')
-        let obj = JSON.parse(data);
-
-        const supportVersion = ["1.2", "1.3", "1.4", "1.4.1"]
-        if (supportVersion.indexOf(obj.version) === -1) mkDialog("数据无效", `不支持数据版本${obj.version}！`);
-
-        mainSetting = obj.mainSetting;
-        const salt = obj.salt;
-        if (obj.isPwdNull) {
-            UMC.decrypt(obj, Cryp.pbkdf2("", salt));
-        } else {
-            if (obj.memory !== null && obj.memory !== undefined) {
-                let m = obj.memory;
-                let dpwd = Cryp.pbkdf2(m, salt);
-                if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd) {
-                    isremember = true;
-                    mainPwd = m;
-                    UMC.decrypt(obj, dpwd);
-                } else {
-                    isremember = false;
-                }
+            umcFilePaths = obj.umcFilePaths;
+            for (let i = umcFilePaths.length - 1; i >= 0; i--) {
+                if (!window.fs.hasFile(umcFilePaths[i])) umcFilePaths.splice(i, 1);
             }
-            if (!isremember) {
+            if (umcFilePaths.length != 0) {
+                let v: string = umcFilePaths[umcFilePaths.length - 1];
+                const params = getInitDataSync();
+                if ('path' in params) v = params.path as string;
+                curPath = v;
+                window.fs.read(v).then((data) => { UMC.parse(data) });
+            } else {
                 main!.innerHTML = `
-                <div class="title">请输入访问密钥</div>
-                <div class="form">
-                <div><label for="mainPwd">访问密钥：</label><input type="text" id="mainPwd" class="vaild"/></div>
-                ${mainSetting.mainPwdTip === "" ? `` : `<div><p>密码提示：${mainSetting.mainPwdTip}</p></div>`}
-                <div><input type="checkbox" id="rememberPwd"} style="margin-right: 10px;"/><label for="rememberPwd">记住密钥</label></div>
-                </div>
-                <div class="action" id="Yes"><p>确定</p></div>
-                <div id="error"></div>
-                `;
-                (<HTMLDivElement>document.querySelector("#navBar")).style.display = "none";
-                document.querySelector("#Yes")?.addEventListener("click", () => {
-                    let m = (document.querySelector("#mainPwd") as HTMLInputElement).value;
-                    let dpwd = Cryp.pbkdf2(m, salt);
-                    if (Cryp.pbkdf2(dpwd, salt) == obj.mainPwd) {
-                        isremember = (document.querySelector("#rememberPwd") as HTMLInputElement).checked;
-                        mainPwd = m;
-                        (<HTMLDivElement>document.querySelector("#navBar")).style.display = "flex";
-                        UMC.decrypt(obj, dpwd);
+                <div class="title" style="margin: 7px; margin-top: 40px">选择密码仓库</div>
+                <p>在缓存中没有找到可用的密码仓库，它们可能被删除、移动或重命名了，你现在可以：</p>
+                <div id="newUMC"><p class="action">点此新建一个密码仓库</p></div>
+                <div id="importUMC"><p class="action">点此导入密码仓库</p></div>
+                `
+                document.querySelector("div#newUMC")?.addEventListener("click", () => {
+                    let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码仓库文件", extensions: ['umc'] }]);
+                    if (filepath !== undefined) {
+                        umcFilePaths.push(filepath);
+                        curPath = filepath;
                         saveData();
-                    } else {
-                        document.querySelector("#error")!.innerHTML = `
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <strong>密钥错误！</strong>你需要检查你的密钥。
-                        </div>`;
-                        let alert = new bootstrap.Alert(document.querySelector(".alert") as HTMLDivElement);
-                        setTimeout(() => {
-                            alert.close();
-                        }, 1000);
+                        saveEditorData();
+                        location.reload();
                     }
-                });
+                })
+                document.querySelector("div#importUMC")?.addEventListener("click", () => {
+                    let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码仓库文件", extensions: ['umc'] }]);
+                    if (filepath !== undefined) {
+                        umcFilePaths.push(filepath);
+                        curPath = filepath;
+                        saveEditorData();
+                        location.reload();
+                    }
+                })
             }
-        }
-    }).catch((err) => {
-        console.log(err);
-        saveData();
-        (document.querySelector("#nav-home") as HTMLSpanElement).click();
-    });
+        })
+        .catch((err) => {
+            console.error("No file .editor");
+            saveEditorData();
+            location.reload();
+        })
+
 }
 
 fmain();
