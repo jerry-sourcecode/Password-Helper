@@ -53,6 +53,7 @@ function _showSetting(): void {
             <div><p class="action" id="importUMC">点此导入密码仓库</p></div>
             <div><p class="action" id="newUMC">点此新建密码仓库</p></div>
         </div>
+        <div><p class="action" id="welcome">回到“欢迎”界面</p></div>
         <div><p class="action" id="reset">点此注销密码仓库</p><span>，注销会清除在程序上的记录，但不会删除本地库文件。</span></div>
         <p class="btn btn-secondary" id="apply" style="margin-left: auto;">应用</p>
     </div>
@@ -179,7 +180,7 @@ function _showSetting(): void {
             repoName = "untitled";
             saveData();
             saveEditorData();
-            window.electronAPI.startNewProcess();
+            window.electronAPI.startNewProcess(filepath);
             curPath = curPathCache;
             repoName = repoNameCache;
             rfRepo()
@@ -189,18 +190,25 @@ function _showSetting(): void {
         let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码仓库文件", extensions: ['umc'] }]);
         if (filepath !== undefined) {
             if (umcFilePaths.indexOf(filepath) !== -1) {
-                mkDialog("打开失败", "密码仓库已经存在。");
-                return;
+                umcFilePaths.splice(umcFilePaths.indexOf(filepath));
+                umcFilePaths.unshift(filepath);
             }
             umcFilePaths.push(filepath);
             curPath = filepath;
             saveEditorData();
-            window.electronAPI.startNewProcess();
+            window.electronAPI.startNewProcess(filepath);
             rfRepo();
         }
     })
+    document.querySelector("#welcome")?.addEventListener("click", () => {
+        window.electronAPI.rmArg("repoPath");
+        location.reload();
+    });
     document.querySelector("#reset")?.addEventListener("click", () => {
-        umcFilePaths.splice(umcFilePaths.length - 1, 1);
+        window.electronAPI.rmArg("repoPath");
+        for (let i = 0; i < umcFilePaths.length; i++) {
+            if (umcFilePaths[i] == curPath) umcFilePaths.splice(i, 1);
+        }
         saveEditorData();
         location.reload();
     });

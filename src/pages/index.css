@@ -235,7 +235,8 @@ p.icon:not(:hover) {
 	font-weight: normal;
 }
 
-img.icon {
+img.icon,
+img.FolderIcon {
 	width: 25px;
 	height: 25px;
 	margin: 4px;

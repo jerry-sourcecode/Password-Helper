@@ -1,4 +1,9 @@
 class UMC {
+    /**
+     * 给定一些数据，返回数据的名称，没有则返回untitled
+     * @param data 给定的数据
+     * @returns 文件的名称
+     */
     static getName(data: string): string {
         if (data == "") throw new Error("data is null");
         data = data.replace(/\s/g, '')
@@ -14,6 +19,7 @@ class UMC {
      * @param data 处理前的字符串
      */
     static parse(data: string) {
+        navBar.hidden = false;
         if (data == "") throw new Error("data is null");
         let obj = JSON.parse(data);
 

@@ -36,7 +36,25 @@ contextBridge.exposeInMainWorld("msg", {
 contextBridge.exposeInMainWorld("electronAPI", {
 	startNewProcess: (path = undefined) =>
 		ipcRenderer.send("start-new-process", path),
-	getArgs: () => {
-		return process.argv;
+	getArg: (startWith) => {
+		const arg = process.argv.find((arg) =>
+			arg.startsWith(`--${startWith}=`)
+		);
+		if (arg) return arg.replace(`--${startWith}=`, "");
+		return null;
+	},
+	setArg: (startWith, v) => {
+		if (!getArgs(startWith)) {
+			process.argv.push(`--${startWith}=${v}`);
+		} else {
+			process.argv = process.argv.map((arg) =>
+				arg.startsWith(`--${startWith}=`) ? `--${startWith}=${v}` : arg
+			);
+		}
+	},
+	rmArg: (startWith) => {
+		process.argv = process.argv.filter(
+			(item) => !item.startsWith(`--${startWith}=`)
+		);
 	},
 });

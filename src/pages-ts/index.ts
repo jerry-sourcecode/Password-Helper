@@ -102,8 +102,9 @@ function decrypt(data: Item | Task, key: string, except: string[] = []): Item | 
 /** 添加密码按钮 */
 let addBtn = document.querySelector("#addPwd");
 /** main界面 */
-const content = document.querySelector("#contentDiv");
-const main = document.querySelector("#mainDiv");
+const content = document.querySelector("#contentDiv") as HTMLDivElement;
+const main = document.querySelector("#mainDiv") as HTMLDivElement;
+const navBar = document.querySelector("#navBar") as HTMLDivElement;
 /** 密码列表 */
 let pwdList: Array<Password> = [];
 /**密码仓库名称 */
@@ -347,9 +348,9 @@ function doneMkPwd(isAppend: boolean = false, index: number = -1): void {
  * @returns 参数对象
  */
 function getInitDataSync(): { path?: string } {
-    const arg = window.electronAPI.getArgs().find(arg => arg.startsWith('--repoPath='));
+    const arg = window.electronAPI.getArg("repoPath");
     if (arg) {
-        return { path: arg.replace('--repoPath=', '') };
+        return { path: arg };
     }
     return {};
 }
@@ -851,7 +852,7 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
 /**
  * 主函数
  */
-function fmain() {
+(function fmain() {
     document.querySelector("span#nav-mainPage")!.addEventListener("click", () => {
         update(pagePos.mainDir);
     });
@@ -884,38 +885,87 @@ function fmain() {
                 if (!window.fs.hasFile(umcFilePaths[i])) umcFilePaths.splice(i, 1);
             }
             if (umcFilePaths.length != 0) {
-                let v: string = umcFilePaths[umcFilePaths.length - 1];
                 const params = getInitDataSync();
-                if ('path' in params) v = params.path as string;
-                curPath = v;
-                window.fs.read(v).then((data) => { UMC.parse(data) });
+                if (params.path) {
+                    curPath = params.path as string;
+                    console.log(curPath);
+                    window.fs.read(curPath).then((data) => { UMC.parse(data) });
+                    return;
+                }
+                else {
+                    let listHTML = "";
+                    umcFilePaths.forEach((v, idx) => {
+                        listHTML += `
+                        <button type="button" class="list-group-item list-group-item-action" id="umcBtn" style="display: flex;" data-path="${v}">
+                            <div>
+                                <div class="fw-bold" style="font-size: 20px">${Password.format(UMC.getName(window.fs.readSync(v)!))}</div>
+                                ${Password.format(v)}
+                            </div>
+                            <img class="icon" id="deleteUMC" style="margin-right: 3px; margin-left: auto; height: 30px; width: 25px" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除" data-path="${v}">
+                        </button>`
+                    })
+                    content!.innerHTML = `
+                    <div class="title" style="margin: 7px; margin-top: 40px">选择密码仓库</div>
+                    <p>你现在可以点击下面的按钮，打开密码仓库</p>
+                    <div class="list-group" style="margin:20px">
+                    ${listHTML}
+                    </div>
+                    <div id="newUMC"><p class="action">点此新建一个密码仓库</p></div>
+                    <div id="importUMC"><p class="action">点此导入密码仓库</p></div>
+                    `
+                    updateTooltip();
+                    document.querySelectorAll(`button#umcBtn`).forEach(element => {
+                        element.addEventListener("click", (e) => {
+                            curPath = ((element) as HTMLElement).dataset.path!;
+                            if (!window.fs.hasFile(curPath)) {
+                                mkDialog("打开失败", `<p>无法打开密码仓库！程序在试图打开 ${curPath} 时被告知文件不存在。</p>`)
+                            }
+                            window.fs.read(curPath).then((data) => { UMC.parse(data) })
+                            return;
+                        })
+                    });
+                    document.querySelectorAll("#deleteUMC").forEach(element => {
+                        element.addEventListener("click", (e) => {
+                            e.preventDefault();
+                            const tgt = (e.target) as HTMLElement;
+                            let p = (tgt).dataset.path!;
+                            umcFilePaths.splice(umcFilePaths.indexOf(p), 1);
+                            saveEditorData();
+                            location.reload();
+                        })
+                    })
+                }
             } else {
-                main!.innerHTML = `
+                content!.innerHTML = `
                 <div class="title" style="margin: 7px; margin-top: 40px">选择密码仓库</div>
                 <p>在缓存中没有找到可用的密码仓库，它们可能被删除、移动或重命名了，你现在可以：</p>
                 <div id="newUMC"><p class="action">点此新建一个密码仓库</p></div>
                 <div id="importUMC"><p class="action">点此导入密码仓库</p></div>
                 `
-                document.querySelector("div#newUMC")?.addEventListener("click", () => {
-                    let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码仓库文件", extensions: ['umc'] }]);
-                    if (filepath !== undefined) {
-                        umcFilePaths.push(filepath);
-                        curPath = filepath;
-                        saveData();
-                        saveEditorData();
-                        location.reload();
-                    }
-                })
-                document.querySelector("div#importUMC")?.addEventListener("click", () => {
-                    let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码仓库文件", extensions: ['umc'] }]);
-                    if (filepath !== undefined) {
-                        umcFilePaths.push(filepath);
-                        curPath = filepath;
-                        saveEditorData();
-                        location.reload();
-                    }
-                })
             }
+            document.querySelector("div#newUMC")?.addEventListener("click", () => {
+                let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码仓库文件", extensions: ['umc'] }]);
+                if (filepath !== undefined) {
+                    umcFilePaths.push(filepath);
+                    curPath = filepath;
+                    saveData();
+                    saveEditorData();
+                    location.reload();
+                }
+            })
+            document.querySelector("div#importUMC")?.addEventListener("click", () => {
+                let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码仓库文件", extensions: ['umc'] }]);
+                if (filepath !== undefined) {
+                    if (umcFilePaths.indexOf(filepath) !== -1) {
+                        umcFilePaths.splice(umcFilePaths.indexOf(filepath), 1);
+                        umcFilePaths.unshift(filepath);
+                    }
+                    else umcFilePaths.push(filepath);
+                    curPath = filepath;
+                    saveEditorData();
+                    location.reload();
+                }
+            })
         })
         .catch((err) => {
             console.error("No file .editor");
@@ -923,6 +973,4 @@ function fmain() {
             location.reload();
         })
 
-}
-
-fmain();
+})();

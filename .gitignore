@@ -1,9 +1,6 @@
 # rm node_modules
 node_modules/
 
-# rm data
-data
-
 out
 
 TODO.md

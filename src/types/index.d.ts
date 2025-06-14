@@ -62,9 +62,21 @@ interface electronAPI {
     startNewProcess: (path?: string) => void;
     /**
      * 获取启动窗口时附带的参数
-     * @returns 获取的参数数组
+     * @param key 参数的键
+     * @returns 获取的参数值
      */
-    getArgs: () => Array<string>;
+    getArg: (key: string) => string | null;
+    /**
+     * 更改附带的参数，没有则新增
+     * @param key 参数的键
+     * @param value 更改为的参数值
+     */
+    setArg: (key: string, value: string) => void;
+    /**
+     * 删除附带的参数
+     * @param key 参数的键
+     */
+    rmArg: (key: string) => void;
 }
 
 declare global {

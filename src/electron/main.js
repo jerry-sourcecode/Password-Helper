@@ -66,10 +66,11 @@ function setIpc(win) {
 	});
 	if (!ipcMain._readFileHandlerRegistered) {
 		ipcMain.handle("read-file", (event, targetPath) => {
-			targetPath = completePath(targetPath);
 			try {
+				targetPath = completePath(targetPath);
 				return fs.readFileSync(targetPath, "utf-8");
 			} catch (e) {
+				console.error("READFILE ERROR!!!");
 				throw e;
 			}
 		});
