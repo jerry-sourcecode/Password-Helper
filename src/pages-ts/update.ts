@@ -4,7 +4,7 @@
  * @param checkable 切换后是否开启“选择”模式
  */
 function update(dir: Folder, checkable: boolean = false): void {
-    removeTips();
+    Tooltip.disabled();
 
     updatePos();
 
@@ -113,7 +113,7 @@ function update(dir: Folder, checkable: boolean = false): void {
     <div class="action" id="addPwd"><p>添加密码</p></div>
     `;
     content!.innerHTML = inner;
-    updateTooltip();
+    Tooltip.enabled();
     document.querySelector("#up")?.addEventListener("click", () => {
         update(dir.getParent());
     });
@@ -357,7 +357,7 @@ function update(dir: Folder, checkable: boolean = false): void {
     for (let i = 0; i < nowFolders.length; i++) {
         const feditBtn = document.querySelector(`#folder${i}-edit`);
         feditBtn!.addEventListener("click", (e) => {
-            removeTips();
+            Tooltip.disabled();
             e?.stopPropagation();
             const div = document.querySelector(`#folder${i}`);
             div!.innerHTML = `<input type="text" value="${nowFolders[i].item.name}" id="folder${i}-input">`;

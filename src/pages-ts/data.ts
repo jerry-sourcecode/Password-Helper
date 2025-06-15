@@ -696,7 +696,8 @@ function saveEditorData(): void { // 保存数据
     let data = {
         version: "e1.0",
         search: searchMemory,
-        umcFilePaths: umcFilePaths
+        umcFilePaths: umcFilePaths,
+        editorSetting: editorSetting
     };
     window.fs.save("./editor", JSON.stringify(data));
 }

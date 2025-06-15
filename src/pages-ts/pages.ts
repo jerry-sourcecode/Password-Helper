@@ -42,7 +42,7 @@ function _showSetting(): void {
             <p>你可以导入一个新的密码仓库，可以随时方便的切换密码仓库，原来的密码仓库不会丢失。</p>
             <p>当前仓库路径：${curPath}</p>
             <div>
-                <label for="folderSortBy">仓库切换：</label>
+                <label>仓库切换：</label>
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="repoSwitchBtn" data-bs-toggle="dropdown" aria-expanded="false">
                     ${repoName}
                 </button>
@@ -52,13 +52,22 @@ function _showSetting(): void {
             </div>
             <div><p class="action" id="importUMC">点此导入密码仓库</p></div>
             <div><p class="action" id="newUMC">点此新建密码仓库</p></div>
+            <div>
+                <p>你可以将这个仓库
+                ${editorSetting.defaultRepoPath === curPath ? `
+                    <button type="button" id="as-default" class="btn btn-danger" style="margin: 0;">取消设为默认仓库</button>
+                ` : `
+                    <button type="button" id="as-default" class="btn btn-primary" style="margin: 0;">设为默认仓库</button>
+                `}
+                ，同一时刻有且仅能有一个仓库是默认仓库。</p>
+            </div>
         </div>
         <div><p class="action" id="welcome">回到“欢迎”界面</p></div>
         <div><p class="action" id="reset">点此注销密码仓库</p><span>，注销会清除在程序上的记录，但不会删除本地库文件。</span></div>
         <p class="btn btn-secondary" id="apply" style="margin-left: auto;">应用</p>
     </div>
     `;
-    updateTooltip();
+    Tooltip.enabled();
 
     const saveKey = document.querySelector("#rememberPwd") as HTMLInputElement;
     document.querySelector("#mainPwd")?.addEventListener("input", (e) => {
@@ -170,6 +179,22 @@ function _showSetting(): void {
         }
     })
 
+    document.querySelector("#as-default")?.addEventListener("click", (e) => {
+        const tgt = (e.target) as HTMLButtonElement;
+        if (editorSetting.defaultRepoPath === curPath) {
+            tgt.classList.remove("btn-danger")
+            tgt.classList.add("btn-primary");
+            tgt.innerHTML = `设为默认仓库`;
+            editorSetting.defaultRepoPath = null;
+        } else {
+            tgt.classList.add("btn-danger")
+            tgt.classList.remove("btn-primary");
+            tgt.innerHTML = `取消设为默认仓库`;
+            editorSetting.defaultRepoPath = curPath;
+        }
+        saveEditorData();
+    })
+
     document.querySelector("p#newUMC")?.addEventListener("click", () => {
         let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码仓库文件", extensions: ['umc'] }]);
         if (filepath !== undefined) {
@@ -202,6 +227,7 @@ function _showSetting(): void {
     })
     document.querySelector("#welcome")?.addEventListener("click", () => {
         window.electronAPI.rmArg("repoPath");
+        localStorage.setItem("GoToWelcome", "true");
         location.reload();
     });
     document.querySelector("#reset")?.addEventListener("click", () => {

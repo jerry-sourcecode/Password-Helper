@@ -539,7 +539,7 @@ function _goHome(): void {
             </div>
         </div>
     `;
-    updateTooltip();
+    Tooltip.enabled();
     document.querySelector("#edit-repo-name")?.addEventListener("click", (e) => {
         const show = document.querySelector("#repo-name-show") as HTMLElement;
         const input = document.querySelector("#repo-name-input") as HTMLInputElement;

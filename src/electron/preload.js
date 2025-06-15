@@ -44,7 +44,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		return null;
 	},
 	setArg: (startWith, v) => {
-		if (!getArgs(startWith)) {
+		if (!process.argv.find((arg) => arg.startsWith(`--${startWith}=`))) {
 			process.argv.push(`--${startWith}=${v}`);
 		} else {
 			process.argv = process.argv.map((arg) =>

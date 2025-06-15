@@ -74,17 +74,28 @@ function getScroll(): { top: number, left: number } {
     }
 }
 
-/**
- * 删除所有的悬浮工具提示
- */
-function removeTips(): void {
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(tooltip => { bootstrap.Tooltip.getInstance(tooltip)?.dispose(); });
-    return;
-}
 
-/**
- * 触发所有的悬浮提示
- */
-function updateTooltip(): void {
-    [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(t => new bootstrap.Tooltip(t));
+class Tooltip {
+    /**
+     * 禁用所有的悬浮工具提示
+     * @param [element=null] 一个节点，如果填写这个选项，只会有这一个节点被删除
+     */
+    static disabled(element: HTMLElement | null = null): void {
+        if (element !== null) {
+            bootstrap.Tooltip.getInstance(element)?.dispose();
+        }
+        else {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]')
+                .forEach(tooltip => {
+                    bootstrap.Tooltip.getInstance(tooltip)?.dispose();
+                });
+        }
+        return;
+    }
+    /**
+     * 触发所有的悬浮提示
+     */
+    static enabled(): void {
+        [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(t => new bootstrap.Tooltip(t));
+    }
 }
