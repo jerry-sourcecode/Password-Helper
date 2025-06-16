@@ -883,15 +883,19 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
             /**
              * 获取一个UMC文件对应的HTML代码
              * @param path UMC文件路径
+             * @param classList 将会挂载在最外层a标签上的class
              * @returns 如果路径有效，返回对应的HTML代码，否则返回空字符串
              */
-            function mkUMCHtml(path: string) {
+            function mkUMCHtml(path: string, classList: string[] = []) {
+                let str = classList.join(' ');
                 if (!window.fs.hasFile(path)) return ``;
                 return `
-                <a class="list-group-item list-group-item-action ${editorSetting.defaultRepoPath == path ? `list-group-item-warning` : ``}" id="umcBtn" style="display: flex;" data-path="${path}">
+                <a class="list-group-item list-group-item-action ${editorSetting.defaultRepoPath == path ? `list-group-item-warning` : ``} ${str}" id="umcBtn" style="display: flex;" data-path="${path}">
                     <div>
-                        <div class="fw-bold" style="font-size: 20px">${Password.format(UMC.getName(window.fs.readSync(path)!))}</div>
-                        ${Password.format(path)}
+                        <div class="fw-bold">
+                        <span style="font-size: 20px">${Password.format(UMC.getName(window.fs.readSync(path)!))}</span>
+                        </div>
+                        <span style="font-size: 16px">${Password.format(path)}</span>
                     </div>
                     <button type="button" class="btn-close" id="deleteUMC" style="margin-right: 3px; margin-left: auto;" data-bs-toggle="tooltip" data-bs-placement="top" title="删除" data-path="${path}"></button>
                 </a>`
@@ -911,6 +915,43 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
                     }
                 })
                 Tooltip.enabled();
+            }
+            /**
+             * 刷新所有的UMC组件，包括umcBtn和删除图标
+             */
+            function rfUmcBtn() {
+                document.querySelectorAll(`#umcBtn`).forEach(element => {
+                    function action(e: Event) {
+                        curPath = ((element) as HTMLElement).dataset.path!;
+                        if (!window.fs.hasFile(curPath)) {
+                            mkDialog("打开失败", `<p>无法打开密码仓库！程序在试图打开 ${curPath} 时被告知文件不存在。</p>`)
+                        }
+                        window.fs.read(curPath).then((data) => { UMC.parse(data) })
+                        return;
+                    }
+                    element.addEventListener("click", action);
+                });
+                document.querySelectorAll("#deleteUMC").forEach(element => {
+                    element.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        const tgt = (e.target) as HTMLElement;
+                        let p = (tgt).dataset.path!;
+                        umcFilePaths.splice(umcFilePaths.indexOf(p), 1);
+                        if (p === editorSetting.defaultRepoPath) editorSetting.defaultRepoPath = null;
+                        saveEditorData();
+                        Tooltip.disabled();
+                        document.querySelectorAll("#umcBtn").forEach(v => {
+                            const e = v as HTMLElement;
+                            if (e.dataset.path === p) {
+                                e.remove();
+                            }
+                        })
+                        if (umcFilePaths.length == 0) {
+                            fmain();
+                        }
+                        Tooltip.enabled();
+                    })
+                })
             }
             if (data == "") throw new Error("editor is null");
             let obj = JSON.parse(data);
@@ -949,33 +990,7 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
                     <div id="importUMC"><p class="action">点此导入密码仓库</p></div>
                     `
                     Tooltip.enabled();
-                    document.querySelectorAll(`#umcBtn`).forEach(element => {
-                        element.addEventListener("click", (e) => {
-                            curPath = ((element) as HTMLElement).dataset.path!;
-                            if (!window.fs.hasFile(curPath)) {
-                                mkDialog("打开失败", `<p>无法打开密码仓库！程序在试图打开 ${curPath} 时被告知文件不存在。</p>`)
-                            }
-                            window.fs.read(curPath).then((data) => { UMC.parse(data) })
-                            return;
-                        })
-                    });
-                    document.querySelectorAll("#deleteUMC").forEach(element => {
-                        element.addEventListener("click", (e) => {
-                            e.stopPropagation();
-                            const tgt = (e.target) as HTMLElement;
-                            let p = (tgt).dataset.path!;
-                            umcFilePaths.splice(umcFilePaths.indexOf(p), 1);
-                            saveEditorData();
-                            Tooltip.disabled();
-                            document.querySelectorAll("#umcBtn").forEach(v => {
-                                const e = v as HTMLElement;
-                                if (e.dataset.path === p) {
-                                    e.remove();
-                                }
-                            })
-                            Tooltip.enabled();
-                        })
-                    })
+                    rfUmcBtn();
                 }
             } else {
                 content!.innerHTML = `
@@ -992,30 +1007,38 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
                     curPath = filepath;
                     saveData();
                     saveEditorData();
+                    if (umcFilePaths.length == 1) {
+                        fmain();
+                    }
                     let node: HTMLElement = document.createElement("a");
                     node.innerHTML = mkUMCHtml(filepath);
                     document.querySelector("#UMCListDiv")?.appendChild(node);
+                    rfUmcBtn()
                 }
             })
             document.querySelector("div#importUMC")?.addEventListener("click", () => {
                 let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码仓库文件", extensions: ['umc'] }]);
                 if (filepath !== undefined) {
                     if (umcFilePaths.indexOf(filepath) !== -1) {
+                        document.querySelectorAll("#umcBtn").forEach(element => {
+                            const tgt = element as HTMLElement;
+                            tgt.classList.remove("list-group-item-danger")
+                        })
                         umcFilePaths.unshift(filepath);
                         removeUMCAndBtn(filepath);
-                        let node: HTMLElement = document.createElement("a");
-                        node.innerHTML = mkUMCHtml(filepath);
+                        let node: HTMLElement = document.createElement("div");
                         let fanode: HTMLDivElement = document.querySelector("#UMCListDiv")!;
                         fanode.insertBefore(node, fanode.children[0] === undefined ? null : fanode.children[0]);
+                        node.innerHTML = mkUMCHtml(filepath, ["list-group-item-danger"]);
+                        rfUmcBtn();
                     }
                     else {
                         umcFilePaths.push(filepath);
-                        let node: HTMLElement = document.createElement("a");
-                        node.innerHTML = mkUMCHtml(filepath);
-                        document.querySelector("#UMCListDiv")?.appendChild(node);
+                        saveEditorData();
+                        localStorage.setItem("GoToWelcome", "true");
+                        fmain();
                     }
                     curPath = filepath;
-                    localStorage.setItem("GoToWelcome", "true");
                     saveEditorData();
                 }
             })

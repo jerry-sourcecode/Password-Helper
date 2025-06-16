@@ -55,9 +55,9 @@ function _showSetting(): void {
             <div>
                 <p>你可以将这个仓库
                 ${editorSetting.defaultRepoPath === curPath ? `
-                    <button type="button" id="as-default" class="btn btn-danger" style="margin: 0;">取消设为默认仓库</button>
+                    <button type="button" id="as-default" class="btn btn-danger" style="margin: 3px;">取消设为默认仓库</button>
                 ` : `
-                    <button type="button" id="as-default" class="btn btn-primary" style="margin: 0;">设为默认仓库</button>
+                    <button type="button" id="as-default" class="btn btn-primary" style="margin: 3px;">设为默认仓库</button>
                 `}
                 ，同一时刻有且仅能有一个仓库是默认仓库。</p>
             </div>

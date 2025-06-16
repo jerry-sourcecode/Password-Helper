@@ -31,9 +31,23 @@ textarea {
 	overflow-y: scroll;
 }
 
+input {
+	outline: none;
+	color: #666666;
+}
+
+input:focus {
+	border: 3px solid #87baca;
+	color: #333333;
+}
+
 input[type="text"],
 input[type="password"] {
 	width: 25vw;
+}
+
+a {
+	cursor: pointer;
 }
 
 ul {
@@ -391,4 +405,8 @@ p.subtitle {
 
 .btn {
 	margin: 3px;
+}
+
+.form-select {
+	border-width: medium;
 }
