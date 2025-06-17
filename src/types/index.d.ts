@@ -40,10 +40,11 @@ interface msg {
      * @param title 窗口标题
      * @param msg 提示文字
      * @param filters 文件后缀选择器
+     * @param allowMulti 是否允许多选
      * @returns 文件路径，如果未选择则为undefined
      * @example window.msg.showOpenDialogSync("选择地址", "", [{ name: '用户迁移凭证', extensions: ['umc'] }]) // 选择了后缀为umc的文件，且名称为用户迁移凭证
      */
-    showOpenDialogSync: (title: string, msg: string, filters: Electron.FileFilter[]) => string | undefined;
+    showOpenDialogSync: (title: string, msg: string, filters: Electron.FileFilter[], allowMulti: boolean) => string[] | undefined;
     /**
      * 选择保存文件的地址
      * @param title 窗口标题

@@ -50,8 +50,6 @@ function _showSetting(): void {
                 </ul>
                 <img class="icon" id="rf-repo" style="margin-right: 8px;" src="./resources/refresh.png" data-bs-toggle="tooltip" data-bs-placement="top" title="刷新仓库">
             </div>
-            <div><p class="action" id="importUMC">点此导入密码仓库</p></div>
-            <div><p class="action" id="newUMC">点此新建密码仓库</p></div>
             <div>
                 <p>你可以将这个仓库
                 ${editorSetting.defaultRepoPath === curPath ? `
@@ -193,37 +191,6 @@ function _showSetting(): void {
             editorSetting.defaultRepoPath = curPath;
         }
         saveEditorData();
-    })
-
-    document.querySelector("p#newUMC")?.addEventListener("click", () => {
-        let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码仓库文件", extensions: ['umc'] }]);
-        if (filepath !== undefined) {
-            umcFilePaths.push(filepath);
-            let curPathCache = curPath;
-            let repoNameCache = repoName;
-            curPath = filepath;
-            repoName = "untitled";
-            saveData();
-            saveEditorData();
-            window.electronAPI.startNewProcess(filepath);
-            curPath = curPathCache;
-            repoName = repoNameCache;
-            rfRepo()
-        }
-    })
-    document.querySelector("p#importUMC")?.addEventListener("click", () => {
-        let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码仓库文件", extensions: ['umc'] }]);
-        if (filepath !== undefined) {
-            if (umcFilePaths.indexOf(filepath) !== -1) {
-                umcFilePaths.splice(umcFilePaths.indexOf(filepath));
-                umcFilePaths.unshift(filepath);
-            }
-            umcFilePaths.push(filepath);
-            curPath = filepath;
-            saveEditorData();
-            window.electronAPI.startNewProcess(filepath);
-            rfRepo();
-        }
     })
     document.querySelector("#welcome")?.addEventListener("click", () => {
         window.electronAPI.rmArg("repoPath");

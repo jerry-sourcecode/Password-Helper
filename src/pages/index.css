@@ -101,6 +101,7 @@ div.main * {
 	flex-shrink: 0;
 }
 
+
 div.title {
 	display: flex;
 	align-items: center;
@@ -170,7 +171,8 @@ input.vaild+span.check::after {
 	padding-left: 5px;
 }
 
-div.form {
+div.form,
+div.plugin-box {
 	display: flex;
 	align-items: flex-start;
 	flex-direction: column;
@@ -215,21 +217,25 @@ div.info:active img.icon:active {
 	box-shadow: none;
 }
 
-div.info:hover:not(:has(.icon:hover)) {
+div.info:hover:not(:has(.icon:hover)),
+div.plugin-info:hover {
 	cursor: pointer;
 	background-color: rgba(214, 217, 220, 0.918);
 }
 
 div.tool {
 	display: flex;
-	flex-direction: row-reverse;
-	justify-content: flex-start;
 	align-items: center;
 	width: 39vw;
 }
 
-div.tool .icon.attrib {
-	margin-right: auto;
+div.attrib-group {
+	display: flex;
+}
+
+div.tool-group {
+	display: flex;
+	margin-left: auto;
 }
 
 p.icon {
@@ -409,4 +415,33 @@ p.subtitle {
 
 .form-select {
 	border-width: medium;
+}
+
+div.plugin-box p {
+	font-size: 18px;
+	text-indent: 2em;
+}
+
+div.plugin-box h1 {
+	font-size: 27px;
+	font-weight: bolder;
+	text-indent: 0;
+	margin: 10px;
+	margin-left: 0;
+}
+
+div.plugin-box h2 {
+	font-size: 24px;
+	font-weight: bold;
+	text-indent: 0;
+	margin: 9px;
+	margin-left: 0;
+}
+
+div.plugin-box h3 {
+	font-size: 12px;
+	font-weight: bold;
+	text-indent: 0;
+	margin: 9px;
+	margin-left: 0;
 }

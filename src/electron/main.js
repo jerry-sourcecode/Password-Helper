@@ -85,19 +85,19 @@ function setIpc(win) {
 			cancelId: -1,
 		});
 	});
-	ipcMain.on("open-msg", (event, title, msg, filters) => {
+	ipcMain.on("open-msg", (event, title, msg, filters, allowMulti) => {
 		let i = defaultPath.length - 1;
 		while (defaultPath[i] != "/" && defaultPath[i] != "\\") i--;
 		let ans = dialog.showOpenDialogSync(win, {
 			title: title,
 			message: msg,
-			properties: ["openFile"],
+			properties: ["openFile", allowMulti ? "multiSelections" : ""],
 			filters: filters,
 			defaultPath: defaultPath.slice(0, i + 1),
 		});
 		if (ans !== undefined) {
 			defaultPath = ans[0];
-			event.returnValue = ans[0];
+			event.returnValue = ans;
 		} else {
 			event.returnValue = undefined;
 		}

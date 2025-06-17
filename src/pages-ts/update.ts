@@ -15,6 +15,7 @@ function update(dir: Folder, checkable: boolean = false): void {
     document.querySelector("span#nav-home")!.classList.remove("active");
     document.querySelector("span#nav-mainPage")!.classList.remove("active");
     document.querySelector("span#nav-search")!.classList.remove("active");
+    document.querySelector("span#nav-plugin")!.classList.remove("active");
     if (dir.isSame(Folder.bin())) {
         document.querySelector("span#nav-bin")!.classList.add("active");
         _showBin(checkable);
@@ -30,6 +31,10 @@ function update(dir: Folder, checkable: boolean = false): void {
     } else if (dir.isSame(Folder.search())) {
         document.querySelector("span#nav-search")!.classList.add("active");
         _showSearch();
+        return;
+    } else if (dir.isin(Folder.plugin()) || dir.isSame(Folder.plugin())) {
+        document.querySelector("span#nav-plugin")!.classList.add("active");
+        _goPlugin(dir);
         return;
     }
     else {
@@ -243,13 +248,22 @@ function update(dir: Folder, checkable: boolean = false): void {
             }
             let choice: Array<string> = ["确定", "取消"];
             if (folderList[nowIndex].lock !== null) choice.push("取消二级锁");
+            function toDatetimeLocal(date: Date): string {
+                const pad = (n: number) => n.toString().padStart(2, '0');
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+            }
             mkDialog(
                 "设置二级锁",
                 "输入新的二级锁密码：",
                 choice,
                 {
                     isStatic: true,
-                    otherHTML: `<div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入新密码"></div>`,
+                    otherHTML: `
+                    <div class="formItem"><input type="password" id="lockInput" placeholder="在这里输入新密码"></div>
+                    ${UserPlugin.isPluginEnable("Time-Lock") ? `
+                    <div class="formItem"><label>在此之前，你不能解锁文件夹</label><input type="datetime-local" id="time-lock" style="margin:5px" value="${folderList[nowIndex].timelock === null ? `` : toDatetimeLocal(new Date(Number(folderList[nowIndex].timelock)!))}"></div>
+                        ` : ``}
+                    `,
                     otherAction: () => { (document.querySelector("#lockInput") as HTMLInputElement).focus(); },
                     defaultOption: 0
                 }
@@ -257,12 +271,18 @@ function update(dir: Folder, checkable: boolean = false): void {
                 .then((res) => {
                     if (res == 0) {
                         const input = document.querySelector("#lockInput") as HTMLInputElement;
-                        if (input.value == "") {
+                        const dateInput = document.querySelector("#time-lock") as HTMLInputElement;
+                        if (input.value == "" && !(UserPlugin.isPluginEnable("Time-Lock") && dateInput.value != "")) {
                             mkDialog("设置失败！", "密码不能为空。", ["确定"], { defaultOption: 0 });
                             return;
                         }
-                        folderList[nowIndex].lock = Cryp.pbkdf2(Cryp.pbkdf2(input.value));
-                        folderList[nowIndex].cachePwd = input.value;
+                        if (UserPlugin.isPluginEnable("Time-Lock") && dateInput.value != "") {
+                            folderList[nowIndex].timelock = new Date(dateInput.value).getTime().toString()
+                        }
+                        if (input.value != "") {
+                            folderList[nowIndex].lock = Cryp.pbkdf2(Cryp.pbkdf2(input.value));
+                            folderList[nowIndex].cachePwd = input.value;
+                        }
                         saveData();
                         Task.tryDone("双重加密，双重保护");
                         mkToast("设置成功！", "", "<p>二级锁已设置成功。</p>");
@@ -425,6 +445,13 @@ function update(dir: Folder, checkable: boolean = false): void {
         const folder = document.querySelector(`#folder${i}`);
         folder!.addEventListener("click", () => {
             if (folderIsEditing) return;
+            if (nowFolders[i].item.timelock != null && Number(nowFolders[i].item.timelock) > Date.now() && UserPlugin.isPluginEnable("Time-Lock")) {
+                mkDialog(
+                    "时间锁",
+                    `该文件在 ${getReadableTime(nowFolders[i].item.timelock!)} 前无法被解锁。`
+                )
+                return;
+            }
             if (nowFolders[i].item.lock !== null && nowFolders[i].item.cachePwd === null) {
                 mkDialog(
                     "二级锁",

@@ -200,8 +200,12 @@ let signUpTime: string = Date.now().toString();
 let umcFilePaths: Array<string> = [];
 /**当前UMC文件地址 */
 let curPath: string = "";
-
+/**记录当前插件的安装状态 */
+let nowPlugins: UserPlugin[] = [];
+/**记录一个repo */
 type RepoMap = { name: string, path: string }
+/**HTML代码 */
+type HTMLCode = string;
 
 // 一些工具函数
 /**
@@ -438,7 +442,7 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend: bo
  * @param index 目标在对应列表的索引
  * @param dir_from 来源文件夹
  * @param _save 此选项请保持默认，不应被填写
- * @error 可能会因为权限问题而导致报错
+ * @throws 可能会因为权限问题而导致报错：Can't delete item. The item is locked.
  */
 function deleteItem(type: Type, index: number, dir_from: Folder, _save: boolean = true): void {
     if ((type == Type.Folder && folderList[index].isLocked()) || (type == Type.Password && pwdList[index].isLocked())) {
@@ -877,6 +881,9 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
         if (getCurrentUserGroup().permission.canSearch) update(Folder.search());
         else mkDialog("权限不足", "你没有权限使用搜索功能。");
     })
+    document.querySelector("span#nav-plugin")!.addEventListener("click", () => {
+        update(Folder.plugin());
+    })
 
     window.fs.read("./editor")
         .then((data) => {
@@ -886,7 +893,7 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
              * @param classList 将会挂载在最外层a标签上的class
              * @returns 如果路径有效，返回对应的HTML代码，否则返回空字符串
              */
-            function mkUMCHtml(path: string, classList: string[] = []) {
+            function mkUMCHtml(path: string, classList: string[] = []): HTMLCode {
                 let str = classList.join(' ');
                 if (!window.fs.hasFile(path)) return ``;
                 return `
@@ -936,7 +943,9 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
                         e.stopPropagation();
                         const tgt = (e.target) as HTMLElement;
                         let p = (tgt).dataset.path!;
-                        umcFilePaths.splice(umcFilePaths.indexOf(p), 1);
+                        for (let i = umcFilePaths.length - 1; i >= 0; i--) {
+                            if (umcFilePaths[i] === p) umcFilePaths.splice(i, 1);
+                        }
                         if (p === editorSetting.defaultRepoPath) editorSetting.defaultRepoPath = null;
                         saveEditorData();
                         Tooltip.disabled();
@@ -959,6 +968,25 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
             searchMemory = obj.search;
             searchMemory.lastSearchTxt = null;
             searchMemory.txt = "";
+
+            nowPlugins = [];
+            obj.plugins.forEach((element: UserPlugin) => {
+                nowPlugins.push(new UserPlugin(element));
+            });
+            if (nowPlugins.length !== defaultPlugins.length) {
+                for (let i = 0; i < defaultPlugins.length; i++) {
+                    let flag: boolean = false;
+                    for (let j = 0; j < nowPlugins.length; j++) {
+                        if (nowPlugins[j].id === defaultPlugins[i].id) {
+                            flag = true;
+                        }
+                    }
+                    if (!flag)
+                        nowPlugins.push(new UserPlugin(defaultPlugins[i]));
+                }
+                saveEditorData()
+            }
+
 
             umcFilePaths = obj.umcFilePaths;
             editorSetting = obj.editorSetting;
@@ -1003,6 +1031,10 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
             document.querySelector("div#newUMC")?.addEventListener("click", () => {
                 let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码仓库文件", extensions: ['umc'] }]);
                 if (filepath !== undefined) {
+                    if (umcFilePaths.indexOf(filepath) !== -1) {
+                        umcFilePaths.splice(umcFilePaths.indexOf(filepath), 1)
+                        fmain();
+                    }
                     umcFilePaths.push(filepath);
                     curPath = filepath;
                     saveData();
@@ -1017,13 +1049,18 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
                 }
             })
             document.querySelector("div#importUMC")?.addEventListener("click", () => {
-                let filepath: string | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码仓库文件", extensions: ['umc'] }]);
-                if (filepath !== undefined) {
+                let filepath: string[] | undefined = window.msg.showOpenDialogSync("选择打开文件", "选择一个文件来打开", [{ name: "密码仓库文件", extensions: ['umc'] }], true);
+                if (filepath === undefined) return;
+                document.querySelectorAll("#umcBtn").forEach(element => {
+                    const tgt = element as HTMLElement;
+                    tgt.classList.remove("list-group-item-danger")
+                })
+                let flag: boolean = umcFilePaths.length === 0;
+                filepath!.forEach(element => {
+                    importUMC(element);
+                });
+                function importUMC(filepath: string) {
                     if (umcFilePaths.indexOf(filepath) !== -1) {
-                        document.querySelectorAll("#umcBtn").forEach(element => {
-                            const tgt = element as HTMLElement;
-                            tgt.classList.remove("list-group-item-danger")
-                        })
                         umcFilePaths.unshift(filepath);
                         removeUMCAndBtn(filepath);
                         let node: HTMLElement = document.createElement("div");
@@ -1044,7 +1081,7 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
             })
         })
         .catch((err) => {
-            console.error("No file .editor");
+            console.error("No file .editor", err);
             saveEditorData();
             location.reload();
         })

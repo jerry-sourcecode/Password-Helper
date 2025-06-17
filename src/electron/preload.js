@@ -1,4 +1,3 @@
-const { log } = require("console");
 const { contextBridge, ipcRenderer } = require("electron");
 const filesystem = require("fs");
 
@@ -27,8 +26,8 @@ contextBridge.exposeInMainWorld("msg", {
 		ipcRenderer.sendSync("msg", title, "info", msg, choice),
 	warningSync: (title, msg, choice = ["确定"]) =>
 		ipcRenderer.sendSync("msg", title, "warning", msg, choice),
-	showOpenDialogSync: (title, msg, filters) =>
-		ipcRenderer.sendSync("open-msg", title, msg, filters),
+	showOpenDialogSync: (title, msg, filters, allowMulti) =>
+		ipcRenderer.sendSync("open-msg", title, msg, filters, allowMulti),
 	showSaveDialogSync: (title, msg, filters) =>
 		ipcRenderer.sendSync("save-msg", title, msg, filters),
 });

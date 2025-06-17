@@ -73,10 +73,12 @@ class Password { // 密码类
      * @param checkable 是否可以被选择
      * @returns HTML代码
      */
-    getHtml(id: number, checkable: boolean = false): string {
+    getHtml(id: number, checkable: boolean = false): HTMLCode {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
-            <img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="编辑">
-            <img class="icon" id="pwd${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
+            <div class="tool-group">
+                <img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="编辑">
+                <img class="icon" id="pwd${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
+            </div>
         </div>`
         if (checkable) return `<div class="info card" style="flex-direction: row;" id="pwd${id}" draggable="true">
             <div class="checkbox" id="pwd${id}-checkboxDiv"><input type="checkbox" id="pwd${id}-checkbox"></div>
@@ -97,7 +99,7 @@ class Password { // 密码类
      * @param searchPart 搜索Regex的文字，默认为undefined，表示不搜索
      * @returns HTML代码
      */
-    getCard(id: number, isBin: boolean = false, searchPart: string): string {
+    getCard(id: number, isBin: boolean = false, searchPart: string): HTMLCode {
         let newPwd = new Password(this);
         function markSearchWord(key: "from" | "uname" | "pwd" | "email" | "phone" | "note"): void {
             // 和Folder.getCard类似，处理搜索部分
@@ -153,10 +155,12 @@ class Password { // 密码类
      * @param checkable 是否可以被选择
      * @returns HTML代码
      */
-    getHtmlBin(id: number, checkable: boolean = false): string {
+    getHtmlBin(id: number, checkable: boolean = false): HTMLCode {
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
+            <div class="tool-group">
                 <p class="icon" id="bin${id}-recover" style="margin-right: 8px;">恢复</p>
                 <p class="icon" id="bin${id}-delete">删除</p>
+                </div>
             </div>`
         if (checkable) return `<div class="info" style="flex-direction: row;" id="bin${id}" draggable="true">
             <div class="checkbox" id="bin${id}-checkboxDiv"><input type="checkbox" id="bin${id}-checkbox"></div>
@@ -230,7 +234,7 @@ class Password { // 密码类
      * @returns HTML代码
      * @description 这个函数是为了避免重复代码而写的，主要是为了在getHtml和getHtmlBin中使用
      */
-    private getBaseHtml(isBin: boolean = false): string {
+    private getBaseHtml(isBin: boolean = false): HTMLCode {
         return `<p>来源：${Password.format(this.from)}</p>
             <p>用户名：${Password.format(this.uname)}</p>
             <p>密码：******</p>
@@ -292,15 +296,16 @@ class Password { // 密码类
 */
 class Folder {
     /**
-":/a/"表示在主文件夹下的a文件夹内
-""表示在主文件夹下
-特别的，主文件夹的name为":"，parent为""，在回收站中的文件name为"~"，parent为""
+    ":/a/"表示在主文件夹下的a文件夹内
+    ""表示在主文件夹下
+    特别的，主文件夹的name为":"，parent为""，在回收站中的文件name为"~"，parent为""
      */
     name: string;
     private parent: string;
     moDate: string;
     rmDate: string | null;
     lock: string | null = null; // 加密锁
+    timelock: string | null = null;
     cachePwd: string | null = null; // 缓存密码
     type: Type = Type.Folder;
     constructor(data: Folder);
@@ -319,6 +324,7 @@ class Folder {
             this.rmDate = nameOrClass.rmDate;
             this.lock = nameOrClass.lock === undefined ? null : nameOrClass.lock; // 为了兼容旧版本
             this.cachePwd = nameOrClass.cachePwd === undefined ? null : nameOrClass.cachePwd; // 为了兼容旧版本
+            this.timelock = nameOrClass.timelock === undefined ? null : nameOrClass.timelock; // 为了兼容旧版本
         }
     }
     /**
@@ -327,15 +333,20 @@ class Folder {
      * @param checkable 是否可以被选择
      * @returns HTML代码
      */
-    getHtml(id: number, checkable: boolean = false): string {
+    getHtml(id: number, checkable: boolean = false): HTMLCode {
         let inner = `
         <p><img class="FolderIcon" style="margin-right: 8px;" src="./resources/folder.png">${this.name}</p>
         <p>修改日期：${getReadableTime(this.moDate)}</p>
         <div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
-            <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="重命名">
-            <img class="icon" id="folder${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
-            ${this.lock !== null && this.cachePwd === null ? `<img src="../pages/resources/lock.png" title="此文件夹已被加密！" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top">` : ""}
-            ${this.lock !== null && this.cachePwd !== null ? `<img src="../pages/resources/unlock.png" title="此文件夹已解锁！点击以加密" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top" id="folder${id}-unlocked">` : ""}
+            <div class="attrib-group">
+                ${this.lock !== null && this.cachePwd === null ? `<img src="../pages/resources/lock.png" title="此文件夹已被加密！" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top">` : ""}
+                ${this.lock !== null && this.cachePwd !== null ? `<img src="../pages/resources/unlock.png" title="此文件夹已解锁！点击以加密" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top" id="folder${id}-unlocked">` : ""}
+                ${this.timelock !== null && UserPlugin.isPluginEnable("Time-Lock") && Number(this.timelock) > Date.now() ? `<img src="../pages/resources/time-lock.png" title="时间锁限制" class="icon attrib" data-bs-toggle="tooltip" data-bs-placement="top">` : ""}
+            </div>
+            <div class="tool-group">
+                <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="重命名">
+                <img class="icon" id="folder${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
+            </div>
         </div>`
         if (checkable) return `<div class="card info" style="flex-direction: row;" id="folder${id}" draggable="true">
             <div class="checkbox" id="folder${id}-checkboxDiv"><input type="checkbox" id="folder${id}-checkbox"></div>
@@ -355,7 +366,7 @@ class Folder {
      * @returns HTML代码
      */
 
-    getCard(id: number, isBin: boolean = false, searchPart: string): string {
+    getCard(id: number, isBin: boolean = false, searchPart: string): HTMLCode {
         let newname = this.name;
         if (searchPart) {
             const regStr = searchPart.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"); // 转义正则表达式特殊字符
@@ -397,10 +408,12 @@ class Folder {
      * @param checkable 是否可以被选择
      * @returns HTML代码
      */
-    getHtmlBin(id: number, checkable: boolean = false): string { // 获取密码在bin页面的html
+    getHtmlBin(id: number, checkable: boolean = false): HTMLCode { // 获取密码在bin页面的html
         let tool = `<div class="tool" style="width: ${checkable ? "39vw" : "43vw"};">
+            <div class="tool-group">
                 <p class="icon" id="bin${id}-recover" style="margin-right: 8px;">恢复</p>
                 <p class="icon" id="bin${id}-delete">删除</p>
+            </div>
             </div>`;
         let inner = `
         <p><img class="FolderIcon" style="margin-right: 8px;" src="./resources/folder.png">${this.name}</p>
@@ -477,6 +490,13 @@ class Folder {
         return new Folder("SHW", "");
     }
     /**
+     * 获得插件文件夹
+     * @returns 标志着插件的文件夹
+     */
+    static plugin(): Folder {
+        return new Folder("P", "");
+    }
+    /**
      * 判断是否是系统文件夹
      */
     isSystemFolder(): boolean {
@@ -519,6 +539,7 @@ class Folder {
     /**
      * 获得父文件夹对象
      * @returns 父文件夹对象
+     * @throws 当当前文件夹是系统文件夹时，报错：System folder doesn't have parent.
      */
     getParent(): Folder {
         if (this.isSystemFolder()) throw new Error("System folder doesn't have parent.");
@@ -541,7 +562,7 @@ class Folder {
         else return item.getParent().isSame(this);
     }
     /**
-     * 判断文件夹是否在当前文件夹或后代文件夹下
+     * 判断当前文件夹是否在folder或folder的后代文件夹下
      * @param folder 要检查的文件夹
      * @returns 结果
      */
@@ -552,9 +573,9 @@ class Folder {
     }
     /**
      * 可读的HTML代码
-     * @returns 结果
+     * @returns 结果，其中，num表示层级数
      */
-    toReadableHTML(): { html: string, num: number } {
+    toReadableHTML(): { html: HTMLCode, num: number } {
         let ans: string = this.stringify(), lans: Array<{ text: string, index: number }> = [{ text: "主文件夹", index: 1 }], tmp: string = "";
         for (let i = 2; i < ans.length; i++) {
             if (ans[i] == "/") {
@@ -697,7 +718,8 @@ function saveEditorData(): void { // 保存数据
         version: "e1.0",
         search: searchMemory,
         umcFilePaths: umcFilePaths,
-        editorSetting: editorSetting
+        editorSetting: editorSetting,
+        plugins: nowPlugins
     };
     window.fs.save("./editor", JSON.stringify(data));
 }

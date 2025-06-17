@@ -99,3 +99,12 @@ class Tooltip {
         [...document.querySelectorAll('[data-bs-toggle="tooltip"]')].forEach(t => new bootstrap.Tooltip(t));
     }
 }
+
+/**
+ * 将分数和等级提升到极高值，并且保存数据。
+ */
+function cheat() {
+    score = 1e8;
+    level = 1e8;
+    saveData();
+}
