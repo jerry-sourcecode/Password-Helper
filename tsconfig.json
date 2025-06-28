@@ -1,16 +1,14 @@
 {
-  "compilerOptions": {
-      "strict": true,
-      "noImplicitAny": true,
-      "module": "commonjs",
-      "target": "ES6",
-      "isolatedModules": true,
-      "moduleResolution": "node",
-      "esModuleInterop": true,
-      "outDir": "./src/pages/js",
-  },
-  "include": [
-    "./src/pages-ts/**/*.ts",
-    "./src/types/**/*.d.ts"
-  ]
+	"references": [{ "path": "./src/electron" }],
+	"compilerOptions": {
+		"strict": true,
+		"noImplicitAny": true,
+		"module": "commonjs",
+		"target": "ES6",
+		"isolatedModules": true,
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"outDir": "./src/pages/js"
+	},
+	"include": ["./src/pages-ts/**/*.ts", "./src/types/**/*.d.ts"]
 }

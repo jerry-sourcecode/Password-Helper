@@ -1,32 +1,32 @@
 {
-  "name": "password-helper",
-  "version": "1.2.0",
-  "description": "一个帮助管理密码的应用",
-  "homepage": "https://github.com/jerry-sourcecode/Password-Helper#readme",
-  "bugs": {
-    "url": "https://github.com/jerry-sourcecode/Password-Helper/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/jerry-sourcecode/Password-Helper.git"
-  },
-  "license": "ISC",
-  "author": "Jerry Li",
-  "type": "commonjs",
-  "main": "./src/electron/main.js",
-  "scripts": {
-    "w": "tsc --watch",
-    "start": "nodemon --exec electron .",
-    "test": "electron .",
-    "build": "electron-packager ./ Password-Helper --platform=win32 --arch=x64 --out=./out --overwrite --ignore=\"/data$|/editor$|/TODO\\.md$|/\\.gitignore$|/src/pages-ts($|/)|/\\.vscode($|/)|/src/types($|/)\""
-  },
-  "devDependencies": {
-    "@popperjs/core": "^2.11.8",
-    "@types/bootstrap-datepicker": "^1.10.0",
-    "@types/jquery": "^3.5.32",
-    "electron": "^34.0.1",
-    "electron-packager": "^17.1.2",
-    "nodemon": "^3.1.9",
-    "typescript": "^5.7.3"
-  }
+	"name": "password-helper",
+	"version": "1.2.0",
+	"description": "一个帮助管理密码的应用",
+	"homepage": "https://github.com/jerry-sourcecode/Password-Helper#readme",
+	"bugs": {
+		"url": "https://github.com/jerry-sourcecode/Password-Helper/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/jerry-sourcecode/Password-Helper.git"
+	},
+	"license": "ISC",
+	"author": "Jerry Li",
+	"type": "commonjs",
+	"main": "./src/electron-js/main.js",
+	"scripts": {
+		"w": "tsc -b --watch",
+		"start": "nodemon --exec electron .",
+		"test": "electron .",
+		"build": "electron-packager ./ Password-Helper --platform=win32 --arch=x64 --out=./out --overwrite --ignore=\"/data$|/editor$|/TODO\\.md$|/\\.gitignore$|/src/pages-ts($|/)|/\\.vscode($|/)|/src/types($|/)\""
+	},
+	"devDependencies": {
+		"@popperjs/core": "^2.11.8",
+		"@types/bootstrap-datepicker": "^1.10.0",
+		"@types/jquery": "^3.5.32",
+		"electron": "^34.0.1",
+		"electron-packager": "^17.1.2",
+		"nodemon": "^3.1.9",
+		"typescript": "^5.7.3"
+	}
 }

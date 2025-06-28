@@ -1,4 +1,5 @@
 // 一个用于渲染插件市场的文件
+
 /**
  * 记录一个用户插件
  */
@@ -74,13 +75,22 @@ class UserPlugin {
         }
         return undefined;
     }
+    toEncObj(): {
+        id: string,
+        enabled: boolean
+    } {
+        return {
+            id: this.id,
+            enabled: this.isEnabled
+        }
+    }
 }
 
 /**官方插件 */
 const defaultPlugins: UserPlugin[] = [
     new UserPlugin(
         "时间锁",
-        "简单而有效地保护你的密码",
+        "一种新的方式来有效地保护你的密码",
         `
         <h1>插件：时间锁</h1>
         <h2>插件概述</h2>

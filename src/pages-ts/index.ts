@@ -860,31 +860,48 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
     });
 }
 
+document.querySelector("span#nav-mainPage")!.addEventListener("click", () => {
+    update(pagePos.mainDir);
+});
+document.querySelector("span#nav-setting")!.addEventListener("click", () => {
+    update(Folder.setting());
+});
+document.querySelector("span#nav-bin")!.addEventListener("click", () => {
+    if (getCurrentUserGroup().permission.canUseBin) update(Folder.bin());
+    else mkDialog("权限不足", "你没有权限使用回收站。");
+});
+document.querySelector("span#nav-home")!.addEventListener("click", () => {
+    update(Folder.home());
+});
+document.querySelector("span#nav-search")!.addEventListener("click", () => {
+    if (getCurrentUserGroup().permission.canSearch) update(Folder.search());
+    else mkDialog("权限不足", "你没有权限使用搜索功能。");
+});
+document.querySelector("span#nav-plugin")!.addEventListener("click", () => {
+    update(Folder.plugin());
+});
+
+window.ProgramMenu.onMenuViewChange((sub, stt) => {
+    if (sub === "search") {
+        (document.querySelector("span#nav-search") as HTMLDivElement).hidden = !stt;
+    }
+    if (sub === "plugin") {
+        (document.querySelector("span#nav-plugin") as HTMLDivElement).hidden = !stt;
+    }
+    saveEditorData();
+    return;
+});
+
+(function () {
+    let obj = window.ProgramMenu.getViewMenu();
+    (document.querySelector("span#nav-search") as HTMLDivElement).hidden = !obj.search;
+    (document.querySelector("span#nav-plugin") as HTMLDivElement).hidden = !obj.plugin;
+})();
+
 /**
  * 主函数
  */
 (function fmain() {
-    document.querySelector("span#nav-mainPage")!.addEventListener("click", () => {
-        update(pagePos.mainDir);
-    });
-    document.querySelector("span#nav-setting")!.addEventListener("click", () => {
-        update(Folder.setting());
-    });
-    document.querySelector("span#nav-bin")!.addEventListener("click", () => {
-        if (getCurrentUserGroup().permission.canUseBin) update(Folder.bin());
-        else mkDialog("权限不足", "你没有权限使用回收站。");
-    });
-    document.querySelector("span#nav-home")!.addEventListener("click", () => {
-        update(Folder.home());
-    });
-    document.querySelector("span#nav-search")!.addEventListener("click", () => {
-        if (getCurrentUserGroup().permission.canSearch) update(Folder.search());
-        else mkDialog("权限不足", "你没有权限使用搜索功能。");
-    })
-    document.querySelector("span#nav-plugin")!.addEventListener("click", () => {
-        update(Folder.plugin());
-    })
-
     window.fs.read("./editor")
         .then((data) => {
             /**
@@ -970,8 +987,13 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
             searchMemory.txt = "";
 
             nowPlugins = [];
-            obj.plugins.forEach((element: UserPlugin) => {
-                nowPlugins.push(new UserPlugin(element));
+            obj.plugins.forEach((element: any) => {
+                defaultPlugins.forEach((plugin: UserPlugin) => {
+                    if (element.id === plugin.id) {
+                        nowPlugins.push(new UserPlugin(plugin))
+                        nowPlugins[nowPlugins.length - 1].isEnabled = element.enabled;
+                    }
+                })
             });
             if (nowPlugins.length !== defaultPlugins.length) {
                 for (let i = 0; i < defaultPlugins.length; i++) {
@@ -1055,7 +1077,6 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
                     const tgt = element as HTMLElement;
                     tgt.classList.remove("list-group-item-danger")
                 })
-                let flag: boolean = umcFilePaths.length === 0;
                 filepath!.forEach(element => {
                     importUMC(element);
                 });

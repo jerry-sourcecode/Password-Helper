@@ -712,16 +712,11 @@ function saveData(): void { // 保存数据
     window.fs.save(curPath, data);
 }
 
+/**
+ * 保存编辑器数据
+ */
 function saveEditorData(): void { // 保存数据
-    // 数据保存
-    let data = {
-        version: "e1.0",
-        search: searchMemory,
-        umcFilePaths: umcFilePaths,
-        editorSetting: editorSetting,
-        plugins: nowPlugins
-    };
-    window.fs.save("./editor", JSON.stringify(data));
+    window.fs.save("./editor", getEditorData());
 }
 
 /**
@@ -789,6 +784,30 @@ function getData(ismemory: boolean = isremember): string {
         level: enclevel,
         signUpTime: encSignUpTime,
     });
+}
+
+/**
+ * 获得编辑器数据的文本
+ * @returns 文本
+ */
+function getEditorData(): string {
+    let encPlugins: Object[] = [];
+    nowPlugins.forEach((v => {
+        encPlugins.push(v.toEncObj());
+    }))
+    let menu = window.ProgramMenu.getViewMenu()
+    // 数据保存
+    let data = {
+        version: "e1.0",
+        search: searchMemory,
+        umcFilePaths: umcFilePaths,
+        editorSetting: editorSetting,
+        plugins: encPlugins,
+        menu: {
+            view: window.ProgramMenu.getViewMenu()
+        },
+    };
+    return JSON.stringify(data);
 }
 
 /**

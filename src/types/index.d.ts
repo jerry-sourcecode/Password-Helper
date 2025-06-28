@@ -31,10 +31,6 @@ interface fs {
 }
 
 interface msg {
-    info: (title: string, msg: string, choice?: string[]) => Promise<number>;
-    warning: (title: string, msg: string, choice?: string[]) => Promise<number>;
-    infoSync: (title: string, msg: string, choice?: string[]) => number;
-    warningSync: (title: string, msg: string, choice?: string[]) => number;
     /**
      * 选择一个文件
      * @param title 窗口标题
@@ -78,12 +74,34 @@ interface electronAPI {
      * @param key 参数的键
      */
     rmArg: (key: string) => void;
+    /**
+     * 注册当“菜单栏”的“视图”发生改变时的行为
+     * @param callback 行为
+     */
+}
+
+interface ProgramMenu {
+    onMenuViewChange: (
+        /**
+         * @param subject 改变的条目
+         * @param state 当前状态
+         */
+        callback: (subject: "search" | "plugin", state: boolean) => void) => void;
+    /**
+     * 得到当前菜单-视图的状态
+     * @returns 状态对象
+     */
+    getViewMenu: () => {
+        plugin: boolean,
+        search: boolean
+    }
 }
 
 declare global {
     interface Window {
         fs: fs;
         msg: msg;
-        electronAPI: electronAPI
+        electronAPI: electronAPI;
+        ProgramMenu: ProgramMenu;
     }
 }

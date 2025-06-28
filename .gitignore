@@ -10,3 +10,5 @@ editor
 .vscode
 
 src/pages/js/
+
+src/electron-js/

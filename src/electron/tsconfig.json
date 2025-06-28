@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"outDir": "../electron-js",
+		"strict": false,
+		"composite": true
+	},
+	"include": ["**/*.ts"],
+	"exclude": []
+}
