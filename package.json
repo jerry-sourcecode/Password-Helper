@@ -18,7 +18,7 @@
 		"w": "tsc -b --watch",
 		"start": "nodemon --exec electron .",
 		"test": "electron .",
-		"build": "electron-packager ./ Password-Helper --platform=win32 --arch=x64 --out=./out --overwrite --ignore=\"/data$|/editor$|/TODO\\.md$|/\\.gitignore$|/src/pages-ts($|/)|/\\.vscode($|/)|/src/types($|/)\""
+		"build": "electron-packager ./ Password-Helper --platform=win32 --arch=x64 --out=./out --overwrite --ignore=\"/data$|/editor$|/TODO\\.md$|/\\.gitignore$|/src/pages-ts($|/)|/\\.vscode($|/)|/src/types($|/)|/src/electron($|/)\""
 	},
 	"devDependencies": {
 		"@popperjs/core": "^2.11.8",

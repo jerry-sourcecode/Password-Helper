@@ -141,6 +141,11 @@ class UMC {
         }
         this.initToV1_4_1();
     }
+    /**
+     * 解码 1.4.1 版本的数据
+     * @param obj 解码的对象
+     * @param key 解码的密钥
+     */
     private static V1_4_1(obj: any, key: string) {
         obj.pwd.forEach((element: any) => {
             pwdList.push(<Password>decrypt(new Password(element), key));
@@ -159,6 +164,9 @@ class UMC {
         score = Number(Cryp.decrypt(obj.score, key));
         level = Number(Cryp.decrypt(obj.level, key));
     }
+    /**
+     * 初始化到 1.4.1 版本
+     */
     private static initToV1_4_1(): void {
         mainSetting.generateRandomPwdSetting = {
             weightOfLetter: 5,
@@ -168,3 +176,52 @@ class UMC {
         repoName = "untitled";
     }
 };
+
+class EData {
+    /**
+     * 解码给定的数据，并应用
+     * @param data 给定的数据
+     */
+    static parse(data: string): void {
+        if (data == "") throw new Error("editor is null");
+        let obj = JSON.parse(data);
+        if (obj.version == "e1.0") this.V1_0(obj);
+        else alert("编辑器数据已过期");
+    }
+
+    /**
+     * 对版本为e1.0的数据进行解码并应用
+     * @param obj 数据
+     */
+    private static V1_0(obj: any): void {
+        searchMemory = obj.search;
+        searchMemory.lastSearchTxt = null;
+        searchMemory.txt = "";
+
+        nowPlugins = [];
+        obj.plugins.forEach((element: any) => {
+            defaultPlugins.forEach((plugin: UserPlugin) => {
+                if (element.id === plugin.id) {
+                    nowPlugins.push(new UserPlugin(plugin))
+                    nowPlugins[nowPlugins.length - 1].isEnabled = element.enabled;
+                }
+            })
+        });
+        if (nowPlugins.length !== defaultPlugins.length) {
+            for (let i = 0; i < defaultPlugins.length; i++) {
+                let flag: boolean = false;
+                for (let j = 0; j < nowPlugins.length; j++) {
+                    if (nowPlugins[j].id === defaultPlugins[i].id) {
+                        flag = true;
+                    }
+                }
+                if (!flag)
+                    nowPlugins.push(new UserPlugin(defaultPlugins[i]));
+            }
+            saveEditorData()
+        }
+
+        umcFilePaths = obj.umcFilePaths;
+        editorSetting = obj.editorSetting;
+    }
+}

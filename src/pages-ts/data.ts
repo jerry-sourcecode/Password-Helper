@@ -795,7 +795,6 @@ function getEditorData(): string {
     nowPlugins.forEach((v => {
         encPlugins.push(v.toEncObj());
     }))
-    let menu = window.ProgramMenu.getViewMenu()
     // 数据保存
     let data = {
         version: "e1.0",

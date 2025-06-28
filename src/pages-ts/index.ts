@@ -979,39 +979,9 @@ window.ProgramMenu.onMenuViewChange((sub, stt) => {
                     })
                 })
             }
-            if (data == "") throw new Error("editor is null");
-            let obj = JSON.parse(data);
-            if (obj.version != "e1.0") console.log("编辑器数据版本已过期！");
-            searchMemory = obj.search;
-            searchMemory.lastSearchTxt = null;
-            searchMemory.txt = "";
 
-            nowPlugins = [];
-            obj.plugins.forEach((element: any) => {
-                defaultPlugins.forEach((plugin: UserPlugin) => {
-                    if (element.id === plugin.id) {
-                        nowPlugins.push(new UserPlugin(plugin))
-                        nowPlugins[nowPlugins.length - 1].isEnabled = element.enabled;
-                    }
-                })
-            });
-            if (nowPlugins.length !== defaultPlugins.length) {
-                for (let i = 0; i < defaultPlugins.length; i++) {
-                    let flag: boolean = false;
-                    for (let j = 0; j < nowPlugins.length; j++) {
-                        if (nowPlugins[j].id === defaultPlugins[i].id) {
-                            flag = true;
-                        }
-                    }
-                    if (!flag)
-                        nowPlugins.push(new UserPlugin(defaultPlugins[i]));
-                }
-                saveEditorData()
-            }
+            EData.parse(data);
 
-
-            umcFilePaths = obj.umcFilePaths;
-            editorSetting = obj.editorSetting;
             if (editorSetting.defaultRepoPath && !window.fs.hasFile(editorSetting.defaultRepoPath)) editorSetting.defaultRepoPath = null;
             for (let i = umcFilePaths.length - 1; i >= 0; i--) {
                 if (!window.fs.hasFile(umcFilePaths[i])) umcFilePaths.splice(i, 1);
