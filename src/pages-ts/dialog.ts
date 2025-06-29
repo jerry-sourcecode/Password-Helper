@@ -80,6 +80,7 @@ function _showDialog(
             modalDiv.addEventListener("typeEnterKey", () => {
                 if (defaultOption != -1 && defaultOption < option.length) {
                     resolve(defaultOption);
+                    myModal.hide();
                 }
             })
         }
