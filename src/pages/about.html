@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于 - 程序信息</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e7f1 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            padding: 50px 30px 30px;
+            text-align: center;
+            background: linear-gradient(120deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+            transform: rotate(30deg);
+        }
+
+        .app-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .app-icon svg {
+            width: 48px;
+            height: 48px;
+            fill: white;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 2px;
+        }
+
+        .version {
+            font-size: 1.4rem;
+            font-weight: 300;
+            margin-top: 15px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 50px 40px 40px;
+        }
+
+        .info-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .info-section h2 {
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            position: relative;
+            display: inline-block;
+        }
+
+        .info-section h2::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: #2575fc;
+            border-radius: 2px;
+        }
+
+        .info-section p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            color: #555;
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .details {
+            background: #f8f9fc;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            margin: 0 auto 30px;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f0f2f7;
+        }
+
+        .details p {
+            margin: 12px 0;
+            font-size: 1.1rem;
+            color: #444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .details p svg {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            fill: #2575fc;
+        }
+
+        .github-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .github-btn {
+            display: inline-flex;
+            align-items: center;
+            background: #2c3e50;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .github-btn:hover {
+            background: #2575fc;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(37, 117, 252, 0.3);
+        }
+
+        .github-btn svg {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: #777;
+            font-size: 0.95rem;
+            border-top: 1px solid #f0f2f7;
+        }
+
+        /* 动画效果 */
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .app-icon,
+        h1,
+        .version,
+        .info-section,
+        .details,
+        .github-section {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        .info-section {
+            animation-delay: 0.2s;
+        }
+
+        .details {
+            animation-delay: 0.4s;
+        }
+
+        .github-section {
+            animation-delay: 0.6s;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 650px) {
+            .header {
+                padding: 40px 20px 25px;
+            }
+
+            .content {
+                padding: 40px 25px 30px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .version {
+                font-size: 1.2rem;
+            }
+
+            .app-icon {
+                width: 80px;
+                height: 80px;
+            }
+
+            .app-icon svg {
+                width: 36px;
+                height: 36px;
+            }
+
+            .info-section h2 {
+                font-size: 1.4rem;
+            }
+
+            .info-section p {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.9rem;
+            }
+
+            .details {
+                padding: 20px 15px;
+            }
+
+            .github-btn {
+                padding: 12px 24px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <!-- <div class="app-icon">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M12,1L3,5v6c0,5.55,3.84,10.74,9,12c5.16-1.26,9-6.45,9-12V5L12,1z M19,11c0,1.85-0.51,3.65-1.38,5.21l-1.45-1.45 c1.29-1.94,1.07-4.58-0.64-6.29c-1.95-1.95-5.12-1.95-7.07,0c-1.95,1.95-1.95,5.12,0,7.07c1.71,1.71,4.35,1.92,6.29,0.64 l1.72,1.72c-1.19,1.42-2.73,2.51-4.47,3.04C7.98,20.42,5,16.97,5,11V6.3l7-3.11l7,3.11V11z M12,15c-1.66,0-3-1.34-3-3s1.34-3,3-3 s3,1.34,3,3S13.66,15,12,15z" />
+                </svg>
+            </div> -->
+            <h1>Password Helper</h1>
+            <div class="version">版本 1.4</div>
+        </div>
+
+        <div class="content">
+            <div class="info-section">
+                <h2>关于本程序</h2>
+                <p>Password Helper 是一款高效的密码储存工具，旨在让密码储存安全化，可视化。我们专注于提供流畅的体验和强大的功能。</p>
+                <p>此版本包含了多项性能优化和用户体验改进，为您带来更快速、更稳定的使用体验。</p>
+            </div>
+
+            <div class="details">
+                <p>
+                    <!-- 分支图标 -->
+                    <svg width="256" height="256" viewBox="0 0 256 256">
+                        <path fill="#2575fc"
+                            d="M232 64a32 32 0 1 0-40 31v17a8 8 0 0 1-8 8H96a23.8 23.8 0 0 0-8 1.38V95a32 32 0 1 0-16 0v66a32 32 0 1 0 16 0v-17a8 8 0 0 1 8-8h88a24 24 0 0 0 24-24V95a32.06 32.06 0 0 0 24-31M64 64a16 16 0 1 1 16 16a16 16 0 0 1-16-16m32 128a16 16 0 1 1-16-16a16 16 0 0 1 16 16M200 80a16 16 0 1 1 16-16a16 16 0 0 1-16 16">
+                        </path>
+                    </svg>
+                    当前版本：<strong>1.4</strong>
+                </p>
+                <p>
+                    <!-- 日历图标 -->
+                    <svg width="256" height="256" viewBox="0 0 32 32">
+                        <path fill="#2575fc"
+                            d="M9 4v1H5v22h22V5h-4V4h-2v1H11V4zM7 7h2v1h2V7h10v1h2V7h2v2H7zm0 4h18v14H7zm6 2v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2zM9 17v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2zM9 21v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2z">
+                        </path>
+                    </svg>
+                    发布日期：<strong>2025年6月29日</strong>
+                </p>
+            </div>
+
+            <div class="github-section">
+                <a href="https://www.github.com/jerry-sourcecode/password-helper" target="_blank" class="github-btn">
+                    <!-- GitHub图标 -->
+                    <svg width="256" height="256" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M12 0a12 12 0 1 0 0 24a12 12 0 0 0 0-24m3.163 21.783h-.093a.5.5 0 0 1-.382-.14a.5.5 0 0 1-.14-.372v-1.406q.01-.701.01-1.416a3.7 3.7 0 0 0-.151-1.028a1.83 1.83 0 0 0-.542-.875a8 8 0 0 0 2.038-.471a4.05 4.05 0 0 0 1.466-.964c.407-.427.71-.943.885-1.506a6.8 6.8 0 0 0 .3-2.13a4.1 4.1 0 0 0-.26-1.476a3.9 3.9 0 0 0-.795-1.284a2.8 2.8 0 0 0 .162-.582q.05-.3.05-.604q0-.392-.09-.773a5 5 0 0 0-.221-.763a.3.3 0 0 0-.111-.02h-.11q-.346.004-.674.111a5 5 0 0 0-.703.26a7 7 0 0 0-.661.343q-.322.191-.573.362a9.6 9.6 0 0 0-5.143 0a14 14 0 0 0-.572-.362a6 6 0 0 0-.672-.342a4.5 4.5 0 0 0-.705-.261a2.2 2.2 0 0 0-.662-.111h-.11a.3.3 0 0 0-.11.02a6 6 0 0 0-.23.763q-.08.382-.081.773q0 .304.051.604t.16.582A3.9 3.9 0 0 0 5.702 10a4.1 4.1 0 0 0-.263 1.476a6.9 6.9 0 0 0 .292 2.12c.181.563.483 1.08.884 1.516c.415.422.915.75 1.466.964c.653.25 1.337.41 2.033.476a1.8 1.8 0 0 0-.452.633a3 3 0 0 0-.2.744a2.75 2.75 0 0 1-1.175.27a1.8 1.8 0 0 1-1.065-.3a2.9 2.9 0 0 1-.752-.824a3 3 0 0 0-.292-.382a2.7 2.7 0 0 0-.372-.343a1.8 1.8 0 0 0-.432-.24a1.2 1.2 0 0 0-.481-.101q-.06.002-.12.01a.7.7 0 0 0-.162.02a.4.4 0 0 0-.13.06a.12.12 0 0 0-.06.1a.33.33 0 0 0 .14.242q.14.111.232.171l.03.021q.2.155.382.333q.169.148.3.33q.136.178.231.381q.11.2.231.463c.188.474.522.875.954 1.145c.453.243.961.364 1.476.351q.262 0 .522-.03q.258-.041.515-.091v1.743a.5.5 0 0 1-.533.521h-.062a10.286 10.286 0 1 1 6.324 0z">
+                        </path>
+                    </svg>
+                    访问我们的 GitHub
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Password Helper. 保留所有权利。</p>
+        </div>
+    </div>
+
+    <script>
+        // 添加简单的交互效果
+        document.addEventListener('DOMContentLoaded', function () {
+            const detailsItems = document.querySelectorAll('.details p');
+
+            detailsItems.forEach((item, index) => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                item.style.transition = `all 0.5s ease ${index * 0.15}s`;
+
+                setTimeout(() => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, 800 + (index * 150));
+            });
+
+            // 添加按钮点击效果
+            const githubBtn = document.querySelector('.github-btn');
+            githubBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                    window.open(this.href, '_blank');
+                }, 200);
+            });
+        });
+    </script>
+</body>
+
+</html>

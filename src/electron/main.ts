@@ -65,6 +65,15 @@ function getMenuTemplate(): MenuItemConstructorOptions[] {
                         );
                     },
                 },
+                {
+                    label: "关于",
+                    click: () => {
+                        createWindow(
+                            "关于",
+                            "./src/pages/about.html"
+                        );
+                    },
+                },
             ],
         },
     ];
@@ -191,7 +200,7 @@ function createWindow(
         callbacks?: (win: BrowserWindow) => void
     } = { isURL: false, argu: [], callbacks: () => { } }
 ) {
-    const isDebug = true;
+    const isDebug = false;
     const win = new BrowserWindow({
         width: 800,
         height: 600,
