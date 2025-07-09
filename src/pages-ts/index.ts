@@ -1018,6 +1018,7 @@ window.ProgramMenu.onMenuViewChange((sub, stt) => {
                 <p>在缓存中没有找到可用的密码仓库，它们可能被删除、移动或重命名了，你现在可以：</p>
                 <div id="newUMC"><p class="action">点此新建一个密码仓库</p></div>
                 <div id="importUMC"><p class="action">点此导入密码仓库</p></div>
+                <div><p class="action" id="importEditorSetting">导入编辑器设置</p></div>
                 `
             }
             document.querySelector("div#newUMC")?.addEventListener("click", () => {
@@ -1070,6 +1071,17 @@ window.ProgramMenu.onMenuViewChange((sub, stt) => {
                     saveEditorData();
                 }
             })
+            document.querySelector("#importEditorSetting")?.addEventListener("click", () => {
+                let filepath: string[] | undefined = window.msg.showOpenDialogSync("选择打开文件地址", "选择保存编辑器设置的地址", [{ name: "编辑器配置", extensions: ['json'] }], false);
+                if (filepath !== undefined) {
+                    let data: string = window.fs.readSync(filepath[0])!;
+                    window.fs.save("./editor", data);
+                    mkDialog("应用成功", `编辑器数据应用成功！`, ["立即重启"])
+                        .then((v) => {
+                            if (v === 0) location.reload();
+                        })
+                }
+            });
         })
         .catch((err) => {
             console.error("No file .editor", err);

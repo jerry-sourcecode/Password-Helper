@@ -46,11 +46,11 @@ class UserPlugin {
         <div class="card-body">
             <h5 class="card-title" style="font-weight: bold">${pluginData.name}</h5>
             <p class="card-title" style="text-indent: 2em">${pluginData.desc}</p>
-            <a class="btn btn-primary" style="margin: 5px;" id="plugin-btnfor${pluginData.name}">${this.isEnabled ? `禁用` : `启用`}</a>
+            <a class="btn btn-primary" style="margin: 5px;" id="plugin-btnfor${pluginData.id}">${this.isEnabled ? `禁用` : `启用`}</a>
         </div>
         `
         element.appendChild(newNode);
-        document.querySelector(`a#plugin-btnfor${pluginData.name}`)?.addEventListener("click", (e) => {
+        document.querySelector(`a#plugin-btnfor${pluginData.id}`)?.addEventListener("click", (e) => {
             e.stopPropagation();
             const tgt = e.target as HTMLElement;
             if (!this.isEnabled) {

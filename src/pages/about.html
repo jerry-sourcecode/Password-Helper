@@ -319,14 +319,14 @@
                 </svg>
             </div> -->
             <h1>Password Helper</h1>
-            <div class="version">版本 1.4</div>
+            <div class="version" id="v1">版本 1.4</div>
         </div>
 
         <div class="content">
             <div class="info-section">
                 <h2>关于本程序</h2>
                 <p>Password Helper 是一款高效的密码储存工具，旨在让密码储存安全化，可视化。我们专注于提供流畅的体验和强大的功能。</p>
-                <p>此版本包含了多项性能优化和用户体验改进，为您带来更快速、更稳定的使用体验。</p>
+                <p id="des"></p>
             </div>
 
             <div class="details">
@@ -337,7 +337,7 @@
                             d="M232 64a32 32 0 1 0-40 31v17a8 8 0 0 1-8 8H96a23.8 23.8 0 0 0-8 1.38V95a32 32 0 1 0-16 0v66a32 32 0 1 0 16 0v-17a8 8 0 0 1 8-8h88a24 24 0 0 0 24-24V95a32.06 32.06 0 0 0 24-31M64 64a16 16 0 1 1 16 16a16 16 0 0 1-16-16m32 128a16 16 0 1 1-16-16a16 16 0 0 1 16 16M200 80a16 16 0 1 1 16-16a16 16 0 0 1-16 16">
                         </path>
                     </svg>
-                    当前版本：<strong>1.4</strong>
+                    当前版本：<strong id="v2">1.4</strong>
                 </p>
                 <p>
                     <!-- 日历图标 -->
@@ -346,7 +346,7 @@
                             d="M9 4v1H5v22h22V5h-4V4h-2v1H11V4zM7 7h2v1h2V7h10v1h2V7h2v2H7zm0 4h18v14H7zm6 2v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2zM9 17v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2zM9 21v2h2v-2zm4 0v2h2v-2zm4 0v2h2v-2z">
                         </path>
                     </svg>
-                    发布日期：<strong>2025年6月29日</strong>
+                    发布日期：<strong id="d1">2025年6月29日</strong>
                 </p>
             </div>
 
@@ -369,6 +369,14 @@
     </div>
 
     <script>
+        const version = "1.4";
+        const date = "2025年6月29日";
+        const descript = "此版本包含了多项性能优化和用户体验改进，为您带来更快速、更稳定的使用体验。";
+
+        document.querySelector("#v1").innerHTML = `版本 ${version}`;
+        document.querySelector("#v2").innerHTML = version;
+        document.querySelector("#d1").innerHTML = date;
+        document.querySelector("#des").innerHTML = descript;
         // 添加简单的交互效果
         document.addEventListener('DOMContentLoaded', function () {
             const detailsItems = document.querySelectorAll('.details p');
