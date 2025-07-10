@@ -40,6 +40,7 @@ class Password { // 密码类
     type: Type = Type.Password; // 类型
     moDate: string; // 创建日期
     rmDate: string | null = null; // 删除日期
+    pin: boolean = false; // 是否置顶
     constructor(date: Password);
     constructor(from?: string, uname?: string, pwd?: string, note?: string, email?: string, phone?: string, dir?: Folder);
     constructor(fromOrdata: string | Password = "", uname: string = "", pwd: string = "", note: string = "", email: string = "", phone: string = "", dir: Folder = Folder.root()) { // 构造函数
@@ -64,6 +65,7 @@ class Password { // 密码类
             this.dir = (typeof fromOrdata.dir == "object" ? new Folder(fromOrdata.dir).stringify() : fromOrdata.dir);
             this.rmDate = fromOrdata.rmDate;
             this.moDate = fromOrdata.moDate;
+            this.pin = fromOrdata.pin === undefined ? false : fromOrdata.pin; // 为了兼容旧版本
         }
     }
 
@@ -78,6 +80,7 @@ class Password { // 密码类
             <div class="tool-group">
                 <img class="icon" id="pwd${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="编辑">
                 <img class="icon" id="pwd${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
+                <img class="icon" id="pwd${id}-pin" ${this.pin ? `src="./resources/pin-off.png" title="取消置顶"` : `src="./resources/pin.png" title="置顶"`} data-bs-toggle="tooltip" data-bs-placement="top">
             </div>
         </div>`
         if (checkable) return `<div class="info card" style="flex-direction: row;" id="pwd${id}" draggable="true">
@@ -293,6 +296,7 @@ class Password { // 密码类
  * @member type 文件夹类型
  * @member lock 加密锁密码
  * @member cachePwd 如果用户已经输入过了密码，则缓存密码
+ * @member pin 是否置顶
 */
 class Folder {
     /**
@@ -308,6 +312,7 @@ class Folder {
     timelock: string | null = null;
     cachePwd: string | null = null; // 缓存密码
     type: Type = Type.Folder;
+    pin: boolean = false;
     constructor(data: Folder);
     constructor(name: string, parent?: string, time?: string);
     constructor(nameOrClass: string | Folder, parent: string = ":", time: string = Date.now().toString()) {
@@ -325,6 +330,7 @@ class Folder {
             this.lock = nameOrClass.lock === undefined ? null : nameOrClass.lock; // 为了兼容旧版本
             this.cachePwd = nameOrClass.cachePwd === undefined ? null : nameOrClass.cachePwd; // 为了兼容旧版本
             this.timelock = nameOrClass.timelock === undefined ? null : nameOrClass.timelock; // 为了兼容旧版本
+            this.pin = nameOrClass.pin === undefined ? false : nameOrClass.pin; // 为了兼容旧版本
         }
     }
     /**
@@ -346,6 +352,7 @@ class Folder {
             <div class="tool-group">
                 <img class="icon" id="folder${id}-edit" style="margin-right: 8px;" src="./resources/edit.png" data-bs-toggle="tooltip" data-bs-placement="top" title="重命名">
                 <img class="icon" id="folder${id}-delete" src="./resources/delete.png" data-bs-toggle="tooltip" data-bs-placement="top" title="删除">
+                <img class="icon" id="folder${id}-pin" ${this.pin ? `src="./resources/pin-off.png" title="取消置顶"` : `src="./resources/pin.png" title="置顶"`} data-bs-toggle="tooltip" data-bs-placement="top">
             </div>
         </div>`
         if (checkable) return `<div class="card info" style="flex-direction: row;" id="folder${id}" draggable="true">
@@ -570,6 +577,16 @@ class Folder {
         const f = folder.stringify()
         if (this.isSame(folder)) return false;
         return f == this.stringify().slice(0, f.length);
+    }
+    /**
+     * 判断当前文件夹是否是folder或folder的后代文件夹
+     * @description 这个函数和isin不同的是，它会检查当前文件夹是否和folder相同，
+     * @param folder 要检查的文件夹
+     * @returns 结果
+     */
+    isOrIn(folder: Folder): boolean {
+        if (folder.isSame(this)) return true;
+        return this.isin(folder);
     }
     /**
      * 可读的HTML代码

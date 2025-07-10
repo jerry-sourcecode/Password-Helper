@@ -82,6 +82,10 @@ function update(dir: Folder, checkable: boolean = false): void {
         }
     }
     nowFolders.sort((a: folderMapping, b: folderMapping) => {
+        // 当a置顶但b不置顶时，a排在前面
+        if (a.item.pin && !b.item.pin) return -1;
+        // 当b置顶但a不置顶时，b排在前面
+        if (b.item.pin && !a.item.pin) return 1;
         switch (mainSetting.folderSortBy) {
             case SortBy.name:
                 return a.item.name.localeCompare(b.item.name);
@@ -94,6 +98,10 @@ function update(dir: Folder, checkable: boolean = false): void {
         }
     });
     nowPwds.sort((a: pwdMapping, b: pwdMapping) => {
+        // 当a置顶但b不置顶时，a排在前面
+        if (a.item.pin && !b.item.pin) return -1;
+        // 当b置顶但a不置顶时，b排在前面
+        if (b.item.pin && !a.item.pin) return 1;
         switch (mainSetting.folderSortBy) {
             case SortBy.name:
                 return a.item.from.localeCompare(b.item.from);
@@ -106,10 +114,16 @@ function update(dir: Folder, checkable: boolean = false): void {
         }
     });
     nowFolders.forEach((value: folderMapping, idx: number) => {
-        inner += value.item.getHtml(idx, checkable);
+        if (value.item.pin) inner += value.item.getHtml(idx, checkable);
     });
     nowPwds.forEach((value: pwdMapping, idx: number) => {
-        inner += value.item.getHtml(idx, checkable);
+        if (value.item.pin) inner += value.item.getHtml(idx, checkable);
+    });
+    nowFolders.forEach((value: folderMapping, idx: number) => {
+        if (!value.item.pin) inner += value.item.getHtml(idx, checkable);
+    });
+    nowPwds.forEach((value: pwdMapping, idx: number) => {
+        if (!value.item.pin) inner += value.item.getHtml(idx, checkable);
     });
     if (!has) {
         inner += `<p>暂无密码</p>`;
@@ -344,6 +358,12 @@ function update(dir: Folder, checkable: boolean = false): void {
                 mkDialog("删除失败", "此文件因为权限问题无法删除，请先解锁所有二级锁。");
             }
         });
+        const pinBtn = document.querySelector(`#pwd${i}-pin`);
+        pinBtn!.addEventListener("click", (e) => {
+            e?.stopPropagation();
+            nowPwds[i].item.pin = !nowPwds[i].item.pin;
+            init(dir);
+        });
         const info = document.querySelector(`#pwd${i}`);
         info!.addEventListener("click", () => {
             if (folderIsEditing) return;
@@ -431,6 +451,12 @@ function update(dir: Folder, checkable: boolean = false): void {
             } catch (error) {
                 mkDialog("删除失败", "此文件因为权限问题无法删除，请先解锁所有二级锁。");
             }
+            init(dir);
+        });
+        const fpinBtn = document.querySelector(`#folder${i}-pin`);
+        fpinBtn!.addEventListener("click", (e) => {
+            e?.stopPropagation();
+            nowFolders[i].item.pin = !nowFolders[i].item.pin;
             init(dir);
         });
         if (nowFolders[i].item.lock !== null && nowFolders[i].item.cachePwd !== null) {

@@ -47,7 +47,7 @@ class Cryp {
     }
 }
 
-const whitelistAttributes = ["type", "cachePwd"];
+const whitelistAttributes = ["type", "cachePwd", "pin"];
 
 function encrypt(data: Item | Task, key: string, except: string[] = []): Item | Task { // 加密
     let enc: Item | Task;
@@ -271,7 +271,7 @@ function updatePos(): void {
         pagePos.setting = getScroll();
     } else if (currentFolder.isSame(Folder.search())) {
         pagePos.search = getScroll();
-    } else if (currentFolder.isin(Folder.root())) {
+    } else if (currentFolder.isOrIn(Folder.root())) {
         pagePos.main = getScroll();
     }
 }
