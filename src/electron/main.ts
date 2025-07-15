@@ -200,7 +200,7 @@ function createWindow(
         callbacks?: (win: BrowserWindow) => void
     } = { isURL: false, argu: [], callbacks: () => { } }
 ) {
-    const isDebug = false;
+    const isDebug = true;
     const win = new BrowserWindow({
         width: 800,
         height: 600,

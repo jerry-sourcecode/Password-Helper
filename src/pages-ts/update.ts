@@ -16,23 +16,23 @@ function update(dir: Folder, checkable: boolean = false): void {
     document.querySelector("span#nav-mainPage")!.classList.remove("active");
     document.querySelector("span#nav-search")!.classList.remove("active");
     document.querySelector("span#nav-plugin")!.classList.remove("active");
-    if (dir.isSame(Folder.bin())) {
+    if (dir.isOrIn(Folder.bin())) {
         document.querySelector("span#nav-bin")!.classList.add("active");
         _showBin(checkable);
         return;
-    } else if (dir.isSame(Folder.home())) {
+    } else if (dir.isOrIn(Folder.home())) {
         document.querySelector("span#nav-home")!.classList.add("active");
         _goHome();
         return;
-    } else if (dir.isSame(Folder.setting())) {
+    } else if (dir.isOrIn(Folder.setting())) {
         document.querySelector("span#nav-setting")!.classList.add("active");
         _showSetting();
         return;
-    } else if (dir.isSame(Folder.search())) {
+    } else if (dir.isOrIn(Folder.search())) {
         document.querySelector("span#nav-search")!.classList.add("active");
         _showSearch();
         return;
-    } else if (dir.isin(Folder.plugin()) || dir.isSame(Folder.plugin())) {
+    } else if (dir.isOrIn(Folder.plugin())) {
         document.querySelector("span#nav-plugin")!.classList.add("active");
         _goPlugin(dir);
         return;
@@ -120,10 +120,10 @@ function update(dir: Folder, checkable: boolean = false): void {
         if (value.item.pin) inner += value.item.getHtml(idx, checkable);
     });
     nowFolders.forEach((value: folderMapping, idx: number) => {
-        if (!value.item.pin) inner += value.item.getHtml(idx, checkable);
+        if (!value.item.pin && value.item.isin(Folder.root())) inner += value.item.getHtml(idx, checkable);
     });
     nowPwds.forEach((value: pwdMapping, idx: number) => {
-        if (!value.item.pin) inner += value.item.getHtml(idx, checkable);
+        if (!value.item.pin && value.item.isin(Folder.root())) inner += value.item.getHtml(idx, checkable);
     });
     if (!has) {
         inner += `<p>暂无密码</p>`;

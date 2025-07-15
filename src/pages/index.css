@@ -445,3 +445,12 @@ div.plugin-box h3 {
 	margin: 9px;
 	margin-left: 0;
 }
+
+.list-group-item {
+	width: 37vw;
+}
+
+.form-control {
+	margin: 3px;
+	width: 26vw;
+}

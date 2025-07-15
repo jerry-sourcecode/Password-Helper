@@ -385,10 +385,14 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend: bo
     <div class="formItem"><label for="uname">用户名<span style="color:red;">*</span>：</label><input type="text" id="uname" class="${by[index].uname == "" ? "invaild" : "vaild"}" value="${by[index].uname}" /><span class="check"></span></div>
     <div class="formItem"><label for="pwd">密码<span style="color:red;">*</span>：</label><input type="text" id="pwd" class="${by[index].pwd == "" ? "invaild" : "vaild"}" value="${by[index].pwd}" /><span class="check"></span></div>
     <div class="formItem"><p class="icon" style="margin-left: 0;" id="randpwd">随机生成一个高强度的密码</p></div>
-    <div class="formItem"><label for="email">邮箱：</label><input type="text" id="email" value="${by[index].email}"></div>
-    <div class="formItem"><label for="phone">手机号：</label><input type="text" id="phone" value="${by[index].phone}"></div>
+    <div class="formItem"><label for="email">邮箱：</label><input list="defaultEmailList" type="text" id="email" value="${by[index].email}">
+    <datalist id="defaultEmailList"><!-- 默认邮箱列表 --></datalist>
+    </div>
+    <div class="formItem"><label for="phone">手机号：</label><input list="defaultPhoneList" type="text" id="phone" value="${by[index].phone}">
+    <datalist id="defaultPhoneList"><!-- 默认手机号列表 --></datalist>
+    </div>
     <div class="formItem_Copy"><p>修改时间：${getReadableTime(by[index].moDate)}</p></div>
-    <div class="formItem"><label for="note">备注：</label><br><textarea id="note" placeholder="可以在这里输入一些想说的话。">${by[index].note}</textarea></div>
+    <div class="formItem"><label for="note">备注：</label><br><textarea spellcheck="false" id="note" placeholder="可以在这里输入一些想说的话。">${by[index].note}</textarea></div>
     </div>
     <div class="action" id="submit"><p>提交</p></div>
     <div class="action" id="cancel"><p>取消</p></div>
@@ -407,6 +411,21 @@ function changePwd(by: Array<Password>, index: number, dir: Folder, isAppend: bo
             }
         });
     }
+    // 填充默认邮箱和手机号
+    const defaultEmailList = document.querySelector("#defaultEmailList") as HTMLDataListElement;
+    const defaultPhoneList = document.querySelector("#defaultPhoneList") as HTMLDataListElement;
+    pwdList.forEach((item) => {
+        if (item.isin(Folder.setting().subDir("email"))) {
+            const option = document.createElement("option");
+            option.value = Password.format(item.email, showBasicInfoMaxLength);
+            defaultEmailList.appendChild(option);
+        }
+        if (item.isin(Folder.setting().subDir("phone"))) {
+            const option = document.createElement("option");
+            option.value = Password.format(item.phone, showBasicInfoMaxLength);
+            defaultPhoneList.appendChild(option);
+        }
+    });
     const rd = document.querySelector("#randpwd");
     rd?.addEventListener("click", () => {
         const pwd = document.querySelector("#pwd") as HTMLInputElement;
@@ -574,134 +593,9 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
     }
     updatePos();
     currentFolder = Folder.append();
-    if (mainSetting.easyAppend) {
-        pwdList.push(new Password("", "", "", "", "", "", dir));
-        changePwd(pwdList, pwdList.length - 1, dir, true);
-        return;
-    }
-    // 添加密码
-    if (_step == 0) {
-        content!.innerHTML = `
-        <div class="title">添加密码</div>
-        <div class="form">
-        <div class="formItem"><label for="input">来源<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.from}" /><span class="check"></span></div>
-        </div>
-        <div class="formItem"><p>你可以填写此密码的来源，如网站网址、应用程序的名称等。请注意，此项必填。</p></div>
-        </div>
-        <div class="action" id="nxt"><p>下一步</p></div>
-        <div class="action" id="cancel"><p>取消</p></div>`
-    }
-    else if (_step == 1) {
-        content!.innerHTML = `
-        <div class="title">添加密码</div>
-        <div class="form">
-        <div class="formItem"><label for="input">用户名<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.uname}"/><span class="check"></span></div>
-        </div>
-        <div class="formItem"><p>你可以填写此密码对应的用户名。请注意，此项必填。</p></div>
-        </div>
-        <div class="action" id="pre"><p>上一步</p></div>
-        <div class="action" id="nxt"><p>下一步</p></div>
-        <div class="action" id="cancel"><p>取消</p></div>`
-    }
-    else if (_step == 2) {
-        content!.innerHTML = `
-        <div class="title">添加密码</div>
-        <div class="form">
-        <div class="formItem"><label for="input">密码<span style="color:red;">*</span>：</label><input type="text" id="input" class="invaild" value="${_result.pwd}"/><span class="check"></span></div>
-        <div class="formItem"><p class="icon" style="margin-left: 0;" id="randpwd">随机生成一个高强度的密码</p></div>
-        </div>
-        <div class="formItem"><p>你可以填写密码。请注意，此项必填。</p></div>
-        </div>
-        <div class="action" id="pre"><p>上一步</p></div>
-        <div class="action" id="nxt"><p>下一步</p></div>
-        <div class="action" id="cancel"><p>取消</p></div>`
-        document.querySelector("#randpwd")!.addEventListener("click", () => {
-            _result.pwd = randstr(16);
-            (document.getElementById("input") as HTMLInputElement)!.value = _result.pwd;
-            (document.querySelector("input") as HTMLInputElement)!.dispatchEvent(new Event("input"));
-        })
-    } else if (_step == 3) {
-        content!.innerHTML = `
-        <div class="title">添加密码</div>
-        <div class="form">
-        <div class="formItem"><label for="input_email">邮箱：</label><input type="text" id="input_email" value="${_result.email}"></div>
-        <div class="formItem"><label for="input_phone">手机号：</label><input type="text" id="input_phone" value="${_result.phone}"></div>
-        <div class="formItem"><p>你可以填写辅助信息。请注意，以上内容为选填。</p></div>
-        </div>
-        <div class="action" id="pre"><p>上一步</p></div>
-        <div class="action" id="nxt"><p>下一步</p></div>
-        <div class="action" id="cancel"><p>取消</p></div>
-        `
-    }
-    else if (_step == 4) {
-        content!.innerHTML = `
-        <div class="title">添加密码</div>
-        <div class="form">
-        <div class="formItem"><label for="input">备注：</label><br><textarea id="input" placeholder="可以在这里输入一些想说的话。">${_result.note}</textarea></div>
-        <div class="formItem"><p>你可以填写一些备注。请注意，以上内容为选填。</p></div>
-        </div>
-        <div class="action" id="pre"><p>上一步</p></div>
-        <div class="action" id="nxt"><p>完成</p></div>
-        <div class="action" id="cancel"><p>取消</p></div>
-        `
-    }
-    if (_step != 3 && _step != 4) {
-        document.getElementById("input")!.addEventListener("input", (e) => {
-            if (_step == 0) {
-                _result.from = (document.getElementById("input") as HTMLInputElement)!.value;
-            }
-            else if (_step == 1) {
-                _result.uname = (document.getElementById("input") as HTMLInputElement)!.value;
-            }
-            else if (_step == 2) {
-                _result.pwd = (document.getElementById("input") as HTMLInputElement)!.value;
-            }
-            let tgt: HTMLInputElement = e.target as HTMLInputElement;
-            if (tgt.value == "") {
-                tgt.classList.add("invaild");
-                tgt.classList.remove("vaild");
-            } else {
-                tgt.classList.add("vaild");
-                tgt.classList.remove("invaild");
-            }
-        });
-        (document.querySelector("input") as HTMLInputElement)!.dispatchEvent(new Event("input"));
-    }
-    if (_step == 4) document.querySelector("#input")?.addEventListener("input", () => {
-        _result.note = (document.getElementById("input") as HTMLTextAreaElement)!.value;
-    })
-    if (_step == 3) {
-        document.getElementById("input_email")!.addEventListener("input", () => {
-            _result.email = (document.getElementById("input_email") as HTMLInputElement)!.value;
-        })
-        document.getElementById("input_phone")!.addEventListener("input", () => {
-            _result.phone = (document.getElementById("input_phone") as HTMLInputElement)!.value;
-        })
-    }
-    document.getElementById("nxt")!.addEventListener("click", () => {
-        if (_step == 0) {
-            if ((document.getElementById("input") as HTMLInputElement)!.value == "") return mkDialog("提交错误！", "来源不能为空！");
-        }
-        else if (_step == 1) {
-            if ((document.getElementById("input") as HTMLInputElement)!.value == "") return mkDialog("提交错误！", "用户名不能为空！");
-        }
-        else if (_step == 2) {
-            if ((document.getElementById("input") as HTMLInputElement)!.value == "") return mkDialog("提交错误！", "密码不能为空！");
-        }
-        if (_step == 4) {
-            pwdList.push(new Password(_result.from, _result.uname, _result.pwd, _result.note, _result.email, _result.phone, dir));
-            doneMkPwd(true, pwdList.length - 1);
-            init(dir);
-            return;
-        }
-        addPwd(dir, _step + 1, _result);
-    });
-    if (_step != 0) document.getElementById("pre")!.addEventListener("click", () => {
-        addPwd(dir, _step - 1, _result);
-    });
-    document.getElementById("cancel")!.addEventListener("click", () => {
-        update(dir);
-    })
+    pwdList.push(new Password("", "", "", "", "", "", dir));
+    changePwd(pwdList, pwdList.length - 1, dir, true);
+    return;
 }
 /**
  * 检查密码的安全性
@@ -711,7 +605,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
 function checkSafety(index: number): string {
     let list: Array<number> = [], safety: string = "";
     for (let i = 0; i < pwdList.length; i++) {
-        if (pwdList[i].pwd == pwdList[index].pwd && i != index) {
+        if (pwdList[i].pwd == pwdList[index].pwd && i != index && pwdList[i].getParent().isin(Folder.root())) {
             list.push(i);
         }
     }
@@ -752,7 +646,21 @@ function checkSafety(index: number): string {
 function showPwd(by: Array<Password>, index: number, from: Folder): void {
     updatePos();
     currentFolder = Folder.show();
-    let inner: string = `
+    let inner: string;
+    if (from.isSame(Folder.setting())) inner = `
+    <div class="form">
+    ${by[index].getParent().isOrIn(Folder.setting().subDir("email")) ? `
+        <div class="formItem_Copy"><label for="from">邮箱：</label><input type="text" id="from" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
+        <div class="formItem_Copy"><label for="pwd">密码：</label><input type="password" id="pwd" class="vaild" value="${by[index].pwd}" readonly /><img class="icon" src="./resources/copy.png" id="pwdCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>` : `
+        <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>`}
+    <div class="formItem"><p class="action" id="showHidePwd">显示密码</p></div>
+    <div class="formItem" id="safety"></div>
+    <div class="formItem_Copy"><p>修改时间：${getReadableTime(by[index].moDate)}</p></div>
+    <div class="formItem"><label for="note">备注：</label><br><textarea spellcheck="false" id="note" readonly>${by[index].note}</textarea></div>
+    </div>
+    <div class="action" id="back"><p>返回</p></div>
+    `;
+    else inner = `
     <div class="form">
     <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
     <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${by[index].uname}" readonly /><img class="icon" src="./resources/copy.png" id="unameCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
@@ -763,7 +671,7 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
     <div class="formItem_Copy"><label for="phone">手机号：</label><input type="text" id="phone" class="vaild" value="${by[index].phone}" readonly /><img class="icon" src="./resources/copy.png" id="phoneCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
     <div class="formItem_Copy"><p>修改时间：${getReadableTime(by[index].moDate)}</p></div>
     ${from.isSame(Folder.bin()) ? `<div class="formItem_Copy"><p>删除时间：${getReadableTime(by[index].rmDate!)}</p></div>` : ""}
-    <div class="formItem"><label for="note">备注：</label><br><textarea id="note" readonly>${by[index].note}</textarea></div>
+    <div class="formItem"><label for="note">备注：</label><br><textarea spellcheck="false" id="note" readonly>${by[index].note}</textarea></div>
     </div>
     <div class="action" id="back"><p>返回</p></div>
     `
@@ -771,10 +679,10 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
     Tooltip.enabled();
     const safety: HTMLDivElement = document.querySelector("#safety")!;
     Task.tryDone("例行检查");
-    if (from != Folder.bin()) {
+    if (!from.isSame(Folder.bin()) && !by[index].getParent().isSame(Folder.setting().subDir("phone"))) {
         safety.innerHTML = checkSafety(index);
-        if (safety.innerHTML == "") safety.style.display = "none";
     }
+    if (safety.innerHTML == "") safety.style.display = "none";
     document.querySelector("#showHidePwd")?.addEventListener("click", (e) => {
         const div = document.querySelector("input#pwd") as HTMLInputElement;
         if (div.type == "password") {

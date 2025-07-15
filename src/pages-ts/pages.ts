@@ -19,7 +19,6 @@ function _showSetting(): void {
         <p class="subtitle">其他个性化设置</p>
         <div class="settingFormItem">
             <div class="form-check"><input class="form-check-input" type="checkbox" id="autoCopy" ${mainSetting.autoCopy ? "checked" : ""}/><label  class="form-check-label" for="autoCopy">当点击一条信息时，不会跳转到详情界面，而是直接复制这条信息对应的密码。</label></div>
-            <div class="form-check"><input class="form-check-input" type="checkbox" id="easyAppend" ${mainSetting.easyAppend ? "checked" : ""}/><label  class="form-check-label" for="easyAppend">添加密码时，使用快速而简洁的表单形式来代替创建引导形式。</label></div>
             <div><label for="pwdSortBy">密码显示顺序设置：</label>
                 <select id="pwdSortBy" class="form-select">
                     <option value="name" ${mainSetting.pwdSortBy === SortBy.name ? "selected" : ""}>按照来源顺序</option>
@@ -35,6 +34,22 @@ function _showSetting(): void {
                     <option value="time_late" ${mainSetting.folderSortBy === SortBy.time_late ? "selected" : ""}>按照重命名时间顺序</option>
                     <option value="time_early" ${mainSetting.folderSortBy === SortBy.time_early ? "selected" : ""}>按照重命名时间倒序</option>
                 </select>
+            </div>
+        </div>
+        <p class="subtitle">常用信息设置</p>
+        <div class="settingFormItem" style="margin-left: 2em">
+            <p>你可以在这里储存常用的手机号和邮箱，会在设置密码的手机号和邮箱时显示输入提示。</p>
+            <div>
+                <p>常用邮箱：</p>
+                <div class="list-group" id="emailDiv">
+                    <a class="list-group-item list-group-item-action list-group-item-success" id="add-new-email">增加新的邮件</a>
+                </div>
+            </div>
+            <div style="text-indent: 0">
+                <label>常用手机号：</label>
+                <div class="list-group" id="phoneDiv">
+                    <a class="list-group-item list-group-item-action list-group-item-success" id="add-new-phone">增加新的手机号</a>
+                </div>
             </div>
         </div>
         <p class="subtitle">仓库设置</p>
@@ -73,6 +88,179 @@ function _showSetting(): void {
     document.querySelector("#mainPwd")?.addEventListener("input", (e) => {
         saveKey.disabled = (<HTMLInputElement>e.target).value == "";
         if (saveKey.disabled) saveKey.checked = false;
+    });
+
+    function mkEmailOrPhoneHtml(type: "email" | "phone", value: string, index: number): string {
+        return `
+        <a class="list-group-item d-flex justify-content-between align-items-center list-group-item-action" id="${type}-button" data-id="${index}">
+            <!-- 左侧文本 -->
+            <div class="text-truncate pe-2">${Password.format(value, showBasicInfoMaxLength)}</div>
+            
+            <!-- 右侧图标组 -->
+            <div class="d-flex align-items-center">
+                <img class="icon me-2" id="${type}-edit" src="./resources/edit.png" 
+                    data-bs-toggle="tooltip" data-bs-placement="top" title="编辑" data-id="${index}">
+                <button type="button" class="btn-close" id="${type}-delete" 
+                        data-bs-toggle="tooltip" data-bs-placement="top" title="删除" data-id="${index}"></button>
+            </div>
+        </a>`;
+    }
+
+    const emailDiv = document.querySelector("#emailDiv") as HTMLDivElement;
+    const phoneDiv = document.querySelector("#phoneDiv") as HTMLDivElement;
+    pwdList.forEach((pwd: Password, id: number) => {
+        if (pwd.isin(Folder.setting().subDir("email"))) {
+            emailDiv.innerHTML += mkEmailOrPhoneHtml("email", pwd.email, id);
+        }
+        if (pwd.isin(Folder.setting().subDir("phone"))) {
+            phoneDiv.innerHTML += mkEmailOrPhoneHtml("phone", pwd.phone, id);
+        }
+    })
+    Tooltip.enabled();
+    const addEmailBtn = document.querySelector("#add-new-email") as HTMLButtonElement;
+    addEmailBtn.addEventListener("click", () => {
+        mkDialog("添加邮箱", `
+            <div style="display:flex; flex-direction: column; gap: 10px;">
+                <label for="emailInput">邮箱：</label>
+                <input type="text" id="emailInput" class="form-control">
+                <label for="emailPwdInput">密码：</label>
+                <input type="text" id="emailPwdInput" class="form-control">
+                <label for="emailNoteInput">备注：</label>
+                <textarea spellcheck="false" id="emailNoteInput" class="form-control"></textarea>
+            </div>
+        `, ["添加", "取消"], {
+            defaultOption: 0, otherAction() {
+                (document.querySelector("#emailInput") as HTMLInputElement).focus();
+            },
+        })
+            .then((res) => {
+                if (res == 0) {
+                    const email = (document.querySelector("#emailInput") as HTMLInputElement).value;
+                    const pwd = (document.querySelector("#emailPwdInput") as HTMLInputElement).value;
+                    const note = (document.querySelector("#emailNoteInput") as HTMLTextAreaElement).value;
+                    if (email === "") {
+                        mkDialog("添加失败", "邮箱不能为空！");
+                        return;
+                    }
+                    if (pwd === "") {
+                        mkDialog("添加失败", "密码不能为空！");
+                        return;
+                    }
+                    const newPwd = new Password("", email, pwd, note, email);
+                    newPwd.setParent(Folder.setting().subDir("email"));
+                    pwdList.push(newPwd);
+                    saveData();
+                    emailDiv.innerHTML += mkEmailOrPhoneHtml("email", newPwd.email, pwdList.length - 1);
+                    update(Folder.setting());
+                }
+            });
+    })
+    const addPhoneBtn = document.querySelector("#add-new-phone") as HTMLButtonElement;
+    addPhoneBtn.addEventListener("click", () => {
+        mkDialog("添加手机号", `
+            <div style="display:flex; flex-direction: column; gap: 10px;">
+                <label for="phoneInput">手机号：</label>
+                <input type="text" id="phoneInput" class="form-control">
+                <label for="phoneNoteInput">备注：</label>
+                <textarea spellcheck="false" id="phoneNoteInput" class="form-control"></textarea>
+            </div>
+        `, ["添加", "取消"], {
+            defaultOption: 0, otherAction() {
+                (document.querySelector("#phoneInput") as HTMLInputElement).focus();
+            }
+        })
+            .then((res) => {
+                if (res == 0) {
+                    const phone = (document.querySelector("#phoneInput") as HTMLInputElement).value;
+                    const note = (document.querySelector("#phoneNoteInput") as HTMLTextAreaElement).value;
+                    if (phone === "") {
+                        mkDialog("添加失败", "手机号不能为空！");
+                        return;
+                    }
+                    const newPwd = new Password("", phone, "", note, "", phone);
+                    newPwd.setParent(Folder.setting().subDir("phone"));
+                    pwdList.push(newPwd);
+                    saveData();
+                    phoneDiv.innerHTML += mkEmailOrPhoneHtml("phone", newPwd.phone, pwdList.length - 1);
+                    update(Folder.setting());
+                }
+            });
+    })
+    document.querySelectorAll("#email-delete, #phone-delete").forEach((v) => {
+        v.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const id = (v as HTMLElement).dataset.id;
+            if (id !== undefined) {
+                pwdList.splice(Number(id), 1);
+                saveData();
+                update(Folder.setting());
+            }
+        });
+    });
+    document.querySelectorAll("#email-button, #phone-button").forEach((v) => {
+        v.addEventListener("click", () => {
+            const id = (v as HTMLElement).dataset.id;
+            if (id !== undefined) {
+                showPwd(pwdList, Number(id), Folder.setting());
+            }
+        });
+    });
+    document.querySelectorAll("#email-edit, #phone-edit").forEach((v) => {
+        v.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const id = (v as HTMLElement).dataset.id;
+            if (id !== undefined) {
+                if (pwdList[Number(id)].getParent().isSame(Folder.setting().subDir("email"))) {
+                    mkDialog(`编辑信息`, `
+                    <div style="display:flex; flex-direction: column; gap: 10px;">
+                        <label for="emailInput">邮箱：</label>
+                        <input type="text" id="emailInput" class="form-control" value="${pwdList[Number(id)].email}">
+                        <label for="emailPwdInput">密码：</label>
+                        <input type="text" id="emailPwdInput" class="form-control" value="${pwdList[Number(id)].pwd}">
+                        <label for="emailNoteInput">备注：</label>
+                        <textarea spellcheck="false" id="emailNoteInput" class="form-control">${pwdList[Number(id)].note}</textarea>
+                    </div>
+                    `, ["保存", "取消"]).then((res) => {
+                        if (res == 0) {
+                            const email = (document.querySelector("#emailInput") as HTMLInputElement).value;
+                            const pwd = (document.querySelector("#emailPwdInput") as HTMLInputElement).value;
+                            const note = (document.querySelector("#emailNoteInput") as HTMLTextAreaElement).value;
+                            if (email === "" || pwd === "") {
+                                mkDialog("编辑失败", "邮箱和密码不能为空！");
+                                return;
+                            }
+                            pwdList[Number(id)].email = email;
+                            pwdList[Number(id)].pwd = pwd;
+                            pwdList[Number(id)].note = note;
+                            saveData();
+                            update(Folder.setting());
+                        }
+                    });
+                } else {
+                    mkDialog(`编辑信息`, `
+                    <div style="display:flex; flex-direction: column; gap: 10px;">
+                        <label for="phoneInput">手机号：</label>
+                        <input type="text" id="phoneInput" class="form-control" value="${pwdList[Number(id)].phone}">
+                        <label for="phoneNoteInput">备注：</label>
+                        <textarea spellcheck="false" id="phoneNoteInput" class="form-control">${pwdList[Number(id)].note}</textarea>
+                    </div>
+                    `, ["保存", "取消"]).then((res) => {
+                        if (res == 0) {
+                            const phone = (document.querySelector("#phoneInput") as HTMLInputElement).value;
+                            const note = (document.querySelector("#phoneNoteInput") as HTMLTextAreaElement).value;
+                            if (phone === "") {
+                                mkDialog("编辑失败", "手机号不能为空！");
+                                return;
+                            }
+                            pwdList[Number(id)].phone = phone;
+                            pwdList[Number(id)].note = note;
+                            saveData();
+                            update(Folder.setting());
+                        }
+                    });
+                }
+            }
+        });
     });
 
     function rfRepo() {
@@ -130,7 +318,6 @@ function _showSetting(): void {
     saveKey.addEventListener("change", () => { applyStyle(); })
     document.querySelector("#mainPwdTip")?.addEventListener("input", () => { applyStyle(); })
     document.querySelector("#autoCopy")?.addEventListener("change", () => { applyStyle(); })
-    document.querySelector("#easyAppend")?.addEventListener("change", () => { applyStyle(); })
     document.querySelector("#pwdSortBy")?.addEventListener("change", () => { applyStyle(); })
     document.querySelector("#folderSortBy")?.addEventListener("change", () => { applyStyle(); })
     document.querySelector("#generateRdPwdSetting-Letter")?.addEventListener("change", (e) => {
@@ -155,7 +342,6 @@ function _showSetting(): void {
             isremember = saveKey.checked;
             mainSetting.mainPwdTip = (document.querySelector("#mainPwdTip") as HTMLInputElement).value;
             mainSetting.autoCopy = (document.querySelector("#autoCopy") as HTMLInputElement).checked;
-            mainSetting.easyAppend = (document.querySelector("#easyAppend") as HTMLInputElement).checked;
             mainSetting.generateRandomPwdSetting = {
                 weightOfLetter: Number((document.querySelector("#generateRdPwdSetting-Letter") as HTMLInputElement).value),
                 weightOfNum: Number((document.querySelector("#generateRdPwdSetting-Number") as HTMLInputElement).value),

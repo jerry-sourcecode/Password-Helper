@@ -5,6 +5,7 @@ const showNoteMaxLength: number = 135; // 在main页面显示备注的最大长�
 const showOtherMaxLength: number = 60; // 在main页面显示来源、用户名、密码的最大长度
 const showSearchMaxLength: number = 47; // 在搜索页面显示来源、用户名、密码的最大长度
 const showPathMaxLength: number = 35; // 在main页面显示路径的最大长度
+const showBasicInfoMaxLength: number = 55; // 在setting页面显示基本信息的最大长度
 
 enum Type { // 类型枚举
     Folder, // 文件夹
@@ -504,6 +505,14 @@ class Folder {
         return new Folder("P", "");
     }
     /**
+     * 获取子目录
+     * @param dirname 目录名称
+     * @returns 子目录
+     */
+    subDir(dirname: string): Folder {
+        return new Folder(dirname, this.stringify());
+    }
+    /**
      * 判断是否是系统文件夹
      */
     isSystemFolder(): boolean {
@@ -703,8 +712,6 @@ type GenerateRandomPwdSetting = {
 class MainSetting {
     /**自动复制密码 */
     autoCopy: boolean = false;
-    /**使用表单 */
-    easyAppend: boolean = false;
     /**密码排序方式 */
     pwdSortBy: SortBy = SortBy.name;
     /**文件夹排序方式 */
