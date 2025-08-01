@@ -197,13 +197,15 @@ let pagePos: {
 /** 注册时间 */
 let signUpTime: string = Date.now().toString();
 /**被记录的UMC文件地址 */
-let umcFilePaths: Array<string> = [];
+let umcFilePaths: Array<{ main: string, copy: string[] }> = [];
 /**当前UMC文件地址 */
 let curPath: string = "";
 /**记录当前插件的安装状态 */
 let nowPlugins: UserPlugin[] = [];
 /**记录一个repo */
 type RepoMap = { name: string, path: string }
+/**记录一个备份repo的路径 */
+type UmcPath = { main: string, copy: string[] };
 /**HTML代码 */
 type HTMLCode = string;
 
@@ -648,6 +650,7 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
     currentFolder = Folder.show();
     let inner: string;
     if (from.isSame(Folder.setting())) inner = `
+    <div class="title">查看密码详情</div>
     <div class="form">
     ${by[index].getParent().isOrIn(Folder.setting().subDir("email")) ? `
         <div class="formItem_Copy"><label for="from">邮箱：</label><input type="text" id="from" class="vaild" value="${by[index].email}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
@@ -661,6 +664,7 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
     <div class="action" id="back"><p>返回</p></div>
     `;
     else inner = `
+    <div class="title">查看密码详情</div>
     <div class="form">
     <div class="formItem_Copy"><label for="from">来源：</label><input type="text" id="from" class="vaild" value="${by[index].from}" readonly /><img class="icon" src="./resources/copy.png" id="fromCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
     <div class="formItem_Copy"><label for="uname">用户名：</label><input type="text" id="uname" class="vaild" value="${by[index].uname}" readonly /><img class="icon" src="./resources/copy.png" id="unameCopy" title="复制" data-bs-toggle="tooltip" data-bs-placement="top"></div>
@@ -674,6 +678,7 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
     <div class="formItem"><label for="note">备注：</label><br><textarea spellcheck="false" id="note" readonly>${by[index].note}</textarea></div>
     </div>
     <div class="action" id="back"><p>返回</p></div>
+    ${from.isSame(Folder.bin()) ? "" : `<div class="action" id="edit"><p>修改密码</p></div>`}
     `
     content!.innerHTML = inner;
     Tooltip.enabled();
@@ -766,6 +771,9 @@ function showPwd(by: Array<Password>, index: number, from: Folder): void {
             update(from);
         }
     });
+    document.querySelector("#edit")?.addEventListener("click", () => {
+        changePwd(by, index, from);
+    });
 }
 
 document.querySelector("span#nav-mainPage")!.addEventListener("click", () => {
@@ -837,7 +845,10 @@ window.ProgramMenu.onMenuViewChange((sub, stt) => {
              * @param path UMC文件路径 
              */
             function removeUMCAndBtn(path: string) {
-                umcFilePaths.splice(umcFilePaths.indexOf(path), 1);
+                const idx = umcFilePaths.findIndex(obj => obj.main === path);
+                if (idx !== -1) {
+                    umcFilePaths.splice(idx, 1);
+                }
                 saveEditorData();
                 Tooltip.disabled();
                 document.querySelectorAll("#umcBtn").forEach(v => {
@@ -869,7 +880,7 @@ window.ProgramMenu.onMenuViewChange((sub, stt) => {
                         const tgt = (e.target) as HTMLElement;
                         let p = (tgt).dataset.path!;
                         for (let i = umcFilePaths.length - 1; i >= 0; i--) {
-                            if (umcFilePaths[i] === p) umcFilePaths.splice(i, 1);
+                            if (umcFilePaths[i].main === p) umcFilePaths.splice(i, 1);
                         }
                         if (p === editorSetting.defaultRepoPath) editorSetting.defaultRepoPath = null;
                         saveEditorData();
@@ -892,7 +903,7 @@ window.ProgramMenu.onMenuViewChange((sub, stt) => {
 
             if (editorSetting.defaultRepoPath && !window.fs.hasFile(editorSetting.defaultRepoPath)) editorSetting.defaultRepoPath = null;
             for (let i = umcFilePaths.length - 1; i >= 0; i--) {
-                if (!window.fs.hasFile(umcFilePaths[i])) umcFilePaths.splice(i, 1);
+                if (!window.fs.hasFile(umcFilePaths[i].main)) umcFilePaths.splice(i, 1);
             }
             if (umcFilePaths.length != 0) {
                 const params = getInitDataSync();
@@ -906,7 +917,7 @@ window.ProgramMenu.onMenuViewChange((sub, stt) => {
                     if (localStorage.getItem("GoToWelcome") === "true") localStorage.removeItem("GoToWelcome");
                     let listHTML = "";
                     umcFilePaths.forEach((v, idx) => {
-                        listHTML += mkUMCHtml(v);
+                        listHTML += mkUMCHtml(v.main);
                     })
                     content!.innerHTML = `
                     <div class="title" style="margin: 7px; margin-top: 40px">选择密码仓库</div>
@@ -932,11 +943,11 @@ window.ProgramMenu.onMenuViewChange((sub, stt) => {
             document.querySelector("div#newUMC")?.addEventListener("click", () => {
                 let filepath: string | undefined = window.msg.showSaveDialogSync("选择保存地址", "选择保存新文件的地址", [{ name: "密码仓库文件", extensions: ['umc'] }]);
                 if (filepath !== undefined) {
-                    if (umcFilePaths.indexOf(filepath) !== -1) {
-                        umcFilePaths.splice(umcFilePaths.indexOf(filepath), 1)
+                    if (umcFilePaths.findIndex(obj => obj.main == filepath) !== -1) {
+                        umcFilePaths.splice(umcFilePaths.findIndex(obj => obj.main == filepath), 1)
                         fmain();
                     }
-                    umcFilePaths.push(filepath);
+                    umcFilePaths.push({ main: filepath, copy: [] });
                     curPath = filepath;
                     saveData();
                     saveEditorData();
@@ -960,8 +971,8 @@ window.ProgramMenu.onMenuViewChange((sub, stt) => {
                     importUMC(element);
                 });
                 function importUMC(filepath: string) {
-                    if (umcFilePaths.indexOf(filepath) !== -1) {
-                        umcFilePaths.unshift(filepath);
+                    if (umcFilePaths.findIndex(obj => obj.main == filepath) !== -1) {
+                        umcFilePaths.unshift({ main: filepath, copy: [] });
                         removeUMCAndBtn(filepath);
                         let node: HTMLElement = document.createElement("div");
                         let fanode: HTMLDivElement = document.querySelector("#UMCListDiv")!;
@@ -970,7 +981,7 @@ window.ProgramMenu.onMenuViewChange((sub, stt) => {
                         rfUmcBtn();
                     }
                     else {
-                        umcFilePaths.push(filepath);
+                        umcFilePaths.push({ main: filepath, copy: [] });
                         saveEditorData();
                         localStorage.setItem("GoToWelcome", "true");
                         fmain();

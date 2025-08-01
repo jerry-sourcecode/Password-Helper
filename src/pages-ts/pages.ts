@@ -75,6 +75,13 @@ function _showSetting(): void {
                 ，同一时刻有且仅能有一个仓库是默认仓库。</p>
             </div>
         </div>
+        <p class="subtitle">仓库备份设置</p>
+        <div class="settingFormItem">
+            <p>你可以新建一个仓库作为此仓库的备份，备份仓库将会与主仓库同步修改。</p>
+            <div class="list-group" id="repo-copy-div">
+                <a class="list-group-item list-group-item-action list-group-item-success" id="add-new-repo-copy">增加新的仓库备份</a>
+            </div>
+        </div>
         <div><p class="action" id="welcome">回到“欢迎”界面</p></div>
         <div><p class="action" id="importEditorSetting">导入编辑器设置</p></div>
         <div><p class="action" id="exportEditorSetting">导出编辑器设置</p></div>
@@ -102,6 +109,20 @@ function _showSetting(): void {
                     data-bs-toggle="tooltip" data-bs-placement="top" title="编辑" data-id="${index}">
                 <button type="button" class="btn-close" id="${type}-delete" 
                         data-bs-toggle="tooltip" data-bs-placement="top" title="删除" data-id="${index}"></button>
+            </div>
+        </a>`;
+    }
+
+    function mkRepoCopyHtml(repo: string): string {
+        return `
+        <a class="list-group-item d-flex justify-content-between align-items-center list-group-item-action" id="repo-button" data-id="${repo}">
+            <!-- 左侧文本 -->
+            <div class="text-truncate pe-2">${Password.format(repo, showBasicInfoMaxLength, "front")}</div>
+            
+            <!-- 右侧图标组 -->
+            <div class="d-flex align-items-center">
+                <button type="button" class="btn-close" id="repo-delete" 
+                        data-bs-toggle="tooltip" data-bs-placement="top" title="删除" data-id="${repo}"></button>
             </div>
         </a>`;
     }
@@ -186,6 +207,45 @@ function _showSetting(): void {
                 }
             });
     })
+    const repoCopyDiv = document.querySelector("#repo-copy-div") as HTMLDivElement;
+
+    let copyrepolist = umcFilePaths[umcFilePaths.findIndex(obj => obj.main === curPath)].copy
+    copyrepolist.forEach((repo: string) => {
+        repoCopyDiv.innerHTML += mkRepoCopyHtml(repo);
+    });
+    document.querySelectorAll("#repo-delete").forEach((v) => {
+        v.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const umcPath = (v as HTMLElement).dataset.id;
+            if (umcPath !== undefined) {
+                const index = copyrepolist.indexOf(umcPath);
+                if (index > -1) {
+                    copyrepolist.splice(index, 1);
+                    saveEditorData();
+                    update(Folder.setting());
+                } else {
+                    mkDialog("删除失败", `<p>备份仓库不存在！他可能被移动、删除或重命名了。</p><p>原仓库地址：${umcPath}</p>`)
+                }
+            }
+        });
+    });
+    document.querySelector("#add-new-repo-copy")?.addEventListener("click", () => {
+        let finename = window.msg.showSaveDialogSync("选择备份仓库地址", "选择备份仓库的地址", [{ name: "密码仓库", extensions: ['umc'] }])
+        if (finename !== undefined) {
+            if (umcFilePaths.findIndex(obj => obj.main === finename) !== -1) {
+                mkDialog("添加失败", "备份仓库已存在！");
+                return;
+            }
+            if (window.fs.hasFile(finename)) {
+                mkDialog("添加失败", "备份仓库已存在！");
+                return;
+            }
+            copyrepolist.push(finename);
+            saveData();
+            saveEditorData();
+            repoCopyDiv.innerHTML += mkRepoCopyHtml(finename);
+        }
+    })
     document.querySelectorAll("#email-delete, #phone-delete").forEach((v) => {
         v.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -265,17 +325,17 @@ function _showSetting(): void {
 
     function rfRepo() {
         for (let i = umcFilePaths.length - 1; i >= 0; i--) {
-            if (!window.fs.hasFile(umcFilePaths[i])) umcFilePaths.splice(i, 1);
+            if (!window.fs.hasFile(umcFilePaths[i].main)) umcFilePaths.splice(i, 1);
         }
         const repoSwitchUl = document.querySelector("#repoSwitchUl");
         if (!repoSwitchUl) return;
         let inner = "";
         for (let i = 0; i < umcFilePaths.length; i++) {
-            if (umcFilePaths[i] === curPath) {
+            if (umcFilePaths[i].main === curPath) {
                 inner += `<li><span class="dropdown-item active" data-path="${umcFilePaths[i]}" data-name="${repoName}" id="repoSwitchLi">${repoName}</span></li>`
                 continue;
             }
-            let n = window.fs.readSync(umcFilePaths[i])
+            let n = window.fs.readSync(umcFilePaths[i].main)
             if (n !== undefined) inner += `<li><span class="dropdown-item" data-path="${umcFilePaths[i]}" data-name="${UMC.getName(n)}" id="repoSwitchLi">${UMC.getName(n)}</span></li>`;
         }
         repoSwitchUl!.innerHTML = inner;
@@ -406,7 +466,7 @@ function _showSetting(): void {
     document.querySelector("#reset")?.addEventListener("click", () => {
         window.electronAPI.rmArg("repoPath");
         for (let i = 0; i < umcFilePaths.length; i++) {
-            if (umcFilePaths[i] == curPath) umcFilePaths.splice(i, 1);
+            if (umcFilePaths[i].main == curPath) umcFilePaths.splice(i, 1);
         }
         saveEditorData();
         location.reload();

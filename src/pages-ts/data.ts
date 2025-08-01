@@ -734,6 +734,10 @@ function saveData(): void { // 保存数据
     // 数据保存
     let data = getData();
     window.fs.save(curPath, data);
+    let copy = umcFilePaths.find(v => v.main == curPath)?.copy;
+    copy?.forEach((v) => {
+        window.fs.save(v, data);
+    });
 }
 
 /**
