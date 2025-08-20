@@ -23,9 +23,6 @@ class UMC {
         if (data == "") throw new Error("data is null");
         let obj = JSON.parse(data);
 
-        const supportVersion = ["1.2", "1.3", "1.4", "1.4.1"]
-        if (supportVersion.indexOf(obj.version) === -1) mkDialog("数据无效", `不支持数据版本${obj.version}！`);
-
         mainSetting = obj.mainSetting;
         repoName = obj.name;
         document.title = `Password Helper - ${repoName}`;
@@ -89,7 +86,13 @@ class UMC {
         let v: string = obj.version;
         if (v == "1.2" || v == "1.3" || v == "1.4") this.V1_2V1_3V1_4(obj, key);
         else if (v == "1.4.1") this.V1_4_1(obj, key);
-        else return false;
+        else if (v == "1.5") this.V1_5(obj, key);
+        else {
+            mkDialog("数据无效", `不支持数据版本${obj.version}！`)
+                .then((v) => {
+                    throw Error(`Can't find data version ${v}`);
+                })
+        };
         (document.querySelector("#nav-home") as HTMLSpanElement).click();
         return true;
     }
@@ -163,6 +166,7 @@ class UMC {
         })
         score = Number(Cryp.decrypt(obj.score, key));
         level = Number(Cryp.decrypt(obj.level, key));
+        this.initToV1_5();
     }
     /**
      * 初始化到 1.4.1 版本
@@ -174,6 +178,37 @@ class UMC {
             weightOfPunc: 1
         }
         repoName = "untitled";
+        this.initToV1_5();
+    }
+    /**
+     * 解码 1.5 版本的数据
+     * @param obj 解码的对象
+     * @param key 解码的密钥
+     */
+    private static V1_5(obj: any, key: string) {
+        obj.pwd.forEach((element: any) => {
+            pwdList.push(<Password>decrypt(new Password(element), key));
+        });
+        obj.folder.forEach((element: any) => {
+            folderList.push(<Folder>decrypt(new Folder(element), key));
+        })
+        signUpTime = Cryp.decrypt(obj.signUpTime, key);
+        obj.bin.forEach((element: any) => {
+            if (element.type == Type.Password) binItem.push(<Item>decrypt(new Password(element), key));
+            else binItem.push(<Item>decrypt(new Folder(element), key));
+        });
+        obj.DONETasks.forEach((element: any) => {
+            DONETasks.push(TaskMap.dec(element, key));
+        })
+        score = Number(Cryp.decrypt(obj.score, key));
+        level = Number(Cryp.decrypt(obj.level, key));
+    }
+    /**
+     * 初始化到 1.5 版本
+     */
+    private static initToV1_5(): void {
+        pwdList.forEach(v => v.pin = false);
+        folderList.forEach(v => v.pin = false);
     }
 };
 
@@ -186,6 +221,7 @@ class EData {
         if (data == "") throw new Error("editor is null");
         let obj = JSON.parse(data);
         if (obj.version == "e1.0") this.V1_0(obj);
+        else if (obj.version == "e1.1") this.V1_1(obj);
         else alert("编辑器数据已过期");
     }
 
@@ -218,10 +254,51 @@ class EData {
                 if (!flag)
                     nowPlugins.push(new UserPlugin(defaultPlugins[i]));
             }
-            saveEditorData()
+        }
+
+        obj.umcFilePaths.forEach((v: string) => {
+            umcFilePaths.push({
+                main: v,
+                copy: []
+            })
+        })
+        editorSetting = obj.editorSetting;
+        saveEditorData();
+    }
+    /**
+     * 对版本为e1.0的数据进行解码并应用
+     * @param obj 数据
+     */
+    private static V1_1(obj: any): void {
+        searchMemory = obj.search;
+        searchMemory.lastSearchTxt = null;
+        searchMemory.txt = "";
+
+        nowPlugins = [];
+        obj.plugins.forEach((element: any) => {
+            defaultPlugins.forEach((plugin: UserPlugin) => {
+                if (element.id === plugin.id) {
+                    nowPlugins.push(new UserPlugin(plugin))
+                    nowPlugins[nowPlugins.length - 1].isEnabled = element.enabled;
+                }
+            })
+        });
+        if (nowPlugins.length !== defaultPlugins.length) {
+            for (let i = 0; i < defaultPlugins.length; i++) {
+                let flag: boolean = false;
+                for (let j = 0; j < nowPlugins.length; j++) {
+                    if (nowPlugins[j].id === defaultPlugins[i].id) {
+                        flag = true;
+                    }
+                }
+                if (!flag)
+                    nowPlugins.push(new UserPlugin(defaultPlugins[i]));
+            }
         }
 
         umcFilePaths = obj.umcFilePaths;
         editorSetting = obj.editorSetting;
+
+        saveEditorData()
     }
 }

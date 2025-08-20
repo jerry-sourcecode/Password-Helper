@@ -797,7 +797,7 @@ function getData(ismemory: boolean = isremember): string {
     let encSignUpTime = Cryp.encrypt(signUpTime, enc);
     // 数据保存
     return JSON.stringify({
-        version: "1.4.1",
+        version: "1.5",
         name: repoName,
         pwd: pwdListUpdated,
         folder: folderListUpdated,
@@ -825,7 +825,7 @@ function getEditorData(): string {
     }))
     // 数据保存
     let data = {
-        version: "e1.0",
+        version: "e1.1",
         search: searchMemory,
         umcFilePaths: umcFilePaths,
         editorSetting: editorSetting,
