@@ -605,6 +605,7 @@ function addPwd(dir: Folder, _step: number = 0, _result: Password = new Password
  * @returns HTML代码，安全性提示，如果很安全则返回空字符串
  */
 function checkSafety(index: number): string {
+    if (!pwdList[index].isin(Folder.root())) return "";
     let list: Array<number> = [], safety: string = "";
     for (let i = 0; i < pwdList.length; i++) {
         if (pwdList[i].pwd == pwdList[index].pwd && i != index && pwdList[i].getParent().isin(Folder.root())) {
